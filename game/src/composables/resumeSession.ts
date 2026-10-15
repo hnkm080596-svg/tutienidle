@@ -9,6 +9,7 @@ import { getRawSave } from '@/services/save/SaveSystem'
 import { readAnyAckedSaveEnvelope } from '@/services/cloudSave/AckedSaveCache'
 import { resolveSaveAccountId } from '@/services/save/saveKeys'
 import type { AuthSession } from '@/services/auth/AuthService'
+import { testSandboxActive } from '@/services/dev/testSandbox'
 
 export interface ResumeCandidate {
   session: AuthSession
@@ -39,6 +40,7 @@ function rawSaveForResume(): string | null {
  *  exists - enough to justify the short intro + continue affordance.
  *  Async because the durable seam lives behind IPC on Electron. */
 export async function hasResumeCandidate(): Promise<boolean> {
+  if (testSandboxActive) return Boolean(rawSaveForResume())
   try {
     const restore = await restoreDurableGuestSession()
     if (restore === 'restored') return true
@@ -57,6 +59,13 @@ export async function hasResumeCandidate(): Promise<boolean> {
  *  the candidate as a recovery error, never a plaintext fallback and
  *  never an implicit new anonymous signup. */
 export async function readResumeCandidate(): Promise<ResumeCandidate | null> {
+  if (testSandboxActive) {
+    return {
+      session: { sessionId: crypto.randomUUID(), mode: 'guest' },
+      name: '',
+      stored: false,
+    }
+  }
   const restore = await restoreDurableGuestSession()
   const stored = readSupabaseSession()
   const raw = rawSaveForResume()

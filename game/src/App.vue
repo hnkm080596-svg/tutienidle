@@ -61,6 +61,9 @@ import { recordSaveOutcome } from './services/diagnostics/recordSaveOutcome'
 import type { AuthSession } from './services/auth/AuthService'
 import { clearMasterGateFlag, isMasterSession, recordSessionLoginId, unlockMasterGate } from './services/master/masterAccess'
 import DevToolsPanel from './components/dev/DevToolsPanel.vue'
+import TestSandboxControls from './components/dev/TestSandboxControls.vue'
+import { testSandboxActive, setTestSandboxMode } from './services/dev/testSandbox'
+import type { SandboxPreset } from './services/dev/sandboxPresets'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
 import PhapTuLabBridge from './dev/PhapTuLabBridge.vue'
@@ -918,6 +921,45 @@ function persistProgress() {
   void lifecycle.persistProgress()
 }
 
+const sandboxBusy = ref(false)
+
+async function transitionSandbox(operation: () => Promise<void>) {
+  if (!testSandboxActive || sandboxBusy.value) throw new Error('Sandbox unavailable')
+  if (!['auth', 'game', 'error'].includes(entryStage.value)) throw new Error('Boot in progress')
+  sandboxBusy.value = true
+  lifecycle.pauseSimulation()
+  try {
+    await operation()
+    lifecycle.suppressPersistence()
+    lifecycle.stopAll()
+    window.location.reload()
+  } catch (error: unknown) {
+    sandboxBusy.value = false
+    lifecycle.resumeSimulation()
+    throw error
+  }
+}
+
+async function leaveTestSandbox() {
+  await transitionSandbox(async () => {
+    if (isBooted.value && entryStage.value === 'game') {
+      const saved = await player.save(gameManager)
+      if (saved.status !== 'ok') throw new Error('Sandbox save failed')
+    }
+    setTestSandboxMode(false)
+  })
+}
+
+async function applySandboxPreset(preset: SandboxPreset) {
+  if (entryStage.value !== 'game') throw new Error('Sandbox not ready')
+  await transitionSandbox(async () => {
+    const { buildSandboxPreset } = await import('./services/dev/sandboxPresets')
+    const save = buildSandboxPreset(preset)
+    const saved = await cloudSaveCoordinator.save(save)
+    if (saved.status !== 'ok') throw new Error('Sandbox preset save failed')
+  })
+}
+
 function resetSaveFromSettings() {
   lifecycle.suppressPersistence()
 
@@ -1153,7 +1195,13 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
   return outcome
 }
 
-function onAuthenticated(session: AuthSession) {
+async function onAuthenticated(session: AuthSession) {
+  if (testSandboxActive) {
+    // Auto-entry can fire while the auth route is still opening. Reuse
+    // the coordinator's admission contract instead of dropping home entry.
+    await coordinator.whenIdle()
+    if (!coordinator.canEnter('home')) return
+  }
   // Spec F8 - bind the save slot BEFORE boot loads: every storage path
   // resolves through resolveSaveKey() from this point on.
   // B1-C - bump the save generation FIRST: an in-flight write from the
@@ -1285,6 +1333,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <TestSandboxControls :entry-stage="entryStage" :leave-sandbox="leaveTestSandbox" />
   <RouteMount v-if="entryStage === 'intro'" route="boot">
     <LoadingScreen />
   </RouteMount>
@@ -1329,11 +1378,11 @@ onUnmounted(() => {
 
     <!-- GameRoot chi hien khi boot xong; inert while an authority
          overlay owns the surface (B1-D). -->
-    <GameRoot v-if="isBooted" :inert="authorityOverlayActive" />
+    <GameRoot v-if="isBooted" :inert="authorityOverlayActive || sandboxBusy" />
 
     <!-- Master-account dev surface - self-gates on the allowlisted
          loginId, inert for everyone else. -->
-    <DevToolsPanel v-if="isBooted" />
+    <div :inert="sandboxBusy"><DevToolsPanel v-if="isBooted" :apply-preset="applySandboxPreset" /></div>
 
     <!-- Beta scope v2 sec.H - the deliberate ending beat: rendered once
          the completion read-model resolves, acknowledged per device via

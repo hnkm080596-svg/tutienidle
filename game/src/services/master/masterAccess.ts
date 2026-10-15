@@ -5,6 +5,7 @@
 import { computed, ref, type ComputedRef } from 'vue'
 import { BETA_MASTER_UNLOCKS } from '@/core/betaScope'
 import type { BetaFeatureName } from '@/core/betaFeatureFlags'
+import { testSandboxActive } from '../dev/testSandbox'
 
 const MASTER_LOGIN_IDS = new Set(['admin'])
 
@@ -121,11 +122,13 @@ function isMasterLoginId(loginId: string | undefined): boolean {
  *  session is master when the loginId is allowlisted OR the gate key
  *  unlocked it - both are client-side test privileges, never authority. */
 export function isMasterSession(): boolean {
+  // Sandbox tools never acquire the legacy save-recovery/tolerance privileges.
+  if (testSandboxActive) return false
   // Read-time kill switch: removing VITE_MASTER_GATE_KEY revokes the
   // flag too, not just new mints (QA fixpoint round on the gate).
   return (MASTER_GATE_KEY !== '' && gateUnlocked.value) || isMasterLoginId(sessionLoginId.value)
 }
 
 export function useMasterAccess(): { isMaster: ComputedRef<boolean> } {
-  return { isMaster: computed(() => isMasterSession()) }
+  return { isMaster: computed(() => testSandboxActive || isMasterSession()) }
 }

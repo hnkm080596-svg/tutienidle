@@ -18,6 +18,7 @@ import { SupabaseFeedbackService } from '../feedback/SupabaseFeedbackService'
 import { CURRENT_SAVE_VERSION } from '../save/SaveSystem'
 import { resolveClientBuildInfo, type ClientBuildEnv, type ClientBuildInfo } from './ClientBuildInfo'
 import { resolveBackendComposition, type BackendComposition, type BackendMode, type BackendRuntime, type BackendAdmission } from './backendMode'
+import { testSandboxActive } from '../dev/testSandbox'
 
 // Beta-final B1.2 - the single composition root. Both modes produce ONE
 // compatible bundle shape; consumers never branch on mode themselves -
@@ -151,7 +152,9 @@ export function createUnavailableBackendBundle(message: string, mode: BackendMod
  *  init. `fatal` compositions still produce a (fail-closed) bundle so
  *  every consumer typechecks and App can render the configuration screen
  *  instead of crashing at import time. */
-export const backendComposition = resolveBackendComposition(import.meta.env)
+export const backendComposition = testSandboxActive
+  ? resolveBackendComposition({ PROD: false, VITE_BACKEND_MODE: 'mock' })
+  : resolveBackendComposition(import.meta.env)
 
 const resolved = createBackendBundle(backendComposition)
 

@@ -1,4 +1,5 @@
 import { readSupabaseSession } from '../supabase/SupabaseSession'
+import { TEST_SANDBOX_ACCOUNT_ID, testSandboxActive } from '../dev/testSandbox'
 
 // Spec F8 (locked 2026-09-16): every save-storage key is namespaced to the
 // authenticated account - 'tien-hiep-idle-save:<accountId>' - with a shared
@@ -37,6 +38,7 @@ export function setSaveAccountId(accountId: string | null): void {
 }
 
 export function resolveSaveAccountId(): string {
+  if (testSandboxActive) return TEST_SANDBOX_ACCOUNT_ID
   if (explicitAccountId !== null) return explicitAccountId
   // Node/vitest has no sessionStorage - resolver stays pure there.
   if (typeof sessionStorage === 'undefined') return GUEST_ACCOUNT_ID
@@ -48,6 +50,7 @@ export function resolveSaveAccountId(): string {
 }
 
 export function accountIdForSession(session: { mode: string; userId?: string; loginId?: string }): string {
+  if (testSandboxActive) return TEST_SANDBOX_ACCOUNT_ID
   // B1.5 - prefer the Supabase userId whenever the session carries one
   // (guest anonymous sessions included).
   if (session.userId) return session.userId

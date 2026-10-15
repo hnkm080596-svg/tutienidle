@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Master-account dev panel (Minh 2026-10-07): rendered only for
-// allowlisted loginIds (masterAccess). Sections: resource adders (every
+// Dev panel: rendered for master accounts or the isolated local test
+// sandbox. Sections: resource adders (every
 // registered material + cultivation + duyenPhan), the cultivationPath
 // switcher for testing (force-set bypasses the ritual's offer gates and
 // one-shot lock - dev semantics, never the sim's), and the skill
@@ -37,12 +37,40 @@ import { randomInt } from '@/core/reward/DropRoll'
 import { itemQualityCeilingForFloor } from '@/core/equipment/ItemQualityBalance'
 import { createDefaultPlayer } from '@/core/player/Player'
 import { CHARACTER_CREATION_TALENTS } from '@/data/talent/Talents'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import { testSandboxActive } from '@/services/dev/testSandbox'
+import type { SandboxPreset } from '@/services/dev/sandboxPresets'
+import { isSandboxPresetAvailable } from '@/services/dev/sandboxPresetCatalog'
 import {
   applyCreationProfile,
   bootstrapEarlyGamePlayer,
 } from '@/core/game/EarlyGameBootstrap'
 
 const { t } = useI18n()
+const props = defineProps<{ applyPreset?: (preset: SandboxPreset) => Promise<void> }>()
+const pendingPreset = ref<SandboxPreset | null>(null)
+const presetBusy = ref(false)
+const presetError = ref('')
+function selectPreset(preset: SandboxPreset) {
+  presetError.value = ''
+  if (!isSandboxPresetAvailable(preset)) {
+    presetError.value = t('testSandbox.presetUnavailable')
+    return
+  }
+  pendingPreset.value = preset
+}
+async function confirmPreset() {
+  if (presetBusy.value || !pendingPreset.value || !props.applyPreset) return
+  presetBusy.value = true
+  presetError.value = ''
+  try {
+    await props.applyPreset(pendingPreset.value)
+  } catch {
+    presetError.value = t('testSandbox.presetFailed')
+    pendingPreset.value = null
+    presetBusy.value = false
+  }
+}
 const { isMaster } = useMasterAccess()
 const gameManager = useGameManager()
 const player = usePlayerStore()
@@ -341,10 +369,21 @@ function respecTree() {
 
 <template>
   <button v-if="isMaster" class="dev-panel-open" type="button" @click="open = !open">
-    {{ t('devPanel.open') }}
+    {{ t(testSandboxActive ? 'testSandbox.tools' : 'devPanel.open') }}
   </button>
   <aside v-if="isMaster && open" class="dev-panel" data-testid="dev-tools-panel">
     <h3 class="dev-panel__title">{{ t('devPanel.title') }}</h3>
+
+    <section v-if="testSandboxActive" class="dev-panel__section">
+      <h4>{{ t('testSandbox.presets') }}</h4>
+      <div class="dev-panel__actions">
+        <button v-for="preset in (['mortal', 'spell', 'body'] as const)" :key="preset"
+          type="button" :data-testid="`sandbox-preset-${preset}`" @click="selectPreset(preset)">
+          {{ t(`testSandbox.preset.${preset}`) }}
+        </button>
+      </div>
+      <p v-if="presetError" role="alert">{{ presetError }}</p>
+    </section>
 
     <section class="dev-panel__section">
       <h4>{{ t('devPanel.resources') }}</h4>
@@ -430,6 +469,9 @@ function respecTree() {
       </div>
     </section>
   </aside>
+  <ConfirmModal :open="pendingPreset !== null" :title="t('testSandbox.confirmTitle')"
+    :message="t('testSandbox.confirmMessage')" danger
+    @confirm="confirmPreset" @cancel="pendingPreset = null" />
 </template>
 
 <style scoped>

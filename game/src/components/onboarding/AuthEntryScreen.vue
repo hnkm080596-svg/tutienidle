@@ -14,6 +14,8 @@ import { authService } from '@/services/auth/AuthServiceFactory'
 import { isValidLoginId, isValidPassword, type AuthenticationMode, type AuthSession } from '@/services/auth/AuthService'
 import { readResumeCandidate, consumeResetNotice, type ResumeCandidate } from '@/composables/resumeSession'
 import { isMasterSession, unlockMasterGate } from '@/services/master/masterAccess'
+import { testSandboxActive } from '@/services/dev/testSandbox'
+import { cloudSaveCoordinator } from '@/services/cloudSave/CloudSaveServiceFactory'
 
 // Scene 01 composition root: owns auth flow state and composes the
 // reference-led scene regions. Presentation lives in the children;
@@ -56,6 +58,22 @@ const { t } = useI18n()
 const resume = ref<ResumeCandidate | null>(null)
 const resumeReady = ref(false)
 onMounted(async () => {
+  if (testSandboxActive) {
+    submitting.value = true
+    try {
+      const loaded = await cloudSaveCoordinator.load()
+      if (loaded.status === 'empty') {
+        const { buildSandboxPreset } = await import('@/services/dev/sandboxPresets')
+        const saved = await cloudSaveCoordinator.save(buildSandboxPreset('mortal'))
+        if (saved.status !== 'ok') throw new Error('Sandbox first save failed')
+      }
+      emit('authenticated', { sessionId: crypto.randomUUID(), mode: 'guest' })
+    } catch {
+      error.value = t('testSandbox.startFailed')
+      submitting.value = false
+    }
+    return
+  }
   resume.value = await readResumeCandidate()
   resumeReady.value = true
 })
