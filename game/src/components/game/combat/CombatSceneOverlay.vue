@@ -175,54 +175,41 @@ onUnmounted(() => {
 }
 
 .combat-scene-overlay__battlefield {
-  position: relative;
+  position: absolute;
+  inset: 0;
   flex: 1 1 auto;
   pointer-events: none;
 }
 
-/* ui-combat reskin (2026-10-04): mock ui-combat.html anchors the AI
-   panel at left:22 top:198 of the 1366x768 canvas (~25.8vh), BELOW the
-   player card it must no longer overlap. Ours sits a touch lower
-   (~28vh) so the slightly taller real player card clears it - and the
-   max() floor keeps it under the card even on short viewports where
-   28vh lands above the card's ~1.8vh+190px bottom edge.
-   left 0.96vw / width 13.64vw / scroll cap stay from spec 10. */
 .combat-scene-overlay__ai-panel {
   position: absolute;
-  left: 22px;
-  top: 104px;
-  width: 235px;
-  max-height: 400px;
-  overflow-y: auto;
+  left: 24px;
+  top: 476px;
+  width: 210px;
+  max-height: 380px;
+  overflow: visible;
   z-index: 12;
 }
 
-/* Slice 7 extension - turn-order strip: neo duoi TopBar, giua.
-   Layout fix (2026-09-06) - truoc dung hardcode top: 60px (xap xi chieu
-   cao TopBar), nay doi sang dung token --combat-topbar-h ma TopBar va
-   CombatSkillDockPanel deu dung de tro height/top cua chinh no. Strip va
-   dock gio neo CUNG mot mep duoi TopBar thay vi 2 gia tri lech nhau -
-   giam kha nang strip "cat" vao phan tren cua dock. Strip van full-width
-   + justify-content: center nen noi dung thuc te (party/turn badges) nam
-   giua man hinh; o viewport rat hep noi dung can giua co the van cham mep
-   trai cua dock - pointer-events: none nen khong chan thao tac, nhung
-   overlap hinh anh trong truong hop cuc hep chua duoc xu ly triet de o
-   task nay (xem bao cao). */
 .combat-scene-overlay__turn-order-strip {
   position: absolute;
-  top: 99px;
-  left: 0;
-  right: 0;
+  top: 0;
+  left: 50%;
+  right: auto;
+  width: 640px;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   z-index: 12;
 }
 
-
-.combat-scene-overlay__battlefield { position: absolute; inset: 0; }
-.combat-scene-overlay__ai-panel { left: 24px; top: 476px; width: 210px; max-height: 380px; overflow: visible; }
-.combat-scene-overlay__turn-order-strip { top: 0; left: 50%; right: auto; width: 640px; transform: translateX(-50%); }
-.combat-scene-overlay__log-toggle { position: absolute; left: 24px; top: 528px; bottom: auto; pointer-events: auto; }
+.combat-scene-overlay__log-toggle {
+  position: absolute;
+  left: 24px;
+  top: 528px;
+  bottom: auto;
+  pointer-events: auto;
+}
 </style>
 
 
