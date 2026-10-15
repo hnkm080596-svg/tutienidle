@@ -18,6 +18,8 @@ export interface EntitySprite {
   color: number
   offsetX: number
   row: LaneIndex
+  healthBarBelowFeet?: boolean
+  hideLabel?: boolean
   healthBar?: EnemyHealthBar
 
   /**

@@ -48,6 +48,7 @@ export class GameManagerTickOps {
       notifyMaterialGained: (materialId: string, amount: number) => void
       notifications: NotificationQueue
       productionSystem: ProductionSystem
+      settleAutomaticProduction?: (player: PlayerData) => void
       materialBag: MaterialBag
       materialRegistry: MaterialRegistry
       decomposeSystem: DecomposeSystem
@@ -151,6 +152,7 @@ export class GameManagerTickOps {
         this.reconcileQuestLifecycle()
       }
 
+      this.deps.settleAutomaticProduction?.(activePlayer)
       this.deps.productionSystem.tick(
         this.deps.time?.now() ?? Date.now(),
         this.deps.materialBag,

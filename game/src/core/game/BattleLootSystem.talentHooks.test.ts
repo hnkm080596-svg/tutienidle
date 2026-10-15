@@ -75,14 +75,14 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
     const { killEnemy, equipmentBag, materialBag } = createLootTestSetup({
       realmId: 'qi_refining',
       stage: QI_REFINING_STAGE,
-      materialIds: ['qi_refining_ore_decade'],
+      materialIds: ['material_spirit_ore_decade'],
       equipmentTemplates: [{ id: 'eq_test', name: 'Kiếm Test' }],
     })
 
     killEnemy()
 
     expect(equipmentBag.add).not.toHaveBeenCalled()
-    expect(materialBag.getAmount('qi_refining_ore_decade')).toBeGreaterThanOrEqual(1)
+    expect(materialBag.getAmount('material_spirit_ore_decade')).toBeGreaterThanOrEqual(1)
   })
 
   it('pool draw vào equipment_any — material không vào túi', () => {
@@ -91,13 +91,13 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
     const { killEnemy, equipmentBag, materialBag } = createLootTestSetup({
       realmId: 'qi_refining',
       stage: QI_REFINING_STAGE,
-      materialIds: ['qi_refining_ore_decade'],
+      materialIds: ['material_spirit_ore_decade'],
       equipmentTemplates: [{ id: 'eq_test', name: 'Kiếm Test' }],
     })
 
     killEnemy()
 
-    expect(materialBag.getAmount('qi_refining_ore_decade')).toBe(0)
+    expect(materialBag.getAmount('material_spirit_ore_decade')).toBe(0)
     expect(equipmentBag.add).toHaveBeenCalledTimes(1)
   })
 })
@@ -141,7 +141,7 @@ describe('BattleLootSystem — talent v3 retired KHÔNG còn bonus (spec v4 §4.
       realmId: 'qi_refining',
       talentIds: ['co_duyen'],
       stage: QI_REFINING_STAGE,
-      materialIds: ['qi_refining_ore_decade'],
+      materialIds: ['material_spirit_ore_decade'],
       equipmentTemplates: [{ id: 'eq_test', name: 'Kiếm Test' }],
     })
 

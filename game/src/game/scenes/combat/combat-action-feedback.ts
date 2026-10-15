@@ -13,9 +13,10 @@ import {
   HIT_RECOIL_PX,
   PLAYER_ID,
   TURN_READY_LEAN_MS,
-  TURN_READY_LEAN_PX,
 } from './combatConstants'
 import type { StatusVfxAttachedEvent } from '@/core/battle/BattleEvents'
+import { getCombatPlaybackSpeed } from '@/presentation/combat/CombatPlaybackSpeed'
+import { beginInitiativeReady, cancelInitiativeReady, consumeInitiativeReady, hasInitiativeView } from '@/presentation/combat/CombatInitiativeReady'
 
 export class CombatActionFeedback {
   constructor(private readonly scene: CombatScene) {}
@@ -27,20 +28,6 @@ export class CombatActionFeedback {
     if (!target) {
       return
     }
-
-    // Pop qua boost object - projection ghi kich thuoc moi frame nen
-    // tween scale truc tiep se bi ghi de; boost nhan vao kich thuoc cuoi
-    // o applyEntityDepthScale() (perspective) / setScale (flat).
-    scene.tweens.killTweensOf(target.boost)
-    target.boost.value = 1
-
-    scene.tweens.add({
-      targets: target.boost,
-      value: 1.25,
-      duration: 90,
-      yoyo: true,
-      ease: 'Quad.easeOut',
-    })
 
     scene.flashColor(target, CRITICAL_FLASH_COLOR, 120)
     scene.showFloatingText(target, 'Chí Mạng!', '#ffd54f')
@@ -70,8 +57,10 @@ export class CombatActionFeedback {
       return
     }
 
-    const isPlayer = event.targetId === PLAYER_ID
-    const dx = isPlayer ? -18 : 18
+    const attacker = scene.spriteFor(event.sourceId)
+    const dx = attacker && attacker.rect.x !== dodger.rect.x
+      ? Math.sign(dodger.rect.x - attacker.rect.x) * 18
+      : event.targetId === PLAYER_ID ? -18 : 18
 
     scene.playHorizontalImpulse(dodger, dx, 130)
 
@@ -110,18 +99,32 @@ export class CombatActionFeedback {
     // straight to standby (playback resolves the fallback).
     scene.playCombatAnimation(sprite, event.actorId, 'idle_to_standby')
 
-    // Forward lean = the turn-start emphasis, riding the offsetX channel
-    // hit recoil / dodge / cast actor-impulse already reuse; direction
-    // follows the scene facing convention (player +x, enemy -x).
-    scene.playHorizontalImpulse(
-      sprite,
-      (event.actorId === PLAYER_ID ? 1 : -1) * TURN_READY_LEAN_PX,
-      TURN_READY_LEAN_MS,
-    )
+    if (hasInitiativeView() && port) {
+      beginInitiativeReady(event.actorId, token)
+      const timer = scene.time.addEvent({ delay: 16, loop: true, callback: () => {
+        if (port.getPendingPlaybackToken() !== token) {
+          cancelInitiativeReady(event.actorId, token)
+          cleanup()
+          return
+        }
+        if (consumeInitiativeReady(event.actorId, token)) {
+          cleanup()
+          port.acknowledgeTurnReady(token)
+        }
+      } })
+      const cleanup = () => {
+        timer.remove(false)
+        cancelInitiativeReady(event.actorId, token)
+        scene.events.off('shutdown', cleanup)
+      }
+      scene.events.once('shutdown', cleanup)
+      return
+    }
 
+    // Authored animation owns the body; readiness keeps only its pacing ACK.
     // Ack on the same beat the removed boost yoyo used (2 x TURN_READY_LEAN_MS),
     // so the ready phase paces declare exactly as before.
-    scene.time.delayedCall(TURN_READY_LEAN_MS * 2, () => {
+    scene.time.delayedCall(TURN_READY_LEAN_MS * 2 / getCombatPlaybackSpeed(), () => {
       port?.acknowledgeTurnReady(token)
     })
   }
@@ -140,20 +143,7 @@ export class CombatActionFeedback {
       // through its transition; entities without it snap straight to idle.
       scene.playCombatAnimation(sprite, event.actorId, 'standby_to_idle')
 
-      // CR1-F1 - a dying entity's death sequence owns sprite.rect's tween
-      // channel (fall/fade -> finalize). A standby tail arriving after a
-      // lethal action-end flush must not kill that tween or the corpse
-      // wedges mid-fall forever.
-      const dying =
-        event.actorId === PLAYER_ID
-          ? scene.playerDying
-          : scene.dyingIds.has(event.actorId)
 
-      if (!dying) {
-        scene.tweens.killTweensOf(sprite.rect)
-
-        sprite.rect.setScale(1)
-      }
     }
   }
 

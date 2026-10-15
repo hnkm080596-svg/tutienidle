@@ -1,3 +1,6 @@
+
+/* Instance panels own their internal presentation. */
+@scope (:root) to (:is(.game-panel, .combat-panel__content, .game-card, .game-action-button, .game-tab-button, .game-dropdown-button, .chip-select, .slot-view)) {
 /* Shared visual skin. Gameplay models and commands remain with their owners. */
 :root {
   --th-paper: #f3e5c8;
@@ -345,38 +348,8 @@
   .th-panel-swap-enter-active, .th-panel-swap-leave-active { transition: none; }
 }
 
-/* Rail over panels (2026-10): every fidelity scene root spans inset:0
-   with pointer-events:auto and swallows rail clicks - the click lands
-   on the scene root (its @click.self backdrop-dismiss) instead of the
-   real nav button, so rail-switching panels read as "closed to home".
-   The rail cannot out-z the overlay canvas (it lives inside the scaled
-   home canvas), so the fix is hit-testing: scene roots go transparent
-   to clicks and each bounded region child keeps capturing its own box.
-   Backdrop clicks now fall through to DongFuStage's own empty-space
-   handler, which also closes overlays - same dismiss, working rail. */
-:is(#app, body) .cf-scene,
-:is(#app, body) .skill-paper-scene,
-:is(#app, body) .realm-paper-scene,
-:is(#app, body) .technique-paper-scene,
-:is(#app, body) .body-paper-scene,
-:is(#app, body) .alchemy-scene,
-:is(#app, body) .inventory-scene,
-:is(#app, body) .equipment-scene,
-:is(#app, body) .quest-scene,
-:is(#app, body) .settings-scene,
-:is(#app, body) .exploration-scene { pointer-events: none; }
-:is(#app, body) .cf-scene > *,
-:is(#app, body) .skill-paper-scene > *,
-:is(#app, body) .realm-paper-scene > *,
-:is(#app, body) .technique-paper-scene > *,
-:is(#app, body) .body-paper-scene > *,
-:is(#app, body) .alchemy-scene > *,
-:is(#app, body) .inventory-scene > *,
-:is(#app, body) .equipment-scene > *,
-:is(#app, body) .quest-scene > *,
-:is(#app, body) .settings-scene > *,
-:is(#app, body) .exploration-scene > * { pointer-events: auto; }
-
 /* Owner ruling 2026-10-11: suppress button focus frames app-wide
    (ESC focus restoration draws the gold ring on nav/panel buttons). */
 :is(#app, body) button:focus-visible { outline: none !important; }
+
+}

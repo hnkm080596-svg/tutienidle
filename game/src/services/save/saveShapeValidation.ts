@@ -82,7 +82,7 @@ import {
   type TribulationCommitWitnessedRecord,
 } from '../../core/tribulation/TribulationCommitWitness'
 import {
-  CYCLE_BASE_SECONDS_BY_REALM,
+  productionBaseSeconds,
   computeCycleSeconds,
 } from '../../core/production/ProductionBalance'
 import { BETA_MORTAL_STARTER_SKILL_ID } from '../../core/betaScope'
@@ -346,7 +346,7 @@ const COMPANION_GIFT_MOMENT_BY_ID = new Map(
 // producible ceiling for a holding is claimed realm tier + 1.
 const PROFESSION_MATERIAL_REALM_TIER_BY_ID = new Map<string, number>(
   materialCatalog.flatMap((material) =>
-    material.profession === undefined
+    material.profession?.resourceKind !== 'herb' || material.profession.realmId === undefined
       ? []
       : ([[material.id, getRealmTier(material.profession.realmId)]] as [string, number][]),
   ),
@@ -3633,7 +3633,8 @@ function validateProductionCycleSave(
   // stamps completesAtMs = startedAtMs + computeCycleSeconds(base,
   // level)*1000 and never mutates it afterward, so a mismatched span is
   // a fabricated reward window (shorter mints faster free settles).
-  const cycleBaseSeconds = CYCLE_BASE_SECONDS_BY_REALM[value.collectionRealmId]
+  const cycleKind = THANH_VAN_PRODUCTION_SITES.find(site => site.siteId === value.siteId)?.kind
+  const cycleBaseSeconds = cycleKind ? productionBaseSeconds(cycleKind, value.collectionRealmId) : undefined
   if (cycleBaseSeconds !== undefined) {
     const expectedSpanMs =
       computeCycleSeconds(cycleBaseSeconds, value.siteLevelAtStart as number) * 1000
@@ -5087,6 +5088,11 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
     for (let i = 0; i < materials.length; i += 1) {
       const entry = materials[i]
       if (!isObject(entry) || typeof entry.materialId !== 'string') continue
+
+      // The fresh resource catalog has no aliases or legacy conversion.
+      if (/^(?:spirit_stone_(?:ha|trung|thuong)_pham|(?:mortal|qi_refining|foundation_establishment|golden_core|nascent_soul|soul_transformation|void_refinement|body_integration|mahayana|tribulation)_(?:wood|ore)_(?:decade|century|millennium|myriad_year|thuong_co))$/.test(entry.materialId)) {
+        issues.push({ path: `materials[${i}]`, message: `retired resource identity '${entry.materialId}'` })
+      }
 
       // F-MAT-PULL-TOKEN: the companion pull pool is permanently closed
       // and every token source is suppressed at origination (quest

@@ -26,6 +26,7 @@ for (const preset of Object.values(COMBAT_VFX_PRESETS) as CombatVfxPreset[]) {
   const aura = preset.id === 'holy_radiance'
   const ground = preset.space === 'ground_projected' || preset.space === 'screen'
   const burst = preset.space === 'hybrid'
+  const impactBurst = burst || preset.impactStyle === 'sparks'
   // Scoped to upright + the arcane_impact fallback (OQ1): hybrid and ground
   // presets keep a static cast until a melee/ranged discriminator exists.
   const impulse = preset.space === 'upright' || preset.id === 'arcane_impact'
@@ -57,8 +58,8 @@ for (const preset of Object.values(COMBAT_VFX_PRESETS) as CombatVfxPreset[]) {
     ],
     impact: [
       ...sheetCue,
-      { primitive: aura ? 'aura' : ground ? 'ground-shape' : burst ? 'burst' : 'stroke',
-        anchor: 'targets', shape: aura || ground ? 'ring' : burst ? 'sparks' : 'slash',
+      { primitive: aura ? 'aura' : ground ? 'ground-shape' : impactBurst ? 'burst' : 'stroke',
+        anchor: 'targets', shape: aura || ground ? 'ring' : impactBurst ? 'sparks' : 'slash',
         offsetMs: 0, durationMs: preset.durationMs, count: 12 },
       // Authored shake migrates to an impact camera-cue; authored precedence in
       // the driver suppresses the generic landed-hit impulse for that action.
@@ -77,18 +78,15 @@ recipes.set('hoa_cau_comet', {
   castMs: 1450, impactMs: 900, recoveryMs: 0,
   cast: [], impact: [], recovery: [],
 })
-// Linh Bao point detonation: the authored Arcadia burst (12 frames over the
-// sheet's 550ms detonation window) plays at each landed target on the impact
-// beat, replacing the generic sparks accent. The cast aura and the preset's
-// authored camera-cue keep the hybrid recipe's behavior; the impact ACK
-// itself still lands on the cast clip's marked frame.
+// Reuse the authored Phap Tu charge frames with white fill and source alpha.
+// The target-local explosion uses the same white palette as the orb.
 recipes.set('linh_bao_burst', {
-  id: 'linh_bao_burst', version: 1, color: 0xbef0ff,
+  id: 'linh_bao_burst', version: 1, color: 0xffffff,
   castMs: 260, impactMs: 550, recoveryMs: 0,
-  cast: [{ primitive: 'aura', anchor: 'source', shape: 'ring', offsetMs: 0, durationMs: 260 }],
+  cast: [{ primitive: 'atlas', anchor: 'targets', shape: 'flame', offsetMs: 0, durationMs: 260, fitCastPhase: true,
+    atlas: { key: 'hoa-cau-charge', frames: 51, scale: 1.75, tintFill: 0xffffff, alpha: 0.8 } }],
   impact: [
-    { primitive: 'atlas', anchor: 'targets', shape: 'explosion', offsetMs: 0, durationMs: 550,
-      atlas: { key: 'linh-bao-burst', frames: 12, scale: 1 } },
+    { primitive: 'burst', anchor: 'targets', shape: 'explosion', offsetMs: 0, durationMs: 550, count: 24, scale: 1.3 },
     { primitive: 'camera-cue', anchor: 'source', shape: 'camera', offsetMs: 0, durationMs: 90,
       intensity: 0.003 },
   ],

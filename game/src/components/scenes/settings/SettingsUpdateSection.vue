@@ -2,7 +2,7 @@
 // Scene 16/17 update section (ref's Cap Nhat - electron/feed builds
 // only): phase-aware status line + download/cancel/install/check.
 import { useI18n } from 'vue-i18n'
-import GameButton from '@/components/common/GameButton.vue'
+import GameActionButton from '@/components/common/GameActionButton.vue'
 import SettingsSectionFrame from './SettingsSectionFrame.vue'
 
 defineProps<{
@@ -46,43 +46,43 @@ const { t } = useI18n()
     </p>
 
     <div class="settings-panel__actions">
-      <GameButton
+      <GameActionButton
         v-if="phase === 'available'"
-        size="md"
-        variant="primary"
+
+
         data-testid="update-download"
         @click="emit('download')"
       >
         {{ t('updates.download') }}
-      </GameButton>
-      <GameButton
+      </GameActionButton>
+      <GameActionButton
         v-else-if="phase === 'downloading'"
-        size="md"
-        variant="secondary"
+
+
         data-testid="update-cancel"
         @click="emit('cancel')"
       >
         {{ t('updates.cancel') }}
-      </GameButton>
-      <GameButton
+      </GameActionButton>
+      <GameActionButton
         v-else-if="phase === 'downloaded'"
-        size="md"
-        variant="primary"
+
+
         data-testid="update-install"
         @click="emit('install')"
       >
         {{ t('updates.install') }}
-      </GameButton>
-      <GameButton
+      </GameActionButton>
+      <GameActionButton
         v-else
-        size="md"
-        variant="secondary"
+
+
         :disabled="phase === 'checking' || phase === 'installing'"
         data-testid="update-check"
         @click="emit('check')"
       >
         {{ t('updates.check') }}
-      </GameButton>
+      </GameActionButton>
     </div>
   </SettingsSectionFrame>
 </template>
@@ -99,7 +99,7 @@ const { t } = useI18n()
   align-items: flex-start;
   gap: 10px;
 }
-.settings-panel__actions > .game-button {
+.settings-panel__actions > .game-action-button {
   width: 100%;
 }
 </style>

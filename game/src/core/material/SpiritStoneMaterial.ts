@@ -11,7 +11,7 @@ import type { Material } from './Material'
 // la linh thach, khong co pham cap nua" - trung/thuong pham da bi xoa,
 // moi nguon/chi phi deu dung MOT id duy nhat. Save v88 migrate gap
 // stack trung/thuong vao id nay 1:1 (xem services/save).
-export const SPIRIT_STONE_MATERIAL_ID = 'spirit_stone_ha_pham'
+export const SPIRIT_STONE_MATERIAL_ID = 'material_spirit_stone'
 
 export const SPIRIT_STONE_MATERIAL: Material = {
   id: SPIRIT_STONE_MATERIAL_ID,

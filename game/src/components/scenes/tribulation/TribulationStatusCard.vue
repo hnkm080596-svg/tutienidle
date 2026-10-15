@@ -5,7 +5,7 @@
 // ref's "Do Tam Ma %" / attempt counters were invented, not rebuilt.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import CombatArtSurface from '@/components/scenes/combat/CombatArtSurface.vue'
 import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 const props = defineProps<{
@@ -27,8 +27,7 @@ const timerLabel = computed(() => {
 </script>
 
 <template>
-  <div class="tribulation-ui__status" data-hk-region="status-card">
-    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+  <CombatArtSurface family="tribulation" art="chapter-plaque" class="tribulation-ui__status" data-hk-region="status-card">
     <div class="tribulation-ui__header">
       <img v-if="plaqueUrl" class="tribulation-ui__plaque" :src="plaqueUrl" alt="" aria-hidden="true" />
       <div class="tribulation-ui__chapter">{{ chapterName }}</div>
@@ -50,7 +49,7 @@ const timerLabel = computed(() => {
       </div>
       <div class="tribulation-ui__hint">{{ t('tribulation.overlay.tankHint') }}</div>
     </div>
-  </div>
+  </CombatArtSurface>
 </template>
 
 <style scoped>
@@ -59,7 +58,7 @@ const timerLabel = computed(() => {
    strikes/hint fold into it. surface-m-panel gives the card a real
    body so text can't escape the plaque's painted bounds. */
 .tribulation-ui__status { position:absolute; top:59.51%; left:3.59%; width:min(25.12vw, 420px); max-height:23.38%; overflow-y:auto; display:flex; flex-direction:column; gap:2px; text-align:center; isolation:isolate; padding:30px 16px 14px; border-radius:var(--radius-md); }
-.tribulation-ui__status > :not(.ink-nine-slice) { position:relative; z-index:2; }
+.tribulation-ui__status > :not(.combat-art-surface__art) { position:relative; z-index:2; }
 .tribulation-ui__header { position:relative; display:flex; flex-direction:column; gap:2px; align-items:center; }
 .tribulation-ui__plaque { position:absolute; left:50%; top:-14px; transform:translateX(-50%); width:min(200px, 90%); height:auto; opacity:.9; pointer-events:none; }
 .tribulation-ui__chapter { position:relative; font-family:var(--font-display); font-size:var(--text-display); font-weight:800; text-shadow:0 0 14px var(--scene-tribulation-glow); }
@@ -80,4 +79,9 @@ const timerLabel = computed(() => {
   background: radial-gradient(circle at 50% 70%, #ffd489, var(--hk-gold-muted, #b99a55) 60%, #6b4c1e);
   box-shadow: 0 0 6px color-mix(in srgb, #ffd489 70%, transparent);
 }
+.tribulation-ui__status.combat-art-surface { top: 480px; left: 24px; width: 405px; min-height: 129px; max-height: 200px; padding: 28px 28px 22px 145px; gap: 4px; border: 0; border-radius: 0; background: transparent; overflow-y: auto; }
+.tribulation-ui__plaque { display: none; }
+.tribulation-ui__chapter { font-size: 26px; color: #f4e7c8; }
+.tribulation-ui__progress { margin-top: 8px; color: #dcc89c; font-size: 15px; }
+.tribulation-ui__time-left,.tribulation-ui__hint,.tribulation-ui__strikes { font-size: 12px; }
 </style>

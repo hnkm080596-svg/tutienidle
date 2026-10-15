@@ -61,7 +61,7 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
       // dropped by 8 of the realm's families (bandit, earthworm,
       // forest_fiend, magma_boar, sand_lynx, rock_bear, blade_hawk,
       // metal_beetle) under the old hand-copied tables.
-      { kind: 'material', itemId: 'qi_refining_ore_decade', amount: { min: 1, max: 3 }, weight: 30 },
+      { kind: 'material', itemId: 'material_spirit_ore_decade', amount: { min: 1, max: 3 }, weight: 30 },
       { kind: 'equipment_any', weight: 20 },
     ],
   },
@@ -84,7 +84,7 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
       // foundation_establishment_ore_decade). A foundation chapter that
       // cannot fund its own enhance is an impossible wall, so the band
       // pays its own realm's ore.
-      { kind: 'material', itemId: 'foundation_establishment_ore_decade', amount: { min: 1, max: 2 }, weight: 15 },
+      { kind: 'material', itemId: 'material_spirit_ore_decade', amount: { min: 1, max: 2 }, weight: 15 },
       { kind: 'equipment_any', weight: 20 },
     ],
   },

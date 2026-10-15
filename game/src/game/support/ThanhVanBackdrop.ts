@@ -8,7 +8,7 @@
 // (thanhVanLayerDepth): sky < far mountains < midground < atmosphere
 // < battle ground < foreground < grading; KHONG con phu thuoc thu tu
 // add vao display list (truoc day atmosphere bi de len battle ground).
-import Phaser from 'phaser'
+import type Phaser from 'phaser'
 import { DEPTH_THANH_VAN_TIME_GRADE } from './BattleLayers'
 import {
   THANH_VAN_CANVAS,
@@ -77,14 +77,19 @@ export function attachThanhVanBackdrop(
     // Scale DEU theo be rong (khong meo ti le) - bu chenh lech aspect
     // ratio bang vi tri (offsetY), khong phai bang cach nen/gian rieng
     // truc doc.
-    const scale = canvasWidth / THANH_VAN_CANVAS.w
+    const scale = Math.max(
+      canvasWidth / THANH_VAN_CANVAS.w,
+      targetHorizonY / (THANH_VAN_CANVAS.h * THANH_VAN_HORIZON_FRACTION),
+      (canvasHeight - targetHorizonY) / (THANH_VAN_CANVAS.h * (1 - THANH_VAN_HORIZON_FRACTION)),
+    )
+    const scaledWidth = THANH_VAN_CANVAS.w * scale
     const scaledHeight = THANH_VAN_CANVAS.h * scale
     const offsetY = targetHorizonY - THANH_VAN_CANVAS.h * THANH_VAN_HORIZON_FRACTION * scale
 
     for (const image of images) {
-      image.setDisplaySize(canvasWidth, scaledHeight)
+      image.setDisplaySize(scaledWidth, scaledHeight)
 
-      image.setPosition(0, offsetY)
+      image.setPosition((canvasWidth - scaledWidth) / 2, offsetY)
     }
 
     // Lop phu mau grading van phu TRON canvas (khong le thuoc horizon).
@@ -109,3 +114,4 @@ export function attachThanhVanBackdrop(
 
   return { redraw, destroy, depthByKey }
 }
+

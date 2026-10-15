@@ -75,7 +75,7 @@ const sliceTint = computed(() => {
 <template>
   <button
     :type="type"
-    class="game-button"
+    class="game-button game-panel__button"
     :class="[`game-button--${variant}`, `game-button--${size}`, `game-button--${shape}`, { 'is-loading': loading, 'has-accent': accentVar !== undefined }]"
     :style="accentVar ? { '--button-accent': accentVar } : undefined"
     :disabled="disabled || loading"

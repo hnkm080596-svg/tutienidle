@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import GamePanel from '@/components/common/GamePanel.vue'
 import { provide, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import GameTabButton from '@/components/common/GameTabButton.vue'
 import BodyPaperFigure from './BodyPaperFigure.vue'
 import BodyPaperDetails from './BodyPaperDetails.vue'
 import { BODY_POUR_VISUAL, type BodyPaperModel, type BodyPaperPour, type BodyPaperUnit } from './bodyUi'
@@ -22,52 +22,40 @@ const { t } = useI18n()
 // rAF) and the figure (reader, reveals tiers riding the fill edge).
 provide(BODY_POUR_VISUAL, reactive({ spec: null, progressAbs: 0 }))
 
-const paper = {
-  backgroundImage: `url('${resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')}')`,
-}
-const divider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
-const bodyArt = (name: string) =>
-  resolveAssetUrl(`/assets/ui/tien-hiep-2026-10/body/${name}-v1.png`)
-
-// Preview nav art ids (ren/khai/dan) keyed by the ui chapter id.
-const NAV_ART: Record<string, string> = { refinement: 'ren', meridian: 'khai', cycle: 'dan' }
-const navArt = (id: string, lit: boolean) =>
-  bodyArt(`navigation-${NAV_ART[id] ?? 'ren'}-${lit ? 'lit' : 'unlit'}`)
-
 const rootRef = ref<HTMLElement | null>(null)
 useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 <template>
-  <section ref="rootRef" class="body-scene body-paper-scene" :aria-label="t('body.title')" @click.self="emit('back')">
-    <div class="body-panel" :style="paper">
+  <section ref="rootRef" class="rail-panel-scene body-scene body-paper-scene" :aria-label="t('body.title')" @click.self="emit('back')">
+    <GamePanel :title="t('body.title')">
+    <div class="body-panel">
       <!-- The global pack still sizes .body-heading/h1 to the old 370px
            title box (absolute-era design); this layout wants a full-width
            in-flow heading, so the two width overrides stay inline. -->
-      <header class="body-heading" style="width:auto"><div class="body-heading__top"><div class="body-heading__col"><h1 style="width:auto;text-align:left">{{ t('body.title') }}</h1><img :src="divider" alt=""></div></div><p class="body-subtitle">{{ model.identity }}</p></header>
+      
       <div class="body-layout">
         <nav class="body-family body-chapters" :aria-label="t('body.chapters')">
-          <EquipmentArtButton
+          <GameTabButton
             v-for="chapter in model.chapters"
             :key="chapter.id"
             class="family-pill"
             :class="{ 'is-locked': !chapter.unlocked }"
-            :gold="model.chapter === chapter.id"
-            :aria-pressed="model.chapter === chapter.id"
+            :selected="model.chapter === chapter.id"
             @click="emit('chapter', chapter.id)"
           >
-            <img class="family-icon" :src="navArt(chapter.id, model.chapter === chapter.id)" alt="">
             <span class="family-text">{{ chapter.label }}</span>
-          </EquipmentArtButton>
+          </GameTabButton>
         </nav>
         <BodyPaperFigure :model="model" :selected="unit?.id ?? ''" @select="emit('select', $event)" />
         <BodyPaperDetails :model="model" :unit="unit" :notice="notice" :pour="pour" @invest="emit('invest')" />
       </div>
     </div>
     <p v-if="preview" class="body-preview-label">{{ t('body.preview') }}</p>
+    </GamePanel>
   </section>
 </template>
 <style scoped>
-.body-scene { position:absolute; inset:0; pointer-events:auto; font-family:var(--font-display,Georgia,serif); color:#3b2f1d; line-height:1.3; }
+.body-scene { position:absolute; inset:0;  font-family:var(--font-display,Georgia,serif); color:#3b2f1d; line-height:1.3; }
 .body-scene :deep(*) { box-sizing:border-box; }
 /* Paper page geometry = HomeBodyArtPanel preview source verbatim
    (left:24% top:12.5% w74% h75% = 345,101,1065x608 at 1440x810 - same
@@ -84,7 +72,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .body-subtitle { margin:2px 0 4px; font-size:13px; color:#715627; }
 .body-layout { height:calc(100% - 106px); display:grid; grid-template-columns:20% 50% 30%; gap:8px; min-height:0; }
 .body-family { position:relative; display:flex; flex-direction:column; justify-content:flex-start; gap:6px; padding:6px 4px 4px 20px; isolation:isolate; }
-.family-pill { aspect-ratio:1225/324; padding:0; font-size:17px; white-space:nowrap; text-align:center; }
+.family-pill { width:100%; }
 /* Medallion hangs off the capsule's left tip like the Codex preview
    (owner 2026-10-09: icon inside the pill + text starting inside its
    ring read as "two buttons stacked"). Negative left = protrude. */
@@ -93,4 +81,11 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .family-pill.is-locked { opacity:.55; }
 .family-pill:focus-visible { outline:2px solid #315d48; outline-offset:3px; }
 .body-preview-label { position:absolute; left:231px; top:718px; margin:0; color:#806b43; font-size:10px; }
+
+/* Layout instances are relative to the owning panel content. */
+.body-scene :deep(.game-panel__content .body-panel) { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; background: transparent; border: 0; box-shadow: none; }
+.body-scene :deep(.game-panel__content .body-heading) { display: none; }
+.body-scene :deep(.game-panel__content .body-layout) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; }
+.body-scene :deep(.game-panel__content .body-layout) { grid-template-columns: 19% minmax(0,1fr) 29%; }
+.body-scene :deep(.game-panel__content .body-stage) { transform: none; }
 </style>

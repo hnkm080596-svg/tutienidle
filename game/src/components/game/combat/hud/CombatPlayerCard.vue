@@ -1,13 +1,6 @@
 <script setup lang="ts">
-// ui-combat reskin (2026-10-04) - framed player vitals card, top-left of
-// the battlefield (mock ui-combat.html: ornate avatar + name/realm line +
-// skewed HP/MP meters + resource pips + buff chips). Replaces the canvas
-// PlayerHudLayer: DOM overlay owns the chrome (huyen-kim slots), the
-// canvas stays actor-only.
-//
-// Reactivity law: the TurnBattle object mutates in place, so EVERY
-// computed below reads stateVersion.value directly - same rule as
-// useTurnBattleInfo/useTurnCombatManual.
+// The card renders detached combat facts. Gameplay authorities own vitals,
+// resources and skill actions; frame art is independent of those values.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
@@ -22,26 +15,24 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { buffDisplayName } from '@/core/buff2/BuffNames'
 import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import { formatNumber } from '@/core/format/NumberFormatter'
-import { hkChromeUrl } from '@/ui/huyenKimChrome'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import GameCard from '@/components/common/GameCard.vue'
+import CombatVitalMeter from './CombatVitalMeter.vue'
+import TurnCombatSkillBar from './TurnCombatSkillBar.vue'
+import { useCombatPlayerVitals } from '@/composables/useCombatPlayerVitals'
 import type { BuffInstanceSnapshot } from '@/core/buff2/BuffInstance'
 
 const { t } = useI18n()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { battle, isBattleInProgress, buffsForTarget } = useTurnBattleInfo()
+const { buffsForTarget } = useTurnBattleInfo()
+const { entity, hpPercent, isBattleInProgress } = useCombatPlayerVitals()
 
 const kiemReader = makeKiemBarReader(gameManager, () => player)
 const theReader = makeTheBarReader(gameManager, () => player)
 
-// The mock's ornate ring around the avatar lives under scene/combat-v2/
-// (referenced by ui-combat.html) - it is NOT a manifest slot, so the URL
-// resolves through resolveAssetUrl, not hkChromeUrl.
-const ornamentRingUrl = resolveAssetUrl(
-  '/assets/ui/huyen-kim/scene/combat-v2/ornament-ring-v1.png',
-)
-const avatarFrameUrl = hkChromeUrl('avatar-frame')
+const avatarFrameUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/combat/player-card/avatar-ring-v1.png')
+const cardFrameUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/combat/player-card/frame-v1.png')
 
 const visible = computed(() => {
   stateVersion.value
@@ -53,12 +44,6 @@ const visible = computed(() => {
 // participant whose entity.id is the literal 'player' (the CombatBuild
 // partition gate). With companions in the party, players[0] ordering is
 // an assumption; the id gate is the domain's own authority.
-const entity = computed(() => {
-  stateVersion.value
-
-  return battle.value?.players.find((participant) => participant.entity.id === 'player')
-    ?.entity
-})
 
 const profile = computed(
   () => PLAYER_VISUAL_PROFILES[player.visualProfileId] ?? PLAYER_VISUAL_PROFILES.mortal,
@@ -86,15 +71,6 @@ const realmLine = computed(() => {
   return t('home.topBar.realmLine', { realm: realm.name, level: player.realmLevel })
 })
 
-const hpPercent = computed(() => {
-  const current = entity.value
-
-  if (!current || current.maxHp <= 0) {
-    return 0
-  }
-
-  return Math.round(Math.min(100, Math.max(0, (current.currentHp / current.maxHp) * 100)))
-})
 
 const mpPercent = computed(() => {
   const current = entity.value
@@ -224,270 +200,59 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
 </script>
 
 <template>
-  <div v-if="visible && entity" class="combat-player-card" :aria-label="t('combat.overlay.playerCard.title')">
-    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
-
+  <GameCard v-if="visible && entity" class="combat-player-card" :frame-src="cardFrameUrl" :aria-label="t('combat.overlay.playerCard.title')">
     <div class="combat-player-card__content">
       <div class="combat-player-card__portrait">
-        <img v-if="avatarFrameUrl" class="combat-player-card__avatar-disc" :src="avatarFrameUrl" alt="" aria-hidden="true" />
-        <img class="combat-player-card__avatar" :src="avatarUrl" :alt="player.name" />
-        <img class="combat-player-card__avatar-ring" :src="ornamentRingUrl" alt="" aria-hidden="true" />
+        <div class="combat-player-card__portrait-crop"><img class="combat-player-card__avatar" :src="avatarUrl" :alt="player.name" /></div>
+        <img class="combat-player-card__avatar-ring" :src="avatarFrameUrl" alt="" aria-hidden="true" />
       </div>
-
+      <div class="combat-player-card__identity">
+        <span class="combat-player-card__name">{{ player.name }}</span>
+        <span class="combat-player-card__level">{{ realmLine }}</span>
+      </div>
       <div class="combat-player-card__body">
-        <div class="combat-player-card__identity">
-          <span class="combat-player-card__name">{{ player.name }}</span>
-          <span class="combat-player-card__level">{{ realmLine }}</span>
-        </div>
-
-        <div class="combat-player-card__meters">
-          <div class="combat-player-card__meter combat-player-card__meter--hp" role="progressbar" :aria-label="t('combat.overlay.playerCard.hp')" :aria-valuenow="hpPercent" aria-valuemin="0" aria-valuemax="100">
-            <span class="combat-player-card__meter-fill" :style="{ width: `${hpPercent}%` }" />
-            <span v-if="wardPercent > 0" class="combat-player-card__meter-ward" :style="{ width: `${wardPercent}%` }" :aria-label="t('combat.overlay.playerCard.ward')" />
-            <span class="combat-player-card__meter-value">{{ formatNumber(Math.max(0, Math.ceil(entity.currentHp))) }} / {{ formatNumber(Math.ceil(entity.maxHp)) }}</span>
-          </div>
-
-          <div v-if="(entity.stats.maxMp ?? 0) > 0" class="combat-player-card__meter combat-player-card__meter--mp" role="progressbar" :aria-label="t('combat.overlay.playerCard.mp')" :aria-valuenow="mpPercent" aria-valuemin="0" aria-valuemax="100">
-            <span class="combat-player-card__meter-fill" :style="{ width: `${mpPercent}%` }" />
-            <span class="combat-player-card__meter-value">{{ formatNumber(Math.max(0, Math.ceil(entity.currentMp))) }} / {{ formatNumber(Math.ceil(entity.stats.maxMp)) }}</span>
-          </div>
-        </div>
-
+        <CombatVitalMeter :label="t('combat.overlay.playerCard.hp')" :percent="hpPercent" :ward-percent="wardPercent" :text="`${formatNumber(Math.max(0, Math.ceil(entity.currentHp)))} / ${formatNumber(Math.ceil(entity.maxHp))}`" />
+        <CombatVitalMeter v-if="(entity.stats.maxMp ?? 0) > 0" tone="mp" :label="t('combat.overlay.playerCard.mp')" :percent="mpPercent" :text="`${formatNumber(Math.max(0, Math.ceil(entity.currentMp)))} / ${formatNumber(Math.ceil(entity.stats.maxMp))}`" />
         <div v-if="resourcePips" class="combat-player-card__pips" :aria-label="resourcePips.label">
-          <span
-            v-for="pip in resourcePips.total"
-            :key="pip"
-            class="combat-player-card__pip"
-            :class="{ 'is-filled': pip <= resourcePips.filled }"
-          />
           <span class="combat-player-card__pip-label">{{ resourcePips.label }}</span>
+          <span v-for="pip in resourcePips.total" :key="pip" class="combat-player-card__pip" :class="{ 'is-filled': pip <= resourcePips.filled }" />
         </div>
-        <div v-else-if="resourceMeterPercent" class="combat-player-card__meter combat-player-card__meter--resource" role="progressbar" :aria-label="resourceMeterPercent.label" :aria-valuenow="resourceMeterPercent.percent" aria-valuemin="0" aria-valuemax="100">
-          <span class="combat-player-card__meter-fill" :style="{ width: `${resourceMeterPercent.percent}%` }" />
-          <span class="combat-player-card__meter-value">{{ resourceMeterPercent.label }} {{ resourceMeterPercent.text }}</span>
-        </div>
-
+        <CombatVitalMeter v-else-if="resourceMeterPercent" tone="resource" :label="resourceMeterPercent.label" :percent="resourceMeterPercent.percent" :text="resourceMeterPercent.text" />
+        <TurnCombatSkillBar card class="combat-player-card__skills" />
         <div v-if="visibleBuffs.length > 0" class="combat-player-card__effects" :aria-label="t('combat.overlay.playerCard.effects')">
-          <span
-            v-for="buff in visibleBuffs"
-            :key="`${buff.instanceId}:${buff.sourceId}`"
-            class="combat-player-card__effect"
-            :class="`is-${buffPolarity(buff)}`"
-            :title="buffTooltip(buff)"
-          >{{ buffChipText(buff) }}</span>
+          <span v-for="buff in visibleBuffs" :key="`${buff.instanceId}:${buff.sourceId}`" class="combat-player-card__effect" :class="`is-${buffPolarity(buff)}`" v-tooltip="{ title: buffDisplayName(buff.definitionId), description: buffTooltip(buff) }">{{ buffChipText(buff) }}</span>
         </div>
       </div>
     </div>
-  </div>
+  </GameCard>
 </template>
-
 <style scoped>
-/* Mock geometry (ui-combat.html, 1366x768 canvas): card 362x170 at
-   left:20 top:16 - inside the battlefield that lands just under the top
-   bar, so the card anchors left/top with a viewport-scale inset. */
-.combat-player-card {
-  position: absolute;
-  top: 1.8vh;
-  left: 1.2vw;
-  width: min(21.7vw, 362px);
-  min-width: 264px;
-  isolation: isolate;
-  pointer-events: auto;
-  z-index: 12;
+.combat-player-card.game-card {
+  --game-card-frame-top: 0px;
+  --game-card-frame-slice: 200 330;
+  --game-card-frame-width: 20px;
+  position: absolute; right: 24px; top: 154px; width: 480px; min-width: 0;
+  padding: 16px; isolation: isolate; pointer-events: auto; z-index: 12;
+  container-type: inline-size;
 }
-
-/* surface-m-panel paints at z-index 1 - content sits above it (same
-   sibling rule as CombatAiRail). */
-.combat-player-card__content {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  gap: 12px;
-  padding: 16px 16px 18px;
-}
-
-.combat-player-card__portrait {
-  position: relative;
-  flex: none;
-  width: clamp(72px, 6.9vw, 116px);
-  aspect-ratio: 1;
-}
-
-/* avatar-frame chrome: the dark circular plate under the portrait. */
-.combat-player-card__avatar-disc {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  pointer-events: none;
-}
-
-.combat-player-card__avatar {
-  position: absolute;
-  inset: 10%;
-  width: 80%;
-  height: 80%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-/* The mock's gold ornament ring on top of the portrait. */
-.combat-player-card__avatar-ring {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-}
-
-.combat-player-card__body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.combat-player-card__identity {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.combat-player-card__name {
-  font-family: var(--font-display);
-  font-size: clamp(15px, 1.5vw, 25px);
-  color: #fff0bf;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.combat-player-card__level {
-  font-size: var(--text-xs, 12px);
-  color: #d2b565;
-}
-
-/* Skewed meters straight from the mock (CombatFidelityMeter): gold
-   hairline, dark track, gradient fill, centered value unskewed. */
-.combat-player-card__meters {
-  display: grid;
-  gap: 4px;
-}
-
-.combat-player-card__meter {
-  position: relative;
-  height: 17px;
-  transform: skewX(-9deg);
-  border: 1px solid #bca469;
-  background: #100e0dd9;
-  overflow: hidden;
-}
-
-.combat-player-card__meter-fill,
-.combat-player-card__meter-ward {
-  position: absolute;
-  inset: 0 auto 0 0;
-  display: block;
-  transition: width 150ms linear;
-}
-
-.combat-player-card__meter--hp .combat-player-card__meter-fill {
-  background: linear-gradient(#d05d48, #8b2723 60%, #5b1719);
-}
-
-.combat-player-card__meter--mp .combat-player-card__meter-fill {
-  background: linear-gradient(#57b9c4, #216a83 65%, #16415b);
-}
-
-.combat-player-card__meter--resource .combat-player-card__meter-fill {
-  background: linear-gradient(#cdb875, #87754c 65%, #5f4f2e);
-}
-
-/* Ward layer paints after the hp fill so it visibly sits on top. */
-.combat-player-card__meter-ward {
-  left: auto;
-  right: 0;
-  background: linear-gradient(#e3d29a, #cdb875 60%, #87754c);
-  opacity: 0.85;
-}
-
-.combat-player-card__meter-value {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  transform: skewX(9deg);
-  font-size: 11px;
-  font-family: var(--font-body);
-  color: #f4e6c0;
-  text-shadow: 0 1px 2px #000;
-}
-
-/* The mock's diamond pips for small pools (The 5/5, Kiem Pho presets). */
-.combat-player-card__pips {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.combat-player-card__pip {
-  width: 9px;
-  height: 9px;
-  transform: rotate(45deg);
-  border: 1px solid #dcba66;
-  background: #141a18cc;
-}
-
-.combat-player-card__pip.is-filled {
-  background: #dcba66;
-  box-shadow: 0 0 5px #dcba6680;
-}
-
-.combat-player-card__pip-label {
-  margin-left: 4px;
-  font-size: var(--text-xs, 12px);
-  color: #d2b565;
-}
-
-/* Effect chips - polarity-colored squares with a monogram; the full
-   name/duration/description ride the title tooltip (no icon field on
-   buff defs). */
-.combat-player-card__effects {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.combat-player-card__effect {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  border-radius: 3px;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.combat-player-card__effect.is-buff {
-  border: 1px solid #ab935b;
-  background: #142d26;
-  color: #cfe8c0;
-}
-
-.combat-player-card__effect.is-debuff {
-  border: 1px solid #a05a4f;
-  background: #2d1414;
-  color: #f0b8a8;
-}
-
-.combat-player-card__effect.is-neutral {
-  border: 1px solid var(--hk-border-muted, #5a5a4f);
-  background: #1a1d1b;
-  color: var(--hk-text-secondary, #c8c2ae);
-}
+.combat-player-card :deep(.game-card__fill) { inset: 10px; background: #151610 url('/assets/ui/tien-hiep-2026-10/combat/player-card/backdrop-v1.png') center / 100% 100%; clip-path: inset(0 round 3px); }
+.combat-player-card :deep(.game-card__frame) { clip-path: none; }
+.combat-player-card__content { position: relative; display: grid; grid-template-columns: 30% minmax(0, 1fr); grid-template-rows: 54px auto; column-gap: 12px; min-width: 0; }
+.combat-player-card__portrait { position: relative; grid-row: 1 / 3; align-self: center; width: 100%; aspect-ratio: 1; }
+.combat-player-card__portrait-crop { position: absolute; inset: 14%; overflow: hidden; border-radius: 50%; background: #d5c4a1; }
+.combat-player-card__avatar { position: absolute; width: 300%; height: 300%; left: -100%; top: -8%; object-fit: cover; }
+.combat-player-card__avatar-ring { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.combat-player-card__identity { display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; padding-bottom: 10px; color: #291d0e; }
+.combat-player-card__name { font: 700 23px/1.1 var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.combat-player-card__level { font: 600 12px/1.2 var(--font-body); }
+.combat-player-card__body { min-width: 0; display: flex; flex-direction: column; gap: 5px; padding-top: 8px; }
+.combat-player-card__skills { margin-top: 4px; }
+.combat-player-card__pips { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; min-height: 16px; }
+.combat-player-card__pip { width: 8px; height: 8px; transform: rotate(45deg); border: 1px solid #cfad68; background: #151610; }
+.combat-player-card__pip.is-filled { background: #cfad68; }
+.combat-player-card__pip-label { color: #ead4a7; font-size: 11px; margin-right: 5px; }
+.combat-player-card__effects { display: flex; flex-wrap: wrap; gap: 4px; }
+.combat-player-card__effect { width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid #ab935b; background: #142d26; color: #cfe8c0; font-size: 10px; }
+.combat-player-card__effect.is-debuff { border-color: #a05a4f; background: #2d1414; color: #f0b8a8; }
+.combat-player-card__effect.is-neutral { background: #1a1d1b; color: #c8c2ae; }
 </style>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { prefersReducedMotion } from '@/presentation/motionPreference'
 /**
  * PresentationTransitionOverlay (AstraDoctrine Law A10, AGENTS.md P17).
  * Implements CurtainPort for GamePresentationCoordinator.
@@ -62,10 +63,7 @@ const curtainState = ref<'opened' | 'closing' | 'closed' | 'opening'>('opened')
 
 let lastActiveElement: HTMLElement | null = null
 
-function checkReducedMotion(): boolean {
-  if (typeof window === 'undefined' || !window.matchMedia) return false
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
+function checkReducedMotion(): boolean { return prefersReducedMotion() }
 
 function animateCurtain(state: 'closing' | 'opening', signal?: AbortSignal): Promise<void> {
   if (signal?.aborted) {

@@ -125,26 +125,15 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
     }
   })
 
-  it('wood/ore du 9 realm x 5 tuoi, moi entry co years > 0', () => {
-    const yearsByAge: Record<string, number> = {
-      decade: 10,
-      century: 100,
-      millennium: 1000,
-      myriad_year: 10000,
-      thuong_co: 100000,
-    }
-
-    for (const realmId of REALM_TIERS) {
+  it('wood/ore have exactly five age-only identities each', () => {
+    for (const kind of ['wood', 'ore'] as const) {
+      const entries = materials.filter(material => material.profession?.resourceKind === kind)
+      expect(entries).toHaveLength(5)
       for (const age of HERB_AGES) {
-        for (const kind of ['wood', 'ore'] as const) {
-          const material = materials.find(
-            (entry) => entry.id === `${realmId}_${kind}_${age}`,
-          )
-
-          expect(material, `${realmId}_${kind}_${age}`).toBeDefined()
-
-          expect(material!.years, `${realmId}_${kind}_${age}`).toBe(yearsByAge[age])
-        }
+        const material = entries.find(entry => entry.id === `material_spirit_${kind}_${age}`)
+        expect(material).toBeDefined()
+        expect(material!.profession?.realmId).toBeUndefined()
+        expect(material!.years).toBe(10 ** (HERB_AGES.indexOf(age) + 1))
       }
     }
   })
@@ -171,12 +160,12 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
     }
   })
 
-  it('wood/ore ten hien thi gom nhan realm (thap nien..thuong co)', () => {
+  it('wood/ore display names omit realm suffix', () => {
     const expectedNames: Array<[string, string]> = [
-      ['mortal_wood_decade', 'Thập Niên Linh Mộc Phàm Nhân'],
-      ['mortal_ore_decade', 'Thập Niên Linh Khoáng Phàm Nhân'],
-      ['mahayana_wood_millennium', 'Thiên Niên Linh Mộc Đại Thừa'],
-      ['tribulation_ore_thuong_co', 'Thượng Cổ Linh Khoáng Độ Kiếp'],
+      ['material_spirit_wood_decade', 'Thập Niên Linh Mộc'],
+      ['material_spirit_ore_decade', 'Thập Niên Linh Khoáng'],
+      ['material_spirit_wood_millennium', 'Thiên Niên Linh Mộc'],
+      ['material_spirit_ore_thuong_co', 'Thượng Cổ Linh Khoáng'],
     ]
 
     for (const [id, name] of expectedNames) {

@@ -3078,16 +3078,16 @@ describe('validateGameSaveShape - profession material realm pin', () => {
   it('chấp nhận qi_refining_ore_decade trên mortal save (tier +1)', () => {
     const save = validSave()
 
-    save.materials = [{ materialId: 'qi_refining_ore_decade', amount: 3 }]
+    save.materials = [{ materialId: 'material_spirit_ore_decade', amount: 3 }]
 
     const result = validateGameSaveShape(save)
     expect(pathsOf(result).some((path) => path.startsWith('materials'))).toBe(false)
   })
 
   it.each([
-    ['foundation_establishment_ore_decade', 'mortal'],
-    ['golden_core_wood_century', 'mortal'],
-    ['golden_core_ore_decade', 'qi_refining'],
+    ['hoi_linh_thao_foundation_establishment_decade', 'mortal'],
+    ['hoi_linh_thao_golden_core_century', 'mortal'],
+    ['hoi_linh_thao_golden_core_decade', 'qi_refining'],
   ])('từ chối %s trên realm %s (vượt tier +1)', (materialId, realmId) => {
     const save = validSave()
 
@@ -3103,11 +3103,26 @@ describe('validateGameSaveShape - profession material realm pin', () => {
     const save = validSave()
 
     withRealm(save, 'qi_refining')
-    save.materials = [{ materialId: 'foundation_establishment_ore_decade', amount: 1 }]
+    save.materials = [{ materialId: 'material_spirit_ore_decade', amount: 1 }]
 
     const result = validateGameSaveShape(save)
     expect(pathsOf(result).some((path) => path.startsWith('materials'))).toBe(false)
   })
+  it('accepts every wood/ore age in a mortal save and rejects retired identities', () => {
+    for (const kind of ['wood', 'ore']) {
+      for (const age of ['decade', 'century', 'millennium', 'myriad_year', 'thuong_co']) {
+        const save = validSave()
+        save.materials = [{ materialId: `material_spirit_${kind}_${age}`, amount: 1 }]
+        expect(validateGameSaveShape(save).ok).toBe(true)
+      }
+    }
+    for (const materialId of ['mortal_wood_decade', 'qi_refining_ore_century', 'spirit_stone_ha_pham']) {
+      const save = validSave()
+      save.materials = [{ materialId, amount: 1 }]
+      expect(pathsOf(validateGameSaveShape(save))).toContain('materials[0]')
+    }
+  })
+
 })
 
 describe('validateGameSaveShape — v82 seam repair cross-checks', () => {

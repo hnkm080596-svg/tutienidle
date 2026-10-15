@@ -8,22 +8,21 @@ import {
   VISIBLE_MAX_COLUMN,
   type LaneIndex,
 } from './BattleGrid'
+import { DEFAULT_PLAYER_STANDING_POSITION } from './BattlefieldRegions'
 
 export { GRID_ROW_COUNT, GRID_COLUMN_COUNT, SPAWN_COLUMN, VISIBLE_MAX_COLUMN }
 export type { LaneIndex }
 
-// Player la CONG PHONG THU + avatar tan cong (plan sec2.2): cong phu toan
-// bo 10 hang TAI COT HERO_COLUMN - quai tan cong cong khong xet row hien
-// tai cua avatar va khong duoc vuot qua cong. Avatar Player co row that,
-// column luon giu HERO_COLUMN (teleport chi doi row).
-export const HERO_COLUMN = 1
+// Compatibility aliases derive from the shared player standing position.
+// They must not define a second formation or obsolete gate coordinate.
+export const HERO_COLUMN = DEFAULT_PLAYER_STANDING_POSITION.column
 
 // Compatibility aliases for the 10x16 renderer.
 export const SCREEN_VISIBLE_MAX_X = VISIBLE_MAX_COLUMN
 export const LANE_COUNT = GRID_ROW_COUNT
 
-// Hang khoi dau cua avatar Player khi bat dau tran (plan sec2.1).
-export const HERO_LANE_INDEX: LaneIndex = 4
+// Default row before a live formation snapshot supplies entity placement.
+export const HERO_LANE_INDEX: LaneIndex = DEFAULT_PLAYER_STANDING_POSITION.row
 export const CENTER_LANE_INDEX: LaneIndex = HERO_LANE_INDEX
 
 // Authored data field (Enemies.ts) - KHONG anh huong runtime, chi giu

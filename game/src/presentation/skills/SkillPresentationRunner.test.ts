@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
+import { clipImpactMs } from '@/presentation/art/CombatEntityPresentation'
+import { combatPlaybackDelta, setCombatPlaybackSpeed } from '@/presentation/combat/CombatPlaybackSpeed'
 import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
 import type { ResolvedPresentationGroup, SkillCastPresentation, SkillPresentationOutcome, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { SkillPresentationRunner } from './SkillPresentationRunner'
@@ -67,6 +70,57 @@ function fixture(options: { synchronous?: boolean; throwVisual?: boolean } = {})
   return { runner, port, calls, errors, opened, sampled, leases: () => leased, setToken: (token: string | null) => { pendingToken = token } }
 }
 describe('shared skill presentation runner', () => {
+  it('carries the authored raised-hand marker through the live Linh Bao clip catalogue', () => {
+    const clip = animatedArtFormFor('pham_nhan_unarmed')?.castClips?.linh_bao
+    expect(clip?.chargeStartFrameIndex).toBe(4)
+    expect(clip).toBeDefined()
+    expect(clip!.chargeStartFrameIndex! * 1000 / clip!.frameRate).toBeLessThan(clipImpactMs(clip!))
+  })
+  it('waits for the raised-hand marker before opening a fitted charge', () => {
+    const opened = vi.fn((_cue: SkillCue, _context: SkillCueContext) => ({ sample: vi.fn(), finish: vi.fn(), cancel: vi.fn() }))
+    const fitted = { ...recipe, cast: [{ ...recipe.cast[0]!, fitCastPhase: true }] }
+    const impact = vi.fn()
+    const runner = new SkillPresentationRunner({ open: opened }, () => fitted)
+    const port = { getPendingPlaybackToken: () => ref.token, acknowledgeActionImpact: impact, acknowledgeActionComplete: vi.fn() }
+    runner.start(cast, port, { castMs: 600, chargeStartMs: 240 })
+    runner.update(239)
+    expect(opened).not.toHaveBeenCalled()
+    runner.update(1)
+    expect(opened.mock.calls[0]?.[0]).toMatchObject({ offsetMs: 240, durationMs: 360 })
+    runner.update(360)
+    expect(impact).toHaveBeenCalledExactlyOnceWith(ref.token)
+  })
+  it('keeps a fitted charge cue alive until the played clip impact marker', () => {
+    const opened = vi.fn((_cue: SkillCue, _context: SkillCueContext) => ({ sample: vi.fn(), finish: vi.fn(), cancel: vi.fn() }))
+    const fitted = { ...recipe, cast: [{ ...recipe.cast[0]!, fitCastPhase: true }] }
+    const impact = vi.fn()
+    const runner = new SkillPresentationRunner({ open: opened }, () => fitted)
+    const port = { getPendingPlaybackToken: () => ref.token, acknowledgeActionImpact: impact, acknowledgeActionComplete: vi.fn() }
+    runner.start(cast, port, { castMs: 600 })
+    expect(opened.mock.calls[0]?.[0]?.durationMs).toBe(600)
+    runner.update(370)
+    expect(impact).not.toHaveBeenCalled()
+    runner.update(230)
+    expect(impact).toHaveBeenCalledExactlyOnceWith(ref.token)
+  })
+  it('x2 reaches impact and recovery in half the wall time without duplicate ACKs', () => {
+    setCombatPlaybackSpeed(2)
+    try {
+      const f = fixture({ synchronous: true })
+      f.runner.start(cast, f.port)
+      f.runner.update(combatPlaybackDelta(184))
+      expect(f.calls).toEqual([])
+      f.runner.update(combatPlaybackDelta(1))
+      expect(f.calls).toEqual(['impact'])
+      expect(f.sampled).toContain(370)
+      f.runner.update(combatPlaybackDelta(125))
+      expect(f.calls).toEqual(['impact', 'complete'])
+      f.runner.update(combatPlaybackDelta(100))
+      expect(f.calls).toEqual(['impact', 'complete'])
+      expect(recipe.castMs).toBe(370)
+      expect(f.leases()).toBe(0)
+    } finally { setCombatPlaybackSpeed(1) }
+  })
   it('reaches commit once and waits for a sealed result before completing', () => {
     const f = fixture()
     f.runner.start(cast, f.port)

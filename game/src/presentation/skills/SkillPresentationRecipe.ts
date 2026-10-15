@@ -7,17 +7,19 @@ export interface SkillCue {
   readonly offsetMs: number
   readonly durationMs: number
   readonly anchor: 'source' | 'target' | 'targets'
-  readonly shape: 'blade' | 'orb' | 'slash' | 'ring' | 'sparks' | 'rune' | 'impulse' | 'camera' | 'explosion' | 'sheet'
+  readonly shape: 'blade' | 'orb' | 'slash' | 'ring' | 'sparks' | 'rune' | 'impulse' | 'camera' | 'explosion' | 'sheet' | 'flame'
+  readonly fitCastPhase?: boolean
   // Atlas primitive payload: an authored sprite sheet played one frame at a
   // time across durationMs (frame = floor(elapsed/duration * frames)). The
   // cue stays self-contained - key/frames travel in the recipe, so
   // validation needs no asset-registry dependency.
-  readonly atlas?: { key: string; frames: number; scale?: number }
+  readonly atlas?: { key: string; frames: number; scale?: number; tintFill?: number; alpha?: number }
   readonly impulsePx?: number
   readonly intensity?: number
   readonly recall?: boolean
   readonly bend?: number
   readonly count?: number
+  readonly scale?: number
   readonly releaseMs?: number
   readonly cruiseMs?: number
   readonly accelerationMs?: number
@@ -95,10 +97,16 @@ export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
       if (!primitives.has(cue.primitive) || !Number.isFinite(cue.offsetMs) || !Number.isFinite(cue.durationMs)
         || cue.offsetMs < 0 || cue.durationMs <= 0 || cue.offsetMs + cue.durationMs > duration
         || !['source', 'target', 'targets'].includes(cue.anchor)
-        || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune', 'impulse', 'camera', 'explosion', 'sheet'].includes(cue.shape))
+        || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune', 'impulse', 'camera', 'explosion', 'sheet', 'flame'].includes(cue.shape))
         throw new Error('Invalid skill recipe cue')
+      if (cue.fitCastPhase && (phase !== 'cast' || cue.offsetMs !== 0))
+        throw new Error('Cast phase fitting requires a cast cue at offset zero')
       if (cue.primitive === 'atlas') {
         const atlas = cue.atlas
+        if (atlas?.tintFill !== undefined && (!Number.isInteger(atlas.tintFill) || atlas.tintFill < 0 || atlas.tintFill > 0xffffff))
+          throw new Error('Invalid skill atlas tint')
+        if (atlas?.alpha !== undefined && (!Number.isFinite(atlas.alpha) || atlas.alpha < 0 || atlas.alpha > 1))
+          throw new Error('Invalid skill atlas alpha')
         if (!atlas || typeof atlas.key !== 'string' || atlas.key.length === 0
           || !Number.isInteger(atlas.frames) || atlas.frames < 1 || atlas.frames > 64
           || (atlas.scale !== undefined && (!Number.isFinite(atlas.scale) || atlas.scale <= 0 || atlas.scale > 8)))
@@ -130,6 +138,8 @@ export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
         throw new Error('Sheet cue fields on non-sheet primitive')
       if (cue.count !== undefined && (!Number.isInteger(cue.count) || cue.count < 1 || cue.count > 256))
         throw new Error('Unbounded skill cue count')
+      if (cue.scale !== undefined && (!Number.isFinite(cue.scale) || cue.scale <= 0 || cue.scale > 4))
+        throw new Error('Unbounded skill cue scale')
     }
   }
 }

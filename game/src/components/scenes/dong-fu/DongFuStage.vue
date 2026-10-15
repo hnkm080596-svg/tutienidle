@@ -216,7 +216,7 @@ const NAV_FEATURE_LOCKED: Partial<Record<PcPaperIcon, string>> = {
   formation: 'tran_phap',
 }
 function navLocked(id: PcPaperIcon): boolean {
-  if (NAV_LOCKED.includes(id)) return true
+  if (id === 'vendor' || NAV_LOCKED.includes(id)) return true
   const panel = NAV_FEATURE_LOCKED[id]
   return panel !== undefined && !isBetaStandalonePanel(panel)
 }
@@ -237,7 +237,6 @@ const NAV_TARGET: Partial<Record<PcPaperIcon, () => void>> = {
   exploration: () => ui.openLeftPanel('stage_select'),
   quest: () => ui.openStandalonePanel('quest'),
   production: () => navigation.openBuilding('gathering_outpost'),
-  vendor: () => ui.openArchitecture('vendor'),
   sect: () => ui.openArchitecture(),
   settings: () => ui.openLeftPanel('settings'),
   feedback: () => {
@@ -267,6 +266,7 @@ const NAV_ACTIVE_STANDALONE: Partial<Record<PcPaperIcon, 'skill' | 'realm' | 'qu
 }
 
 function navActive(id: PcPaperIcon): boolean {
+  if (navLocked(id)) return false
   if (id === 'home') return !surfaceOpen.value && !feedbackOpen.value
   // 'character'/'inventory' live behind the shared overlay boolean +
   // characterSceneTab, not leftPanelMode (ui store lines ~206).
@@ -276,7 +276,6 @@ function navActive(id: PcPaperIcon): boolean {
   const standalone = NAV_ACTIVE_STANDALONE[id]
   if (standalone && ui.standalonePanel === standalone) return true
   if (id === 'feedback' && feedbackOpen.value) return true
-  if (id === 'vendor') return ui.leftPanelMode === 'architecture' && ui.architectureFocusBuildingId === 'vendor'
   return false
 }
 
@@ -304,7 +303,7 @@ const CHIP_ICON_BY_ID: Record<string, PcPaperResource> = {
 // Dedicated icon art (2026-10-12 commission) overrides the generic
 // resource glyphs per chip id.
 const CHIP_ICON_FILE_BY_ID: Record<string, string> = {
-  spirit_stone_ha_pham: '/assets/materials/spirit_stone_ha_pham.png',
+  material_spirit_stone: '/assets/materials/spirit_stone_ha_pham.png',
   bui_go: '/assets/materials/bui_go.png',
   luyen_dan_tinh_hoa: '/assets/materials/luyen_dan_tinh_hoa.png',
   luyen_khi_tinh_hoa: '/assets/materials/luyen_khi_tinh_hoa.png',
@@ -511,7 +510,7 @@ onBeforeUnmount(() => {
       <div class="pc-paper-scene__frame" aria-hidden="true" />
     </main>
   </SceneDesignCanvas>
-  <FeedbackDialog :open="feedbackOpen" @close="feedbackOpen = false" />
+  <FeedbackDialog rail :open="feedbackOpen" @close="feedbackOpen = false" />
 </template>
 
 <style scoped>

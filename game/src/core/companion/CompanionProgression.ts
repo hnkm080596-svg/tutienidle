@@ -297,7 +297,7 @@ export function isCompanionFeedable(material: Material | undefined): boolean {
 // Feed value of one material: profession materials scale with their realm
 // index, everything else is a flat 10.
 export function companionFeedExpValue(material: Material): number {
-  if (!material.profession) {
+  if (!material.profession?.realmId) {
     return FEED_EXP_BASE
   }
 

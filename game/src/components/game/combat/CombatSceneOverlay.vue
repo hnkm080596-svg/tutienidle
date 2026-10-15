@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 // 6A-T8 (2026-09-01, spec docs/superpowers/specs/2026-09-01-combat-scene-
 // ui-redesign-design.md) - CombatSceneOverlay top-only: 3 bar DOM duoi
 // (Status/Event/Control) roi DOM - HP/MP/Kiet + exit zone vao canvas
@@ -14,17 +14,56 @@
 // `top` (publishTopBarHeight - giu nguyen `right` cua dock), khong con
 // giu import cho 2 component da doi.
 import { nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import CombatTopRail from '@/components/scenes/combat/CombatTopRail.vue'
 import CombatTurnRail from '@/components/scenes/combat/CombatTurnRail.vue'
 import CombatAiRail from '@/components/scenes/combat/CombatAiRail.vue'
-import CombatActionDock from '@/components/scenes/combat/CombatActionDock.vue'
+import CombatPartyDock from './hud/CombatPartyDock.vue'
+import { clearSkillDockWidth } from '@/presentation/geometry/combatInsets'
 import CombatLogFeed from '@/components/scenes/combat/CombatLogFeed.vue'
 import CombatModalLayer from '@/components/scenes/combat/CombatModalLayer.vue'
-import CombatPlayerCard from '@/components/game/combat/hud/CombatPlayerCard.vue'
+import CombatPanel from '@/components/scenes/combat/CombatPanel.vue'
+import CombatControlButton from '@/components/scenes/combat/CombatControlButton.vue'
 import { publishTopBarHeight, resetCombatInsets } from '@/presentation/geometry/combatInsets'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
+import { useGameManager } from '@/composables/useGameState'
+import { skillIconPath } from '@/data/skill/SkillIconManifest'
+import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
+const { t } = useI18n()
 const rootRef = ref<HTMLElement | null>(null)
+const layoutVersion = ref(0)
+const logOpen = ref(false)
+const manager = useGameManager()
+let assetsPending = false
+let mounted = false
+let releaseAssetLatch: (() => void) | undefined
+async function prepareChrome(): Promise<void> {
+  await nextTick()
+  const root = rootRef.value
+  if (!root || !mounted) return
+  const urls = new Set<string>()
+  for (const node of [root, ...root.querySelectorAll<HTMLElement>('*')]) {
+    if (node instanceof HTMLImageElement && node.src) urls.add(node.src)
+    for (const pseudo of [null, '::before', '::after']) {
+      for (const match of getComputedStyle(node, pseudo).backgroundImage.matchAll(/url\(["']?([^"')]+)["']?\)/g)) urls.add(match[1]!)
+    }
+  }
+  for (const actor of manager.getTurnBattle()?.players ?? []) {
+    for (const skill of [actor.basic, actor.special?.skill, actor.ultimate?.skill]) {
+      const icon = skill && skillIconPath(turnSkillDisplayMetaOf(skill.id)?.iconKey)
+      if (icon) urls.add(resolveAssetUrl(icon))
+    }
+  }
+  await Promise.allSettled([...urls].map(url => {
+    const image = new Image()
+    image.src = url
+    return image.decode()
+  }))
+  await document.fonts.ready
+  if (mounted) { assetsPending = false; manager.resumeCombat('ui-assets') }
+}
 
 // Skill dock mounts only while the battle is fighting: its only content
 // (TurnCombatSkillBar) self-hides otherwise, and an empty dock would be a
@@ -38,7 +77,13 @@ let insetsObserver: ResizeObserver | null = null
 const BAR_CLASSES = ['combat-scene-overlay__top-bar']
 
 function barHeight(root: HTMLElement, className: string): number {
-  return root.querySelector<HTMLElement>(`:scope > .${className}`)?.offsetHeight ?? 0
+  return root.querySelector<HTMLElement>(`:scope > .${className}`)?.getBoundingClientRect().height ?? 0
+}
+
+function onPanelLayout() {
+  clearSkillDockWidth()
+  layoutVersion.value++
+  publishInsets()
 }
 
 function publishInsets() {
@@ -74,6 +119,11 @@ function observeBars() {
 }
 
 onMounted(() => {
+  mounted = true
+  assetsPending = true
+  releaseAssetLatch = manager.registerFreezeLatchTruth('ui-assets', () => assetsPending)
+  manager.freezeCombat('ui-assets')
+  void prepareChrome()
   void nextTick(publishInsets)
 
   if (rootRef.value && typeof ResizeObserver !== 'undefined') {
@@ -87,6 +137,10 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  mounted = false
+  assetsPending = false
+  manager.resumeCombat('ui-assets')
+  releaseAssetLatch?.()
   insetsObserver?.disconnect()
   insetsObserver = null
 })
@@ -104,16 +158,17 @@ onUnmounted(() => {
        duy nhat cua app van la PhaserCanvas.vue trong MainScene.vue.
        Overlay chi con TopBar (thong tin zone/stage), AI panel, dock
        ky nang mep phai va cac modal. Bottom = full canvas. -->
+  <CombatPanel @layout="onPanelLayout">
   <div ref="rootRef" class="combat-scene-overlay">
     <CombatTopRail class="combat-scene-overlay__top-bar" />
 
-    <CombatActionDock :fighting="isBattleFighting" />
+    <CombatPartyDock />
 
     <div class="combat-scene-overlay__battlefield">
       <!-- ui-combat reskin (2026-10-04) - the framed player vitals card
            top-left (mock: avatar + HP/MP + resource + buff chips); it
            replaces the retired canvas PlayerHudLayer. -->
-      <CombatPlayerCard />
+
 
       <!-- Combat AI panel - goc TRAI battlefield, chi panel nhan pointer. -->
       <CombatAiRail class="combat-scene-overlay__ai-panel" />
@@ -123,12 +178,15 @@ onUnmounted(() => {
          log (goc phai-duoi, self-guarded khi khong fighting). -->
     <CombatTurnRail class="combat-scene-overlay__turn-order-strip" />
 
-    <CombatLogFeed />
+    <CombatLogFeed v-if="logOpen" />
+    <CombatControlButton class="combat-scene-overlay__log-toggle" :aria-expanded="logOpen" @click="logOpen = !logOpen">{{ t(logOpen ? 'combat.overlay.healthHud.hideLog' : 'combat.overlay.healthHud.showLog') }}</CombatControlButton>
+
 
     <!-- 6A-T6 - confirm thoat tran + result/intro/countdown (scene exit
          zone -> bridge event). -->
-    <CombatModalLayer />
   </div>
+  <template #overlays><CombatModalLayer /></template>
+  </CombatPanel>
 </template>
 <style scoped>
 /* T8.1 (2026-09-02) - khoi phuc styles bi mat trong 6A T8 rewrite
@@ -138,6 +196,7 @@ onUnmounted(() => {
    tuy tien. Status/event/control bar rules KHONG khoi phuc (da
    retire dung chu y). */
 .combat-scene-overlay {
+  --combat-topbar-h: 94px;
   position: absolute;
   inset: 0;
   z-index: 15;
@@ -167,10 +226,10 @@ onUnmounted(() => {
    left 0.96vw / width 13.64vw / scroll cap stay from spec 10. */
 .combat-scene-overlay__ai-panel {
   position: absolute;
-  left: 0.96vw;
-  top: calc(max(28vh, 1.8vh + 190px) - var(--combat-topbar-h));
-  width: 13.64vw;
-  max-height: 40vh;
+  left: 22px;
+  top: 104px;
+  width: 235px;
+  max-height: 400px;
   overflow-y: auto;
   z-index: 12;
 }
@@ -188,7 +247,7 @@ onUnmounted(() => {
    task nay (xem bao cao). */
 .combat-scene-overlay__turn-order-strip {
   position: absolute;
-  top: var(--combat-topbar-h);
+  top: 99px;
   left: 0;
   right: 0;
   display: flex;
@@ -197,4 +256,10 @@ onUnmounted(() => {
 }
 
 
+.combat-scene-overlay__battlefield { position: absolute; inset: 0; }
+.combat-scene-overlay__ai-panel { left: 24px; top: 476px; width: 210px; max-height: 380px; overflow: visible; }
+.combat-scene-overlay__turn-order-strip { top: 0; left: 50%; right: auto; width: 640px; transform: translateX(-50%); }
+.combat-scene-overlay__log-toggle { position: absolute; left: 24px; top: 528px; bottom: auto; pointer-events: auto; }
 </style>
+
+

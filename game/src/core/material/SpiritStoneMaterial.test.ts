@@ -12,7 +12,7 @@ describe('Linh Thạch', () => {
   })
 
   it('stone id/name/stackLimit', () => {
-    expect(SPIRIT_STONE_MATERIAL.id).toBe('spirit_stone_ha_pham')
+    expect(SPIRIT_STONE_MATERIAL.id).toBe('material_spirit_stone')
     expect(SPIRIT_STONE_MATERIAL_ID).toBe(SPIRIT_STONE_MATERIAL.id)
     expect(SPIRIT_STONE_MATERIAL.name).toBe('Linh Thạch')
     expect(SPIRIT_STONE_MATERIAL.category).toBe('spirit_stone')

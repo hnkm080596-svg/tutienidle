@@ -4,7 +4,6 @@
 // amount/chance rows instead. Label values resolve inside the builder
 // per call so a live locale switch re-translates the whole card (the
 // maps were computed()s before the extraction).
-import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
@@ -27,14 +26,6 @@ const REALM_LABEL_KEYS: Record<string, string> = {
   body_integration: 'panels.bag.tooltip.realms.bodyIntegration',
   mahayana: 'panels.bag.tooltip.realms.mahayana',
   tribulation: 'panels.bag.tooltip.realms.tribulation',
-}
-
-const AGE_LABEL_KEYS: Record<string, string> = {
-  decade: 'panels.bag.tooltip.ages.decade',
-  century: 'panels.bag.tooltip.ages.century',
-  millennium: 'panels.bag.tooltip.ages.millennium',
-  myriad_year: 'panels.bag.tooltip.ages.myriadYear',
-  thuong_co: 'panels.bag.tooltip.ages.thuongCo',
 }
 
 const SOURCE_LABEL_KEYS: Record<Material['sourceType'], string> = {
@@ -99,22 +90,7 @@ export function createMaterialTooltipBuilder(t: Translate) {
     const rows: TooltipStatRow[] = [
       { label: t('panels.bag.tooltip.category'), value: categoryKey ? t(categoryKey) : SPIRIT_STONE_LABEL },
       { label: t('panels.bag.tooltip.source'), value: t(SOURCE_LABEL_KEYS[material.sourceType]) },
-      // Realm text IS the material's Pham axis - carry its rank color
-      // (user ruling: every Pham/Chat text shows in its set color).
-      ...(realmText ? [{ label: t('panels.bag.tooltip.realm'), value: realmText, colorVar: rank !== undefined ? `--rank-color-${rank}` : undefined }] : []),
     ]
-
-    if (material.profession?.age) {
-      const ageKey = AGE_LABEL_KEYS[material.profession.age]
-      rows.push({
-        label: t('panels.bag.tooltip.age'),
-        value: ageKey ? t(ageKey) : t('panels.bag.tooltip.yearsSuffix', { count: material.years ?? 0 }),
-      })
-    } else if (material.years !== undefined) {
-      rows.push({ label: t('panels.bag.tooltip.age'), value: t('panels.bag.tooltip.yearsSuffix', { count: material.years }) })
-    }
-    if (material.element !== undefined)
-      rows.push({ label: t('panels.bag.tooltip.element'), value: ELEMENT_LABELS[material.element] })
 
     const owned = options.owned ?? 0
 

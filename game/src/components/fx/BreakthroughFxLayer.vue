@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { prefersReducedMotion } from '@/presentation/motionPreference'
 // Minor-floor Dot Pha cinematic (owner spec 2026-10-11): full-screen dim
 // + click/key lock -> seated silhouette manifests and trembles -> spirit-
 // qi motes stream in from every direction -> qi ring blasts out to cover
@@ -109,12 +110,7 @@ watch(
   { immediate: true },
 )
 
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
-  )
-}
+
 
 function swallowKey(event: KeyboardEvent): void {
   event.stopPropagation()

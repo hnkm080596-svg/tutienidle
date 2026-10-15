@@ -11,6 +11,13 @@
 // - Tran mOi bat dau truOc khi load xong -> KHONG swap giua tran
 //   (generation token vo hieu callback cu).
 import { afterEach, describe, expect, it, vi } from 'vitest'
+vi.mock('phaser', () => ({ default: {
+  Scene: class {},
+  Loader: { Events: { COMPLETE: 'complete' } },
+  Scenes: { SHUTDOWN: 8 },
+  GameObjects: { Sprite: class {} },
+  Math: { Vector2: class { constructor(public x: number, public y: number) {} }, Clamp: (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v)) },
+} }))
 import { createTestScene } from './combat/combatTestHarness'
 import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
 import type { CombatScene } from './CombatScene'
@@ -136,7 +143,7 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
   scene.dyingIds = new Set()
   scene.playerDying = false
   scene.playerSpawnHandle = undefined
-  scene.sys = { isActive: () => true }
+  scene.sys = { isActive: () => true, settings: { status: 5 } }
   scene.scene = {}
 
   return { scene, addedImages, destroyedHandles }
@@ -178,79 +185,85 @@ describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', ()
     expect(queued.filter((key) => key.startsWith('tv-'))).toEqual(expected)
   })
 
-  it('battle_end Ä‘á»§ texture â†’ swap NGAY sang variant khÃ¡c hiá»‡n táº¡i', () => {
+  it('keeps the finished battle background through results and commits the next one at battle start', () => {
     const { scene, addedImages, destroyedHandles } = createPerspectiveScene(true)
-
     scene.onBattleEnd()
-
-    expect(scene.inBattle).toBe(false)
-
-    // Variant mOi KHAC variant cu (selectNext tranh trung tung chieu).
-    expect(scene.thanhVanVariant).not.toEqual({ season: 'spring', time: 'morning' })
-
-    // Backdrop cA(c) ba"< hua"*, aoGBPnh ca"seca variant Ma"sI gao-n A'a"sec 7 key.
-    expect(destroyedHandles).toHaveLength(1)
-
-    expect(addedImages).toHaveLength(7)
-
-    const newKeys = thanhVanLoadList(scene.thanhVanVariant).map((entry) => entry.key)
-
-    expect(addedImages).toEqual(newKeys)
-
-    // Cache phien cap nhat theo variant vua swap - lan vao combat ke
-    // preload dung bo dang hien thI.
-    expect(peekThanhVanVariant()).toEqual(scene.thanhVanVariant)
-
-    expect(scene.usingArtBackdrop).toBe(true)
-  })
-
-  it('battle_end thiáº¿u texture â†’ queue load, CHá»ˆ swap sau COMPLETE', () => {
-    const { scene, addedImages } = createPerspectiveScene(new Set())
-
-    scene.onBattleEnd()
-
-    // 7 key ca"seca variant kao? A'AEdega"GBPc queue aEUR" na"n cA(c) GIa"(R) NGUYASN trong lAoc taoGBPi.
-    expect(scene.load.queued).toHaveLength(7)
-
-    expect(addedImages).toHaveLength(0)
-
     expect(scene.thanhVanVariant).toEqual({ season: 'spring', time: 'morning' })
-
-    // Load xong khi CHUA co tran mOi -> swap nguyen khoi, khong flash.
-    scene.load.flushComplete()
-
-    expect(scene.thanhVanVariant).not.toEqual({ season: 'spring', time: 'morning' })
-
-    expect(addedImages).toHaveLength(7)
-  })
-
-  it('tráº­n má»›i báº¯t Ä‘áº§u TRÆ¯á»šC khi load xong â†’ KHÃ”NG swap giá»¯a tráº­n', () => {
-    const { scene, addedImages } = createPerspectiveScene(new Set())
-
-    scene.onBattleEnd()
-
-    expect(scene.load.queued).toHaveLength(7)
-
-    // Auto-refight bat dau tran ke khi tai chua xong.
+    expect(addedImages).toHaveLength(0)
+    expect(destroyedHandles).toHaveLength(0)
     scene.onBattleStart()
-
-    expect(scene.inBattle).toBe(true)
-
-    scene.load.flushComplete()
-
-    // Callback cu bI generation token vo hieu - nen giu nguyen.
-    expect(scene.thanhVanVariant).toEqual({ season: 'spring', time: 'morning' })
-
-    expect(addedImages).toHaveLength(0)
-
-    // battle_end KE TIEP chon lai variant va swap binh thuong.
-    scene.onBattleEnd()
-
-    scene.load.flushComplete()
-
     expect(scene.thanhVanVariant).not.toEqual({ season: 'spring', time: 'morning' })
-
     expect(addedImages).toHaveLength(7)
+    expect(destroyedHandles).toHaveLength(1)
+    expect(peekThanhVanVariant()).toEqual(scene.thanhVanVariant)
+  })
+
+  it('preloads without swapping even when the loader completes while results are visible', () => {
+    const { scene, addedImages } = createPerspectiveScene(new Set())
+    scene.onBattleEnd()
+    expect(scene.load.queued).toHaveLength(7)
+    scene.load.flushComplete()
+    expect(scene.thanhVanVariant).toEqual({ season: 'spring', time: 'morning' })
+    expect(addedImages).toHaveLength(0)
+    scene.textures.exists = () => true
+    scene.onBattleStart()
+    expect(addedImages).toHaveLength(7)
+  })
+
+  it('holds renderer READY until pending background textures load behind the curtain', () => {
+    const { scene, addedImages } = createPerspectiveScene(new Set())
+    const ready = vi.fn()
+    scene.registry = { get: (key: string) => key === 'sceneAdapter' ? { reportReady: ready } : undefined }
+    scene.onBattleEnd()
+    const context = { transitionId: 10, sessionId: 20, gameGeneration: 1 }
+    scene.rebindSession(context)
+    expect(ready).not.toHaveBeenCalled()
+    expect(addedImages).toHaveLength(0)
+    scene.textures.exists = () => true
+    scene.load.flushComplete()
+    expect(ready).toHaveBeenCalledExactlyOnceWith(context)
+    expect(addedImages).toHaveLength(7)
+  })
+
+  it('rejects a stale loader completion from a superseded renderer binding', () => {
+    const { scene } = createPerspectiveScene(new Set())
+    const ready = vi.fn()
+    scene.registry = { get: (key: string) => key === 'sceneAdapter' ? { reportReady: ready } : undefined }
+    scene.onBattleEnd()
+    scene.rebindSession({ transitionId: 10, sessionId: 20, gameGeneration: 1 })
+    const latest = { transitionId: 11, sessionId: 21, gameGeneration: 1 }
+    scene.rebindSession(latest)
+    scene.textures.exists = () => true
+    scene.load.flushComplete()
+    expect(ready).toHaveBeenCalledExactlyOnceWith(latest)
+  })
+
+  it('does not mutate a stopped renderer when its pending loader completes', () => {
+    const { scene, addedImages } = createPerspectiveScene(new Set())
+    const ready = vi.fn()
+    scene.registry = { get: (key: string) => key === 'sceneAdapter' ? { reportReady: ready } : undefined }
+    scene.onBattleEnd()
+    scene.rebindSession({ transitionId: 10, sessionId: 20, gameGeneration: 1 })
+    scene.textures.exists = () => true
+    scene.sys.isActive = () => false
+    scene.sys.settings.status = 8
+    scene.load.flushComplete()
+    expect(ready).not.toHaveBeenCalled()
+    expect(addedImages).toHaveLength(0)
+  })
+
+  it('allows pending assets to become ready while the renderer is paused', () => {
+    const { scene } = createPerspectiveScene(new Set())
+    const ready = vi.fn()
+    scene.registry = { get: (key: string) => key === 'sceneAdapter' ? { reportReady: ready } : undefined }
+    scene.onBattleEnd()
+    const context = { transitionId: 10, sessionId: 20, gameGeneration: 1 }
+    scene.rebindSession(context)
+    scene.textures.exists = () => true
+    scene.sys.settings.status = 6
+    scene.sys.isActive = () => false
+    scene.load.flushComplete()
+    expect(ready).toHaveBeenCalledExactlyOnceWith(context)
   })
 
   it('flat mode: battle_end khÃ´ng Ä‘á»¥ng loader/backdrop', () => {

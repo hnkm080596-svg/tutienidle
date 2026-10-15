@@ -28,3 +28,7 @@ export function stoneCostRealmFactor(realmId: string): number {
 
   return 1
 }
+
+export function productionUpgradeStoneCost(stepIndex: number, realmId: string): number {
+  return Math.round(100 * Math.pow(2.2, stepIndex)) * stoneCostRealmFactor(realmId)
+}

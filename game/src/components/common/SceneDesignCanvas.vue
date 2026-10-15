@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, shallowRef, useTemplateRef } from 'vue'
+import { GAME_UI_WIDTH, GAME_UI_HEIGHT } from '@/presentation/geometry/GameUiFrame'
+import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef } from 'vue'
 
-const props = withDefaults(defineProps<{ width?: number; height?: number; overlay?: boolean }>(), { width: 1440, height: 810, overlay: false })
+const props = withDefaults(defineProps<{ width?: number; height?: number; overlay?: boolean }>(), { width: GAME_UI_WIDTH, height: GAME_UI_HEIGHT, overlay: false })
+const emit = defineEmits<{ layout: [] }>()
 const viewport = useTemplateRef<HTMLElement>('viewport')
 const scale = shallowRef(1)
 let observer: ResizeObserver | undefined
@@ -11,7 +13,11 @@ const canvasStyle = computed(() => ({
 }))
 function measure() {
   if (!viewport.value) return
-  scale.value = Math.min(viewport.value.clientWidth / props.width, viewport.value.clientHeight / props.height)
+  const width = viewport.value.clientWidth
+  const height = viewport.value.clientHeight
+  if (width <= 0 || height <= 0) return
+  scale.value = Math.min(width / props.width, height / props.height)
+  void nextTick(() => emit('layout'))
 }
 onMounted(() => {
   measure()

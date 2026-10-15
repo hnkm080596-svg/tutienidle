@@ -104,3 +104,24 @@ describe('ToastContainer - loot name pattern (item-info-card spec section 2)', (
     expect(nameLine?.textContent).not.toContain('·')
   })
 })
+
+it('maps and scales the toast into the shared frame on a small viewport', async () => {
+  const oldWidth = window.innerWidth
+  const oldHeight = window.innerHeight
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: 655 })
+  Object.defineProperty(window, 'innerHeight', { configurable: true, value: 576 })
+  try {
+    await pushLoot({ name: 'Linh Thạch' })
+    window.dispatchEvent(new Event('resize'))
+    await nextTick()
+    const element = document.body.querySelector<HTMLElement>('.toast-container')!
+    const scale = 655 / 1440
+    expect(element.style.transform).toBe(`scale(${scale})`)
+    expect(parseFloat(element.style.top)).toBeCloseTo((576 - 810 * scale) / 2 + 204 * scale)
+    expect(parseFloat(element.style.right)).toBeCloseTo(18 * scale)
+  } finally {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: oldWidth })
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: oldHeight })
+    window.dispatchEvent(new Event('resize'))
+  }
+})

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><title>Kiểm tra particle Phân Giải</title>
+<style>
+:root { --game-ui-width: min(100vw, calc(100vh * 16 / 9)); --game-ui-height: min(100vh, calc(100vw * 9 / 16)); --game-ui-left: calc((100vw - var(--game-ui-width)) / 2); --game-ui-top: calc((100vh - var(--game-ui-height)) / 2); }
+body { margin: 0; background: #151913; color: #eed8a5; font: 18px Georgia; }
+main { position: fixed; inset: var(--game-ui-top) var(--game-ui-left); border: 1px solid #ab8b47; box-sizing: border-box; }
+h1 { margin: 22px; font-size: 22px; }
+button { position: absolute; left: 25%; top: 65%; background: #372e1b; color: #ffdf90; border: 1px solid #c49c53; padding: 20px; cursor: pointer; }
+.target { position: absolute; top: 24px; right: 14%; border: 1px solid #b89b58; padding: 12px; }
+</style></head><body><div id="app"></div><script type="module">
+import { createApp, h } from 'vue'
+import DecomposeFxLayer from '/src/components/fx/DecomposeFxLayer.vue'
+import { playDecomposeFx } from '/src/components/fx/decomposeFx.ts'
+import '/src/assets/game-ui-frame.css'
+createApp({render:()=>h('main',[
+ h('h1','Kiểm tra hiển thị riêng — không thay đổi túi đồ'),
+ h('div',{class:'target'},'Điểm đến particle'),
+ h('button',{onClick:(event)=>{const r=event.currentTarget.getBoundingClientRect();playDecomposeFx([{materialId:'bui_go',amount:12,origins:[{x:r.x+r.width/2,y:r.y+r.height/2}]}])}},'Phát hiệu ứng Phân Giải'),
+ h(DecomposeFxLayer),
+])}).mount('#app')
+</script></body></html>

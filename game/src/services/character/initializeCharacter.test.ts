@@ -138,8 +138,8 @@ describe('initializeCharacter - one starter snapshot from canonical metadata', (
       amount,
     ])
     expect(materials).toEqual([
-      ['mortal_wood_decade', 15],
-      ['mortal_ore_decade', 6],
+      ['material_spirit_wood_decade', 15],
+      ['material_spirit_ore_decade', 6],
     ])
 
     expect(calls.setProductionAutoRestart).toHaveBeenCalledTimes(2)

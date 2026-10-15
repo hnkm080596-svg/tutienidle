@@ -16,21 +16,23 @@
 // anchors toward the lower right like the mock. The ResizeObserver
 // publish is unchanged - it still feeds the scene's right inset with the
 // real offsetWidth.
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import TurnCombatSkillBar from './hud/TurnCombatSkillBar.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import CombatArtSurface from '@/components/scenes/combat/CombatArtSurface.vue'
 import { clearSkillDockWidth, publishSkillDockWidth } from '@/presentation/geometry/combatInsets'
 
 const rootRef = ref<HTMLElement | null>(null)
+const props = defineProps<{ layoutVersion?: number }>()
 let observer: ResizeObserver | null = null
 
 function publishWidth() {
-  const width = rootRef.value?.offsetWidth ?? 0
+  const width = rootRef.value?.getBoundingClientRect().width ?? 0
 
   if (width > 0) {
     publishSkillDockWidth(width)
   }
 }
+watch(() => props.layoutVersion, () => { void nextTick(publishWidth) })
 
 onMounted(() => {
   void nextTick(publishWidth)
@@ -51,8 +53,7 @@ onBeforeUnmount(() => {
 
 <template>
   <aside ref="rootRef" class="combat-skill-dock-panel" data-hk-region="skill-dock">
-    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
-    <TurnCombatSkillBar />
+    <CombatArtSurface art="skill-tray" class="combat-skill-dock-panel__card"><TurnCombatSkillBar /></CombatArtSurface>
   </aside>
 </template>
 
@@ -65,16 +66,14 @@ onBeforeUnmount(() => {
    publish keeps the scene's right inset in sync with the real width. */
 .combat-skill-dock-panel {
   position: absolute;
-  bottom: 4vh;
-  right: 1.6vw;
-  width: 9.73vw;
-  min-width: 118px;
-  max-width: 172px;
-  max-height: 56vh;
+  top: 385px;
+  right: 23px;
+  width: 133px;
+  max-height: 380px;
   display: flex;
   flex-direction: column;
   gap: var(--space-3, 12px);
-  padding: 2.6vh 1.1vw 3.1vh;
+  padding: 0;
   overflow: hidden;
   pointer-events: auto;
   z-index: 12;
@@ -86,4 +85,7 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
 }
+.combat-skill-dock-panel__card { padding: 29px 15px 24px; width: 100%; min-height: 0; overflow-y: auto; }
+.combat-skill-dock-panel { top: auto; bottom: 26px; right: 15px; width: 160px; max-height: 340px; overflow: visible; }
+.combat-skill-dock-panel__card { height: 290px; padding: 30px 36px 27px; overflow: visible; }
 </style>

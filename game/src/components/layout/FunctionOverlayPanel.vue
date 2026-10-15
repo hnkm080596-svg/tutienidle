@@ -117,6 +117,7 @@ function close() {
     <EquipmentHallPanel v-else-if="paperMode === 'equipment_hall'" />
     <SettingsSurface v-else-if="paperMode === 'settings'" />
     <ArchitectureSurface v-else-if="paperMode === 'architecture'" />
+    <ProductionPanel v-else-if="paperMode === 'exploration'" />
   </Transition>
 
   <!-- Imperial scroll scenes: no current mode mounts here - the shell

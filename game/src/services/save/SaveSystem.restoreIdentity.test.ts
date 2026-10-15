@@ -58,7 +58,7 @@ describe('restore identity (AR-12)', () => {
     const saveA = baseSave(player)
     const saveB = baseSave(player)
 
-    const ore = materials.find((m) => m.id === 'qi_refining_ore_century')!
+    const ore = materials.find((m) => m.id === 'material_spirit_ore_century')!
     saveB.materials = [{ materialId: ore.id, amount: 5 }]
 
     expect(computeRestoreIdentity(saveA)).not.toBe(computeRestoreIdentity(saveB))

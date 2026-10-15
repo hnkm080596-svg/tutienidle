@@ -106,7 +106,7 @@ function hideBrokenImage(event: Event) {
    --hk-* ramp; --tooltip-accent stays the consumer accent channel. */
 .item-card {
   color: var(--hk-text-primary);
-  font: var(--text-xs) var(--hk-font-ui);
+  font: 13px/1.45 var(--hk-font-ui);
 }
 
 .item-card__eyebrow {
@@ -145,7 +145,7 @@ function hideBrokenImage(event: Event) {
   margin: 0 0 3px;
   color: var(--hk-text-primary);
   font-family: var(--hk-font-display);
-  font-size: var(--text-md);
+  font-size: 17px;
   font-weight: 700;
   line-height: 1.25;
 }
@@ -190,6 +190,7 @@ function hideBrokenImage(event: Event) {
   align-items: baseline;
   color: var(--hk-text-secondary);
   line-height: 1.55;
+  padding: 3px 0;
 }
 .item-card__gem { color: var(--tooltip-accent, var(--hk-gold-muted)); margin-right: 4px; font-size: .8em; }
 .item-card__tier { margin-left: 5px; color: var(--hk-text-muted); }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GamePanel from '@/components/common/GamePanel.vue'
 // Scene 09 (Kho Vat / inventory) paper surface: the approved fidelity
 // composition - toolbar tabs | bag grid | detail rail | count - now
 // owning the shared paper chrome (nine-slice sheet + nav rail + title)
@@ -41,9 +42,10 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 
 <template>
-  <section ref="rootRef" class="inventory-scene" :aria-label="t('panels.bag.title')" @click.self="emit('back')">
-    <div class="inventory-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
-    <header class="inventory-head"><div class="inventory-head__title"><h1>{{ t('panels.bag.title') }}</h1><img class="inventory-divider" :src="titleDivider" alt=""></div></header>
+  <section ref="rootRef" class="rail-panel-scene inventory-scene" :aria-label="t('panels.bag.title')" @click.self="emit('back')">
+    <GamePanel :title="t('panels.bag.title')">
+    
+    
 
     <div class="inventory-content">
       <slot name="toolbar"><div class="toolbar"><nav><button v-for="id in filters" :key="id" :aria-pressed="filter===id" @click="emit('filter',id)">{{ t(`inventoryPreview.${id}`) }}</button></nav><input type="search" :value="query" :placeholder="t('inventoryPreview.search')" :aria-label="t('inventoryPreview.searchLabel')" @input="search"><button class="sort" @click="emit('sort')">{{ t('inventoryPreview.sort') }}</button></div></slot>
@@ -55,11 +57,12 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
     <p v-if="preview" class="inventory-preview">{{ t('preview') }}</p>
     <p class="inventory-notice" role="status">{{ notice }}</p>
+    </GamePanel>
   </section>
 </template>
 
 <style scoped>
-.inventory-scene{position:absolute;inset:0;pointer-events:auto;color:#4b3924;font-family:var(--font-display,Georgia,serif)}
+.inventory-scene{position:absolute;inset:0;color:#4b3924;font-family:var(--font-display,Georgia,serif)}
 .inventory-scene :deep(*){box-sizing:border-box}
 /* Sheet + head = .skill-sheet/.skill-head verbatim (shared redesigned
    band right of the nav rail, owner ruling: backdrop dong bo). */
@@ -100,4 +103,8 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .item-grid button:focus-visible,.toolbar button:focus-visible{outline:2px solid #806126;outline-offset:3px}
 .inventory-preview{position:absolute;left:560px;top:719px;margin:0;font-size:10px;line-height:15px;color:#7d6a45}
 .inventory-notice{position:absolute;left:900px;top:670px;width:480px;height:28px;margin:0;text-align:right;font-size:12px;color:#62512d}
+
+/* Layout instances are relative to the owning panel content. */
+.inventory-scene :deep(.game-panel__content :is(.inventory-sheet,.inventory-head)) { display: none; }
+.inventory-scene :deep(.game-panel__content .inventory-content) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; }
 </style>

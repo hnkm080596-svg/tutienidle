@@ -54,8 +54,11 @@ vi.mock('@/composables/useTurnCombatManual', () => ({
 // assertion makes the dao passive always learned on that way).
 vi.mock('@/composables/useGameState', () => ({
   useGameManager: () => ({
+    catalogOps: { getSkillTemplate: () => undefined },
     setBattleManualMode: mocks.setBattleManualMode,
     progressionOps: {
+      getSkillLevel: () => 1,
+      getSkillCoreMaxLevel: () => 10,
       betaCombatRolesFor: (player: PlayerData) =>
         betaCombatRolesFor(player, { hasSkill: () => true }),
       betaCombatSurfacesFor: (player: PlayerData) =>
@@ -118,12 +121,12 @@ function entry(overrides: Partial<TurnSkillPresentationEntry> = {}): TurnSkillPr
   }
 }
 
-function mountBar(): HTMLElement {
+function mountBar(card = false): HTMLElement {
   const container = document.createElement('div')
 
   document.body.appendChild(container)
 
-  const app = createApp({ render: () => h(TurnCombatSkillBar) })
+  const app = createApp({ render: () => h(TurnCombatSkillBar, { card }) })
 
   // The bar speaks i18n now (skillBar.* keys) -- mount needs the plugin,
   // same pattern as CombatExitConfirmModal.test.ts.
@@ -134,6 +137,16 @@ function mountBar(): HTMLElement {
 }
 
 describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
+  it('lights the automatic basic and locks unavailable card slots without manual-click eligibility dimming', async () => {
+    mocks.playerState = mortalPlayer()
+    mocks.slotList = [entry({ skillId: 'tram', state: 'not_your_turn' }), entry({ skillId: '', state: 'locked' }), entry({ skillId: '', state: 'empty' })]
+    const container = mountBar(true)
+    await nextTick()
+    expect(container.querySelector('.is-auto-active .slot-view--filled')).not.toBeNull()
+    expect(container.querySelector('.combat-skill-slot__orbit')).not.toBeNull()
+    expect(container.querySelectorAll('.slot-view__veil-glyph')).toHaveLength(2)
+    appCleanup(container)
+  })
   it('slot mang skillName → hiển thị tên thật thay nhãn role', async () => {
     mocks.playerState = mortalPlayer()
     mocks.slotList = [
@@ -214,3 +227,15 @@ describe('TurnCombatSkillBar — ngo_dao passive emblem', () => {
 function appCleanup(container: HTMLElement): void {
   container.remove()
 }
+
+it('card layout includes three circular roles while keeping the hidden ultimate disabled', async () => {
+  mocks.playerState = mortalPlayer()
+  mocks.slotList = [entry({ state: 'ready' }), entry({ state: 'ready' }), entry({ state: 'ready' })]
+  const container = mountBar(true)
+  await nextTick()
+  const buttons = container.querySelectorAll<HTMLButtonElement>('button.turn-combat-skill-bar__slot-button')
+  expect(buttons).toHaveLength(3)
+  expect(buttons[2]!.getAttribute('aria-disabled')).toBe('true')
+  expect(buttons[2]!.disabled).toBe(false)
+  expect(container.querySelectorAll('.turn-combat-skill-bar__orb-frame')).toHaveLength(0)
+})

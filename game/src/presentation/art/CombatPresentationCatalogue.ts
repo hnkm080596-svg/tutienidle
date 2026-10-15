@@ -530,6 +530,7 @@ export function buildCatalogue(): {
     firstFrame: range.firstFrame,
     lastFrame: range.lastFrame,
     frameSequence: range.frameSequence,
+    chargeStartFrameIndex: range.chargeStartFrameIndex,
     frameRate,
     sourceSize: { ...sourceSize },
     extent,

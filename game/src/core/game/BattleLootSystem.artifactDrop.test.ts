@@ -36,7 +36,7 @@ describe('BattleLootSystem — Đoán Bảo Thạch drop deferred (doc §6, M-F-
     const { killEnemy, materialBag } = createLootTestSetup({
       realmId: 'qi_refining',
       stage: { stageId: 'qr_5', requiredRealmId: 'qi_refining', floor: 5 },
-      materialTemplates: [DOMAIN_TAGGED_STONE, { id: 'qi_refining_ore_decade' }],
+      materialTemplates: [DOMAIN_TAGGED_STONE, { id: 'material_spirit_ore_decade' }],
     })
 
     killEnemy()

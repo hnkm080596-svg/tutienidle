@@ -904,6 +904,8 @@ Production and decomposition consume the same workforce authority where product 
 
 ### Current contract migration — Architecture, 2026-10-12
 
+Maintained resource update, 2026-10-14: wood/ore now have five age-only IDs (`material_spirit_wood_<age>`, `material_spirit_ore_<age>`), without realm metadata or realm output rolls; herbs retain their realm/recipe/age contract. Spirit stone is one fresh identity `material_spirit_stone`, still held in MaterialBag, with realm-dependent quantities. Upgrade realm gates and numeric tables are retained. Wood/mine cycle creation, offline settlement, rate queries and save validation share the age-only baseline clock. Save v91 intentionally has no legacy migration and preserves incompatible old saves. Functional evidence and deferred balance/full-QA scope: `game/docs/qa/material-resource-cutover-2026-10-14.md`.
+
 IN PROGRESS in `codex/architecture-production-panel` (baseline `f2729f0bf`). The user explicitly superseded the old workforce contract: remove workers; each enabled production site owns one independent cycle, disabling siblings never increases speed. `ProductionSystem` and `ProductionOffline` retain the common advancement primitive, preserve carried pending work, and project new saves through `productionCycles` with legacy worker fields accepted only at the restore boundary.
 
 Decomposition is an immediate atomic command, with integer output rounded down and no debit when output is below one. It uses no workforce, timer or offline progression. Existing Beta hidden admission remains authoritative. Old decomposition settings/deadline saves are inert compatibility data, not authority to consume material on restore.
@@ -3363,3 +3365,9 @@ Sau mỗi lần khảo sát/brainstorm/viết plan/merge cho một hạng mục:
 5. Lịch sử merge trong mục 8.5/9.x chỉ để tra cứu — không dùng để theo dõi việc đang chạy.
 
 - 2026-10-13 accepted ruling: each production site owns up to ten hours of offline cycle work. The allowance is not shared or transferable; map order and sibling toggles cannot starve or accelerate a site. Legal legacy heads share their own site allowance.
+
+### Combat presentation implementation note - 2026-10-15
+
+Follow-up ruling: the initiative line must finish an actor's visible travel before its ready ACK releases the cast. The production scene now uses token-bound visual readiness rather than display-only gauge interpolation. A UI-asset clock latch holds countdown during chrome loading; avatar admission follows the existing summon visibility lifecycle. The line is avatars plus a single stroke. Detailed evidence remains in the combat presentation polish report below.
+
+Local combat UI changes preserve the core impact/completion authority. CombatScene has a session x1/x2 presentation speed; x2 accelerates battle playback/ACK pacing while production and cultivation clocks stay unscaled. Results retain the finished backdrop; next-background preloading is separate from its commit behind the closed curtain, and renderer readiness waits for pending assets. Current-speed/gauge display uses a CSS/SVG initiative track. Shared 3x3 standing-position mapping drives default placement and companion construction. Evidence and limitations: [combat presentation polish](qa/combat-presentation-polish-2026-10-15.md).

@@ -63,7 +63,7 @@ describe('QA R7 - decompose slice boot safety', () => {
       nextCycleAt: Date.now() - 60_000,
       started: true,
     }
-    const ore = source.manager.materialRegistry.get('mortal_ore_decade')
+    const ore = source.manager.materialRegistry.get('material_spirit_ore_decade')
     expect(ore).toBeDefined()
     save.materials = [{ materialId: ore!.id, amount: 1000 }]
 

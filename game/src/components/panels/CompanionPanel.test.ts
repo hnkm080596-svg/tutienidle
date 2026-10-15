@@ -39,7 +39,7 @@ const FEED_MATERIAL: Material = {
 
 // In-scope categories but feed-excluded ids (currency / pull token).
 const SPIRIT_STONE_STUB: Material = {
-  id: 'spirit_stone_ha_pham',
+  id: 'material_spirit_stone',
   name: 'Test Spirit Stone',
   category: 'spirit_stone',
   sourceType: 'building',

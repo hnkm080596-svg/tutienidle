@@ -212,6 +212,7 @@
         "refund": "includes {n} Insight already counted above"
       },
       "respec": {
+        "resetPoints": "Reset Points",
         "button": "Respec",
         "title": "Respec Node Tree",
         "body": "Reset all node investment? Regain {regain} Insight — {count} nodes and cores reset to 0. Free while in Beta.{clawback}",
@@ -635,6 +636,26 @@
       "pageNext": "Next page"
     },
     "production": {
+      "sourceNames": {
+        "mine": "Spirit Mine",
+        "forest": "Blessed Land",
+        "grotto": "Heavenly Grotto"
+      },
+      "resources": {
+        "vein": "Spirit Stones",
+        "mine": "Spirit Ore",
+        "forest": "Spirit Timber",
+        "grotto": "Medicinal Herbs"
+      },
+      "descriptions": {
+        "vein": "Earth veins gather spiritual energy into crystal.",
+        "mine": "Hidden spirit ore awaits the forge.",
+        "forest": "Blessed soil nourishes spirit timber.",
+        "grotto": "Gathered spiritual energy nurtures medicinal herbs."
+      },
+      "stoneRate": "{amount} Spirit Stones/s",
+      "resourceRate": "{amount} {resource}/s",
+      "cycleDuration": "Cycle: {seconds} seconds",
       "summary": "Khai Vật Đường harvests materials for every realm — assign workers to a source, receive them straight into the Bag.",
       "kinds": {
         "forest": "Grove",
@@ -659,6 +680,7 @@
       "linMach": {
         "title": "Spirit Vein",
         "rateSuffix": "/min",
+        "cycleYield": "+{amount} Spirit Stones / {seconds}s",
         "collect": "Collect"
       },
       "remaining": "{time}",
@@ -855,6 +877,7 @@
         "musicVolume": "Music",
         "sfxVolume": "Effects",
         "uiVolume": "Interface",
+        "reducedMotion": "Reduce motion",
         "reducedShake": "Reduce screen shake"
       },
       "language": {
@@ -957,12 +980,14 @@
       "preview": "Produces {amount} essence.",
       "success": "Produced {amount} essence.",
       "empty": "No ore is available to refine.",
+      "belowMinimum": "Stacks yielding less than 1 essence are kept. Collect more to decompose them.",
       "hint": {
         "scope_hidden": "This feature is unavailable.",
         "invalid_amount": "Choose a positive whole-number amount.",
         "invalid_ore": "Choose a valid ore.",
         "insufficient_ore": "You do not have enough of that ore.",
         "insufficient_amount": "Choose more ore to produce at least one essence.",
+        "inventory_changed": "Materials have changed. Select them again to decompose.",
         "output_capacity": "Make room for the essence before refining."
       }
     },
@@ -1267,7 +1292,32 @@
         "mp": "MP",
         "ward": "Ward",
         "effects": "Effects"
+      },
+      "healthHud": {
+        "caption": "Steady your resolve; overcome the inner demon…",
+        "showLog": "Show battle log",
+        "hideLog": "Hide battle log"
+      },
+      "pending": {
+        "speed": "Speed ×2",
+        "item": "Items",
+        "hint": "This feature is not available yet."
       }
+    },
+    "partyCard": {
+      "stats": "Current Stats",
+      "might": "Damage",
+      "defense": "Defense",
+      "speed": "Speed",
+      "empty": "Empty Position",
+      "resource": "Momentum"
+    },
+    "playbackSpeed": "Combat playback speed ×{speed}",
+    "initiative": {
+      "title": "Initiative",
+      "current": "Speed · Action Progress",
+      "ready": "Ready",
+      "actorValue": "Speed {speed} · {gauge}%"
     }
   },
   "onboarding": {
@@ -1536,7 +1586,8 @@
       "timeLeft": "Time remaining",
       "realmCardTitle": "Tribulation: {name}",
       "progressLabel": "Progress",
-      "resolve": "Hold the dao heart — overcome the heart demon"
+      "resolve": "Hold the dao heart — overcome the heart demon",
+      "sceneTitle": "Heavenly Tribulation"
     }
   },
   "actionFailure": {
@@ -1641,7 +1692,7 @@
       "invalid_clock": "The system clock is misbehaving — try again in a moment"
     },
     "outcomeNone": "This run yields no pills.",
-    "queueTitle": "Brewing Queue",
+    "queueTitle": "Queue",
     "brewing": "Brewing",
     "queueEmpty": "No cauldron is brewing yet.",
     "placeIngredients": "Place ingredients into the cauldron",
@@ -2055,6 +2106,9 @@
     "body": "Hung Giao Sung has fallen — every piece of beta content has been conquered: Mortal, Qi Refining, Foundation Establishment. Thank you for playing.",
     "continue": "Continue Cultivating"
   },
+  "inventoryTooltip": {
+    "purpose": "Purpose"
+  },
   "architecture": {
     "title": "Sect Architecture",
     "subtitle": "Sect buildings, spirit veins, and resources",
@@ -2164,7 +2218,7 @@
     "settings": "Settings"
   },
   "character": {
-    "mainStats": "Main Attributes",
+    "mainStats": "Five Roots",
     "points": "({count} points)",
     "max": "MAX",
     "allocate": "Allocate",
@@ -2230,6 +2284,9 @@
     "advanceNotice": "Technique advanced to {grade}."
   },
   "skill": {
+    "treeCardTitle": "Technique Pathways",
+    "insightTooltip": "Spend Insight to learn and upgrade techniques when their requirements are met.",
+    "detailCardTitle": "Technique Details",
     "title": "Skills",
     "navigation": "Features",
     "preview": "UI PREVIEW · Sample data, not wired to gameplay",
@@ -2320,7 +2377,7 @@
     "subtitle": "Spirit gear guards the body · Companions on the immortal road",
     "navigation": "Functions",
     "previewStamp": "UI PREVIEW · Sample data, not wired to gameplay",
-    "summary": "Equipment Attributes",
+    "summary": "Equipment Stats",
     "bag": "Gear Stash",
     "sort": "Sort",
     "filter": "Filter",

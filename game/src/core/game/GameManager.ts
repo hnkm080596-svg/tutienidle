@@ -936,6 +936,7 @@ export class GameManager {
     // tribulationDirector) and saveRestore-adjacent deferred closures
     // point back into it.
     this.tickOps = new GameManagerTickOps({
+      settleAutomaticProduction: (player) => this.buildingOps.settleAutomaticProduction(player),
       getActivePlayer: () => this.activePlayer,
       tickTimedEffects: (player) => this.effectOps.tickTimedEffects(player),
       questSystem: this.questSystem,

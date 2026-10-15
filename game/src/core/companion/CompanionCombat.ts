@@ -8,8 +8,9 @@ import type { CombatEntity } from '@/core/combat/CombatEntity'
 import type { CompanionDefinition, CompanionInstance } from '@/data/companion/Companions'
 import { companionStatsAt } from './CompanionProgression'
 import { getRealmIndex } from '@/core/realm/realmSystem'
+import type { GridPosition } from '@/core/battle/BattleGrid'
 
-export function companionToCombatEntity(instance: CompanionInstance, definition: CompanionDefinition): CombatEntity {
+export function companionToCombatEntity(instance: CompanionInstance, definition: CompanionDefinition, position: Readonly<GridPosition>): CombatEntity {
   // companionStatsAt (companion-gacha Task 2) owns the full stat derivation:
   // base x realm-level growth x constellation multiplier x 'stat' perks.
   const scaled = companionStatsAt(definition, instance)
@@ -27,8 +28,8 @@ export function companionToCombatEntity(instance: CompanionInstance, definition:
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: getRealmIndex(instance.realmId),
-    x: 0, // se bi ghi de boi vi tri o ma FormationLoadout/DEFAULT resolve cho companion nay (Part C)
-    row: 4,
+    x: position.column,
+    row: position.row,
     alive: true,
   }
 }

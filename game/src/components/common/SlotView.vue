@@ -23,6 +23,7 @@ import type { SlotBadge, SlotPresentationState, SlotVariant } from './SlotTypes'
 // The art is painted via --slot-bg-image under :is(#app) so it wins the
 // global slot-frame.png rule.
 const props = defineProps<{
+  circleFrameSrc?: string
   /** Item ma Slot dang chua. null = slot trong - filled/empty suy truc
    * tiep tu day, KHONG co prop `hasItem` rieng. */
   item: T | null
@@ -87,6 +88,8 @@ const props = defineProps<{
   /** Presentation-only render (tooltip card header): root becomes a
    * span role=img, tooltip/click/hover suppressed. */
   static?: boolean
+  /** Read-only slots may opt into hover/focus descriptions without actions. */
+  staticTooltip?: boolean
 
   /** Cuong hoa aura (owner ruling 2026-10-08): slot-level enhance 0-100,
    * 10 cap moi canh gioi. Mau = --rank-color-{canh} (ceil(level/10));
@@ -316,10 +319,11 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
       '--slot-quality-color': qualityTintColor,
     }"
     :role="props.static ? 'img' : undefined"
+    :tabindex="props.static && props.staticTooltip ? 0 : undefined"
     :aria-disabled="props.static ? undefined : isBlocked ? 'true' : undefined"
     :aria-busy="props.static ? undefined : showProcessing ? 'true' : undefined"
     :aria-label="accessibleLabel ?? label"
-    v-tooltip="props.static ? undefined : tooltipContent"
+    v-tooltip="props.static && !props.staticTooltip ? undefined : tooltipContent"
     @click="handleClick"
   >
     <!-- layer 1.4 (art-frame variants only): Pham recolor - masked to
@@ -341,7 +345,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     <img
       v-if="isCircle"
       class="slot-view__ring-art"
-      :src="CIRCLE_FRAME_SRC"
+      :src="circleFrameSrc ?? CIRCLE_FRAME_SRC"
       alt=""
       aria-hidden="true"
     />

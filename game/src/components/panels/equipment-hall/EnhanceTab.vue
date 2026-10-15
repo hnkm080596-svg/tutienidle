@@ -455,7 +455,7 @@ const mainStatLabel = computed(() => enhancePreviewRows.value?.[0]?.label ?? '')
   position: absolute;
   left: 16px;
   right: 16px;
-  bottom: -2px;
+  bottom: 18px;
 }
 .equipment-forge-workspace h2 {
   font-size: 26px;
@@ -654,7 +654,9 @@ const mainStatLabel = computed(() => enhancePreviewRows.value?.[0]?.label ?? '')
    (owner ruling 2026-10-08) - 'filter-art' keeps the 1225/324 pill
    ratio so the frame grows with the text instead of a fixed rect. */
 .equipment-forge-actions > button {
-  width: 300px;
+  width: 255px;
+  min-height: 48px;
+  padding: 8px 29px;
   font-size: 24px;
 }
 .enhance-empty {

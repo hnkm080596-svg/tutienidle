@@ -206,6 +206,8 @@ describe('Tooltip - equipment compare pair (spec section 4)', () => {
 
     const groups = pair!.querySelectorAll('[role="group"]')
     expect(groups.length).toBe(2)
+    expect(pair!.querySelectorAll('.game-card')).toHaveLength(2)
+    expect(pair!.closest('.game-card')).toBeNull()
     expect(groups.item(0).getAttribute('aria-label')).toBe('Đang Mặc')
     expect(groups.item(1).getAttribute('aria-label')).toBe('Vật Phẩm Đang Xem')
 
@@ -229,6 +231,34 @@ describe('Tooltip - equipment compare pair (spec section 4)', () => {
 
     expect(document.querySelector('.tooltip__pair')).toBeNull()
     expect(document.querySelector('#global-tooltip .item-card')).not.toBeNull()
+    expect(document.querySelectorAll('#global-tooltip .game-card')).toHaveLength(1)
     expect(document.querySelector('#global-tooltip [role="group"]')).toBeNull()
+  })
+})
+
+describe('Tooltip purpose-specific frames', () => {
+  it('keeps stat sources and total inside a single shared frame', async () => {
+    mountTooltipApp()
+    const owner = document.createElement('button')
+    document.body.appendChild(owner)
+    cleanup.push(() => owner.remove())
+    useTooltip().showTooltip({ kind: 'stat', name: 'Attack', total: '123', sections: [{ label: 'Sources', rows: [{ label: 'Base', value: '100' }, { label: 'Equipment', value: '+23' }] }] }, owner)
+    await nextTick()
+    const card = document.querySelector('#global-tooltip .game-card')
+    expect(card?.querySelector('.tooltip__stat-total')?.textContent).toBe('123')
+    expect(card?.querySelectorAll('.tooltip__section-row')).toHaveLength(2)
+    expect(card?.querySelectorAll('.game-card__frame')).toHaveLength(1)
+  })
+
+  it('preserves element banner art without a second card frame', async () => {
+    mountTooltipApp()
+    const owner = document.createElement('button')
+    document.body.appendChild(owner)
+    cleanup.push(() => owner.remove())
+    useTooltip().showTooltip({ kind: 'element', element: 'wood', title: 'Wood', description: 'Element effect' }, owner)
+    await nextTick()
+    expect(document.querySelector('#global-tooltip .tooltip__banner')).not.toBeNull()
+    expect(document.querySelector('#global-tooltip .game-card')).toBeNull()
+    expect(document.querySelector('#global-tooltip')?.textContent).toContain('Element effect')
   })
 })

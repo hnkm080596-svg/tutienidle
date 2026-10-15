@@ -9,7 +9,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import GameActionButton from '@/components/common/GameActionButton.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 import { CORE_REALM_LEVEL } from '@/core/realm/realmSystem'
 import type { RealmUiModel } from './realmUi'
@@ -48,8 +48,8 @@ function onRitual() {
         <span>{{ model.rate }}</span>
       </div>
       <div class="realm-actions">
-        <EquipmentArtButton filter-art gold class="realm-upgrade" :class="{ 'btn-hidden': !ritualReady }" :disabled="!ritualReady" data-testid="realm-ritual" @click="onRitual">{{ model.ctaLabel }}</EquipmentArtButton>
-        <EquipmentArtButton filter-art gold class="realm-upgrade" :class="{ 'btn-hidden': !model.canAdvanceFloor }" :disabled="!model.canAdvanceFloor" data-testid="realm-upgrade" @click="emit('advance')">{{ t('realm.advance') }}</EquipmentArtButton>
+        <GameActionButton gold class="realm-upgrade" :class="{ 'btn-hidden': !ritualReady }" :disabled="!ritualReady" data-testid="realm-ritual" @click="onRitual">{{ model.ctaLabel }}</GameActionButton>
+        <GameActionButton gold class="realm-upgrade" :class="{ 'btn-hidden': !model.canAdvanceFloor }" :disabled="!model.canAdvanceFloor" data-testid="realm-upgrade" @click="emit('advance')">{{ t('realm.advance') }}</GameActionButton>
       </div>
     </template>
     <p v-else class="realm-status-line">{{ statusLabel }}</p>
@@ -82,7 +82,7 @@ function onRitual() {
 .realm-row { display:flex; justify-content:space-between; font-size:13px; font-weight:700; color:#241708; text-shadow:0 0 2px #f4e7ce, 0 0 4px #f4e7ce, 0 0 8px #f4e7ce, 0 1px 0 #f4e7ce; }
 .realm-rate { font-size:12px; margin-top:2px; justify-content:center; }
 .realm-actions { display:grid; grid-template-columns:1fr; gap:2px; flex:none; margin-top:auto; }
-.realm-actions .realm-upgrade { font-size:15px; margin-top:0; width:100%; aspect-ratio:auto; height:50px; }
+.realm-actions .realm-upgrade.game-action-button { font-size:15px; margin-top:0; width:100%; aspect-ratio:auto; height:50px; }
 /* Gate unmet: the button is invisible but keeps its slot so the card
    layout stays fixed whether or not the action exists (owner ruling). */
 .realm-actions .realm-upgrade.btn-hidden { visibility:hidden; }

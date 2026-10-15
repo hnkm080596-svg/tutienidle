@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
-import BagChipSelect from './BagChipSelect.vue'
+import GameDropdownButton from '@/components/common/GameDropdownButton.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useUiStore, type BagSortStateMap, type EquipmentSortMode } from '@/stores/ui'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
@@ -373,12 +373,12 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
       <!-- Owner ruling: custom chip-art dropdowns (BagChipSelect) - the
            equipment filter chip art + bag card nine-slice list backdrop;
            native <select> could not wear either. -->
-      <BagChipSelect
+      <GameDropdownButton
         v-model="typeFilter"
         :options="TYPE_OPTIONS"
         :label="t('panels.bag.filterAriaEquipment')"
       />
-      <BagChipSelect
+      <GameDropdownButton
         :model-value="sortMode"
         :options="SORT_OPTIONS"
         :label="t('equipment.order')"

@@ -1,3 +1,6 @@
+
+/* Instance panels own their internal presentation. */
+@scope (:root) to (:is(.game-panel, .combat-panel__content, .game-card, .game-action-button, .game-tab-button, .game-dropdown-button, .chip-select, .slot-view)) {
 /* Secondary surfaces share the same paper and ink art as the PC scenes.
    Teleported dialogs and tooltips intentionally use their own root selectors. */
 :is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel) {
@@ -26,24 +29,6 @@
 :is(#app, body) :is(.offline-summary__rows,.tutorial-overlay__body,.beta-completion__body,.abandon-modal__message,.lore-modal__description) { color: #675637; font-size: 16px; line-height: 1.65; }
 :is(#app, body) .overlay-panel__card .game-button--primary, :is(#app, body) :is(.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel) .game-button--primary { color: #352713; }
 :is(#app, body) .overlay-panel__card .game-button--secondary, :is(#app, body) :is(.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel) .game-button--secondary { color: #eddeb6; }
-
-:is(#app, body) #global-tooltip:not(.tooltip--element) {
-  --hk-text-primary: #f0dfb7; --hk-text-secondary: #d5c6a6; --hk-text-muted: #ad9d7c;
-  --hk-border-muted: #ad8e4966; --hk-gold-muted: #d1b679;
-  color: #f0dfb7; background: #15221e;
-  padding: 22px 24px; border: 0 solid transparent; border-radius: 0; font: 14px/1.55 var(--font-display);
-  border-image: var(--th-art-panel-frame-v2) 240 320 / 26px / 0 stretch;
-  box-shadow: 0 8px 24px #0006;
-}
-:is(#app, body) #global-tooltip:not(.tooltip--element) > .ink-nine-slice { visibility: hidden; }
-:is(#app, body) #global-tooltip:not(.tooltip--element)::before { inset: 25px auto 25px 15px; }
-:is(#app, body) #global-tooltip .tooltip__title { font-size: 18px; line-height: 1.35; }
-:is(#app, body) #global-tooltip .item-card__name { font-size: 18px; line-height: 1.4; }
-:is(#app, body) #global-tooltip .item-card__header { padding-bottom: 9px; }
-:is(#app, body) #global-tooltip .item-card__section { margin-top: 12px; padding-top: 10px; }
-:is(#app, body) #global-tooltip .item-card__section-label { font-size: 12px; letter-spacing: .04em; }
-:is(#app, body) #global-tooltip .item-card__row { column-gap: 18px; line-height: 1.65; }
-:is(#app, body) #global-tooltip .tooltip__icon-shell, :is(#app, body) #global-tooltip .item-card__icon-shell { background: #0b1512; border-color: #ac8c4f; }
 
 :is(#app, body) .tran-phap-panel { display: grid; grid-template-columns: 120px minmax(240px, 1fr) minmax(260px, 1.2fr); grid-template-rows: minmax(0, 1fr) auto; gap: 20px; overflow: hidden; }
 :is(#app, body) .tran-phap-panel__body { display: contents; }
@@ -125,13 +110,12 @@
 :is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::before { content: ''; position: absolute; inset: 18px; border-radius: 26px; background: #efe4ca var(--th-art-paper-surface) center/cover; z-index: -1; pointer-events: none; }
 :is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::before { z-index: -2; }
 :is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::after { content: ''; position: absolute; inset: 0; border: 0 solid transparent; border-image: inherit; z-index: -1; pointer-events: none; }
-:is(#app, body) #global-tooltip:not(.tooltip--element) { background: transparent; border-image-source: none; box-shadow: none; }
-:is(#app, body) #global-tooltip:not(.tooltip--element)::after { content: ''; position: absolute; inset: 7px; border-radius: 12px; background: #15221e; z-index: -1; pointer-events: none; }
-:is(#app, body) #global-tooltip:not(.tooltip--element) > .ink-nine-slice { visibility: visible; }
 :is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel) { box-shadow: none; }
 :is(#app, body) :is(.toast-item) { background: transparent; border-color: transparent; box-shadow: none; isolation: isolate; }
 :is(#app, body) .toast-item::before { content: ''; position: absolute; inset: 6px; border-radius: 10px; background: #15221ef5; z-index: -2; pointer-events: none; }
 :is(#app, body) .toast-item::after { content: ''; position: absolute; inset: 0; border: 0 solid transparent; border-image: inherit; z-index: -1; pointer-events: none; }
 :is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::before {
   inset: 3px; border-radius: 3px;
+}
+
 }

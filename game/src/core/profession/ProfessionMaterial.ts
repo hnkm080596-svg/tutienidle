@@ -1,15 +1,5 @@
-// ProfessionMaterial (2026-08-25, resource-professions-rework plan sec5/sec6)
-// - metadata nghe gan len Material cho vong kinh te moi: Dia Gioi ->
-// Lam/Quang/Dong Thien -> Bag -> Khi Duong/Dan Phong. KHONG con cap
-// raw|processed (plan sec2). Optional field tren Material nen save cu /
-// material legacy khong co metadata van load binh thuong.
-//
-// ID convention (gp123 6E task C2 - truc tuoi thong nhat):
-// - Go: `<realm>_wood_<age>` (age in decade..thuong_co; plain
-//   `<realm>_wood` va hau to pham hoang..tien da XOA)
-// - Quang: `<realm>_ore_<age>`
-// - Linh thao Dong Thien: `<herbBase>_<age>`
-// TEN HIEN THI nam trong catalog data, KHONG parse tu id de lay ten.
+// Resource identity has two distinct contracts: wood/ore carry age only,
+// while herbs retain recipe, realm and age. Display labels live in data.
 
 import type { HerbAge } from '../production/ProductionTypes'
 import { HERB_AGES } from '../production/ProductionTypes'
@@ -37,7 +27,7 @@ export const SUPPORTED_PROFESSION_REALMS: readonly string[] = [
 export interface ProfessionMaterialMeta {
   resourceKind: ResourceKind
 
-  realmId: string
+  realmId?: string
 
   /** gp123 6E C2: go/khoang/thao deu dung truc tuoi thong nhat. */
   age?: HerbAge
@@ -49,16 +39,17 @@ export interface ProfessionMaterialMeta {
   herbBaseId?: string
 }
 
-/**
- * Authoritative wood/ore (Go/Quang) id constructor - `<realmId>_<kind>_<age>`.
- * Parsers (DecomposeSystem ORE_ID_PATTERN) mirror this grammar.
- */
+/** Authoritative identity constructor for the fresh age-only resource table. */
 export function buildProfessionMaterialId(
   resourceKind: 'wood' | 'ore',
-  realmId: string,
   age: HerbAge,
 ): string {
-  return `${realmId}_${resourceKind}_${age}`
+  return `material_spirit_${resourceKind}_${age}`
+}
+
+/** Canonical resource identity carries age only; realms belong to herbs. */
+export function parseProfessionResourceId(resourceKind: 'wood' | 'ore', id: string): HerbAge | null {
+  return HERB_AGES.find(age => buildProfessionMaterialId(resourceKind, age) === id) ?? null
 }
 
 /** Linh thao base identity chung cac bien the nien dai - `<herbId>_<realmId>`. */

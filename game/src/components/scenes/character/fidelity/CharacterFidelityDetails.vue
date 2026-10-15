@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import GameCard from "@/components/common/GameCard.vue"
+import CharacterCardTitle from './CharacterCardTitle.vue'
 // Detail column (G3 mock): one scroll of stacked cards, each a stat
 // group (offense/defense split - user ruling). Rows keep the per-source
 // hover breakdown.
@@ -13,19 +15,19 @@ const rowTooltip = (row: CharacterUiDetail) =>
 </script>
 <template>
   <aside class="character-detail-scroll" data-testid="character-detail-scroll">
-    <section v-for="group in (['offense', 'defense'] as const)" :key="group" class="character-card character-detail-card">
-      <h2>{{ t(`character.${group}`) }}</h2>
+    <GameCard as="section" v-for="group in (['offense', 'defense'] as const)" :key="group" class="character-card character-detail-card">
+      <template #title><CharacterCardTitle :label="t(`character.${group}`)" /></template>
       <dl class="character-card-scroll">
         <div v-for="row in model[group]" :key="row.id" v-tooltip="rowTooltip(row)">
           <dt>{{ row.label }}</dt>
           <dd>{{ row.value }}</dd>
         </div>
       </dl>
-    </section>
+    </GameCard>
   </aside>
 </template>
 <style scoped>
-.character-detail-scroll { min-height: 0; overflow: hidden; display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.character-detail-scroll { min-height: 0; overflow: visible; display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .character-detail-scroll::-webkit-scrollbar { display: none; }
 .character-detail-card { margin: 0; min-height: 0; display: flex; flex-direction: column; }
 .character-card-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding-bottom: 10px; mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent); -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent); }

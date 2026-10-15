@@ -6,6 +6,7 @@
 // Decides visibility only; CombatGridView.setSpriteVisible applies it.
 import type { CombatScene } from '../CombatScene'
 import type { EntitySprite } from './combatTypes'
+import { resetInitiativeSummons, setInitiativeSummoned } from '@/presentation/combat/CombatInitiativeReady'
 
 export class CombatEntityVisualLifecycle {
   private pendingSet = new Set<string>()
@@ -30,6 +31,7 @@ export class CombatEntityVisualLifecycle {
   markPending(ids: Iterable<string>): void {
     for (const id of ids) {
       this.pendingSet.add(id)
+      setInitiativeSummoned(id, false)
     }
   }
 
@@ -55,6 +57,7 @@ export class CombatEntityVisualLifecycle {
 
       if (sprite) {
         this.scene.gridView.setSpriteVisible(sprite, true)
+        setInitiativeSummoned(id, true)
       }
     }
 
@@ -64,6 +67,7 @@ export class CombatEntityVisualLifecycle {
   /** Wave telegraph ended for id: fade-in when its sprite next reconciles. */
   markMaterializing(id: string): void {
     this.materializingSet.add(id)
+    setInitiativeSummoned(id, false)
   }
 
   /** If id is materializing: consume the mark and play scene.playMaterializeFadeIn(sprite). Returns true if consumed. */
@@ -103,6 +107,7 @@ export class CombatEntityVisualLifecycle {
 
   /** Drop pending + materializing marks (battle start / scene shutdown). Does NOT touch the player flag - callers order that explicitly, as today. */
   clear(): void {
+    resetInitiativeSummons()
     this.pendingSet.clear()
     this.materializingSet.clear()
   }

@@ -171,7 +171,7 @@ function settledDefeatSave(receiptOverrides: Record<string, unknown> = {}) {
     receipt: {
       kind: 'defeat',
       cultivationLossPercent: 10,
-      spiritStoneId: 'spirit_stone_ha_pham',
+      spiritStoneId: 'material_spirit_stone',
       spiritStonesLost: 3,
       announcement: {
         titleKey: 'announce.tribulation.defeat.title',
@@ -237,7 +237,7 @@ describe('F-TRB-RECEIPT: committedOutcome.receipt binds the writer emit shape', 
     const save = settledVictorySave({
       kind: 'defeat',
       cultivationLossPercent: 10,
-      spiritStoneId: 'spirit_stone_ha_pham',
+      spiritStoneId: 'material_spirit_stone',
       spiritStonesLost: 3,
     })
 

@@ -45,7 +45,7 @@ describe('PhysiqueEssence registry (M-QI-08)', () => {
     expect(physiqueEssenceMaterialId('linh')).toBeUndefined()
     expect(physiqueEssenceMaterialId('tien')).toBeUndefined()
     expect(physiqueEssenceGradeOf('tinh_hoa_linh_the')).toBeUndefined()
-    expect(physiqueEssenceGradeOf('qi_refining_ore_decade')).toBeUndefined()
+    expect(physiqueEssenceGradeOf('material_spirit_ore_decade')).toBeUndefined()
     expect(physiqueEssenceGradeOf('luyen_khi_tinh_hoa')).toBeUndefined()
   })
 

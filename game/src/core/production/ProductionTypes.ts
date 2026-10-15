@@ -137,7 +137,7 @@ export interface ForestRewardDefinition {
   materialId: string
 
   /** Realm tier ma loai go nay thuoc ve trong Dia Gioi. */
-  realmId: string
+  realmId?: string
 
   /** gp123 6E C2: bien the tuoi cua go (thay vi amount co dinh 3/2/1). */
   age: HerbAge
@@ -148,7 +148,7 @@ export interface ForestRewardDefinition {
 export interface MineRewardDefinition {
   materialId: string
 
-  realmId: string
+  realmId?: string
 
   /** gp123 6E C2: truc tuoi thong nhat (truoc day `quality: OreQuality`). */
   age: HerbAge

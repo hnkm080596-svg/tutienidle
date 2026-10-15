@@ -13,8 +13,10 @@ import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useStateVersion } from '@/composables/useGameState'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import type { BattleLogEntry } from '@/core/battle/turn/TurnOrderPreview'
+import GameCard from '@/components/common/GameCard.vue'
 
 const MAX_VISIBLE = 30
+withDefaults(defineProps<{ collapsible?: boolean }>(), { collapsible: true })
 
 const { isBattleFighting, logEntries, participantNameOf } = useTurnBattleInfo()
 const { t } = useI18n()
@@ -69,20 +71,22 @@ function describe(entry: BattleLogEntry): string {
 </script>
 
 <template>
-  <div v-if="visible" class="battle-log-panel">
+  <GameCard v-if="visible" class="battle-log-panel">
     <button
+      v-if="collapsible"
       type="button"
       class="battle-log-panel__toggle"
       :aria-expanded="!collapsed"
       @click="collapsed = !collapsed"
     >{{ collapsed ? `${t('combat.log.toggle')} ▸` : `${t('combat.log.toggle')} ▾` }}</button>
+    <h2 v-else class="battle-log-panel__heading">{{ t('combat.log.toggle') }}</h2>
 
-    <div v-if="!collapsed" class="battle-log-panel__entries">
+    <div v-if="!collapsible || !collapsed" class="battle-log-panel__entries">
       <p v-for="(entry, index) in recentEntries" :key="`${entry.turn}-${index}`" class="battle-log-panel__line">
         {{ describe(entry) }}
       </p>
     </div>
-  </div>
+  </GameCard>
 </template>
 
 <style scoped>
@@ -103,6 +107,8 @@ function describe(entry: BattleLogEntry): string {
   font-size: var(--text-xs, 12px);
   color: var(--text-muted, #aaa);
 }
+.battle-log-panel.game-card { box-sizing: border-box; padding: 18px; color: #e5d6b5; }
+.battle-log-panel__heading { margin: 0 0 8px; font: 700 17px/1.3 var(--font-display); color: #e4c573; }
 
 .battle-log-panel__toggle {
   align-self: flex-end;
@@ -121,10 +127,11 @@ function describe(entry: BattleLogEntry): string {
 }
 
 .battle-log-panel__entries {
-  overflow: hidden;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 2px;
 }
 

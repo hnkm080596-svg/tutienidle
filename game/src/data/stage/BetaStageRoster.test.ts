@@ -8,6 +8,8 @@ import { describe, expect, it } from 'vitest'
 
 import { STAGES } from './Stages'
 import { ENEMIES } from '../enemy/Enemies'
+import { enemyToCombatEntity } from '../../core/enemy/Enemy'
+import { enemyBasicAttackFor } from '../skill/TurnBasicAttacks'
 import { HIDDEN_BEASTS } from '../enemy/HiddenBeasts'
 import { hiddenBeastChannels } from '../drop/HiddenMaterialChannels'
 import { stageSpawnableEnemyIds } from '../../core/stage/StageSpawnableEnemies'
@@ -122,6 +124,21 @@ describe('beta stage roster census (BETA SCOPE LOCK v2)', () => {
 
 describe('beta boss mechanics preserved', () => {
   const enemyById = (id: string): Enemy => ENEMIES.find((enemy) => enemy.id === id)!
+
+  it('keeps each shipped species on its authored attack kit through entity conversion', () => {
+    for (const [id, basic, special] of [
+      ['mortal_wild_boar', 'ram', undefined],
+      ['mortal_ferocious_wild_boar', 'ram', 'stomp'],
+      ['bandit', 'slash', undefined],
+      ['ferocious_bandit', 'slash', 'slash_multi'],
+      ['foundation_spirit_wolf', 'bite', undefined],
+      ['foundation_ferocious_spirit_wolf', 'bite', 'bite_multi'],
+    ] as const) {
+      const entity = enemyToCombatEntity(enemyById(id))
+      expect(enemyBasicAttackFor(entity).presetId, id).toBe(basic)
+      expect(entity.specialAttacks?.map(attack => attack.presetId) ?? [], id).toEqual(special ? [special] : [])
+    }
+  })
 
   it('ferocious_bandit: slash flurry every 4th own action + 60-turn enrage', () => {
     const bandit = enemyById('ferocious_bandit')

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { prefersReducedMotion } from '@/presentation/motionPreference'
 // Hoa Luyen / Phan Giai dissolve effect layer (owner spec 2026-10-11):
 // consumed cells crumble into a shard burst, then light motes arc UP to
 // the matching resource chip on the Dong Fu top bar - one stream per
@@ -92,12 +93,7 @@ watch(
   { immediate: true },
 )
 
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
-  )
-}
+
 
 function startBurst(burst: DecomposeFxBurst): void {
   if (prefersReducedMotion()) {
@@ -365,7 +361,7 @@ onBeforeUnmount(() => {
 /* Fixed viewport layer above panels but under blocking modals - the
    confirm modal has already closed when a burst plays. Same recipe as
    the body pour layer: pointer-events none, dots translated per frame. */
-.decompose-fx-layer { position:fixed; left:0; top:0; pointer-events:none; }
+.decompose-fx-layer { position:fixed; inset:0; pointer-events:none; }
 .decompose-fx__shard { position:absolute; left:0; top:0; border-radius:2px; will-change:transform,opacity; }
 .decompose-fx__mote { position:absolute; left:0; top:0; border-radius:50%; will-change:transform,opacity; }
 .decompose-fx__flare { position:absolute; left:0; top:0; width:18px; height:18px; border:1.5px solid; border-radius:50%; will-change:transform,opacity; }

@@ -35,15 +35,17 @@ describe('authored skill presentation recipes', () => {
     expect(getSkillPresentationRecipe('ngu_kiem_flight').cast.every(c => c.primitive !== 'actor-impulse')).toBe(true)
     expect(getSkillPresentationRecipe('boss_ground_slam').cast.every(c => c.primitive !== 'actor-impulse')).toBe(true)
   })
-  it('plays the Linh Bao Arcadia burst at the landed targets on the impact beat', () => {
+  it('reuses the white translucent Phap Tu charge at the targets and detonates there', () => {
     const recipe = getSkillPresentationRecipe('linh_bao_burst')
+    expect(recipe.color).toBe(0xffffff)
+    expect(recipe.impact.some(cue => cue.shape === 'flame')).toBe(false)
     expect([recipe.castMs, recipe.impactMs, recipe.recoveryMs]).toEqual([260, 550, 0])
     expect(recipe.cast).toEqual([
-      { primitive: 'aura', anchor: 'source', shape: 'ring', offsetMs: 0, durationMs: 260 }])
+      { primitive: 'atlas', anchor: 'targets', shape: 'flame', offsetMs: 0, durationMs: 260, fitCastPhase: true,
+        atlas: { key: 'hoa-cau-charge', frames: 51, scale: 1.75, tintFill: 0xffffff, alpha: 0.8 } }])
     expect(recipe.impact).toContainEqual(expect.objectContaining({
-      primitive: 'atlas', anchor: 'targets', shape: 'explosion',
-      offsetMs: 0, durationMs: 550,
-      atlas: { key: 'linh-bao-burst', frames: 12, scale: 1 } }))
+      primitive: 'burst', anchor: 'targets', shape: 'explosion',
+      offsetMs: 0, durationMs: 550, count: 24, scale: 1.3 }))
     expect(recipe.impact).toContainEqual(expect.objectContaining({
       primitive: 'camera-cue', anchor: 'source', shape: 'camera',
       offsetMs: 0, durationMs: 90, intensity: 0.003 }))
@@ -54,7 +56,9 @@ describe('authored skill presentation recipes', () => {
       shape: 'explosion' as const, offsetMs: 0, durationMs: 100 }
     for (const atlas of [undefined, { key: '', frames: 4 }, { key: 'k', frames: 0 },
       { key: 'k', frames: 65 }, { key: 'k', frames: 1.5 }, { key: 'k', frames: 4, scale: 0 },
-      { key: 'k', frames: 4, scale: 9 }])
+      { key: 'k', frames: 4, scale: 9 }, { key: 'k', frames: 51, tintFill: -1 },
+      { key: 'k', frames: 51, tintFill: 0x1000000 }, { key: 'k', frames: 51, alpha: NaN },
+      { key: 'k', frames: 51, alpha: 1.1 }])
       expect(() => validateSkillRecipe({ ...recipe, impact: [{ ...base, atlas }] })).toThrow()
     // An atlas payload on a non-atlas primitive is a recipe bug too.
     expect(() => validateSkillRecipe({ ...recipe, impact: [{ primitive: 'burst' as const,
@@ -109,6 +113,15 @@ describe('authored skill presentation recipes', () => {
 // binding play a 'sheet' impact cue covering the whole sheet window; the
 // analytic primitives stay in place as the procedural fallback.
 describe('sheet cue injection (Monster attack VFX sweep)', () => {
+  it('does not overlay a weapon slash on ram, bite or stomp animations', () => {
+    for (const id of ['ram', 'ram_multi', 'bite', 'bite_multi', 'stomp', 'stomp_multi'] as const) {
+      const recipe = getSkillPresentationRecipe(id)
+      expect(recipe.impact.some(cue => cue.primitive === 'sheet'), id).toBe(true)
+      expect(recipe.impact.some(cue => cue.primitive === 'stroke' || cue.shape === 'slash'), id).toBe(false)
+    }
+    for (const id of ['slash', 'slash_multi'] as const)
+      expect(getSkillPresentationRecipe(id).impact.some(cue => cue.shape === 'slash'), id).toBe(true)
+  })
   it('emits a sheet cue per bound preset, sized to its frame window', () => {
     for (const [presetId, binding] of Object.entries(VFX_SHEET_BINDINGS)) {
       const recipe = getSkillPresentationRecipe(presetId as keyof typeof COMBAT_VFX_PRESETS)

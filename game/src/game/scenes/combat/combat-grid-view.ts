@@ -2,7 +2,7 @@
 // CombatScene.ts: 2.5D GRID PROJECTION, depth layers, entity sprite
 // lifecycle/size/position. Module nhan dependency tuong minh qua `scene`
 // - moi cross-call di qua scene delegate de giu seam test.
-import Phaser from 'phaser'
+import type Phaser from 'phaser'
 
 import type { LaneIndex } from '@/core/battle/BattleLane'
 import { HERO_LANE_INDEX } from '@/core/battle/BattleLane'
@@ -32,7 +32,6 @@ import {
   ELITE_AURA_COLOR,
   ENEMY_DISPLAY_SCALE_MULTIPLIER,
   ENEMY_HP_BAR_HEIGHT,
-  ENEMY_HP_BAR_OFFSET_Y,
   ENEMY_HP_BG_COLOR,
   ENEMY_HP_FILL_COLOR,
   LANE_DIVIDER_COLOR,
@@ -82,33 +81,6 @@ function artExtentFor(entityKey: string): { x: number; y: number; w: number; h: 
   }
 
   return undefined
-}
-
-/**
- * Start phase for one entity's idle bob, in ms within its own cycle.
- *
- * A PLAIN rolling hash is not enough here, and that is a measured fact rather
- * than a precaution: runtime enemy ids share a long template prefix and differ
- * only in their tail, so `hash * 31 + char` leaves adjacent ids one apart, and
- * one part in 100000 of a 2.2s period rounds to the same millisecond. Two wolves
- * spawned in a row then breathe in perfect lockstep - the exact failure the
- * jitter exists to prevent.
- *
- * The finalizer below (xorshift-multiply, as in MurmurHash3's avalanche) makes a
- * one-character difference change the whole value.
- */
-function phaseDelayMs(id: string, periodMs: number): number {
-  let hash = 0
-
-  for (let index = 0; index < id.length; index++) {
-    hash = (Math.imul(hash, 31) + id.charCodeAt(index)) | 0
-  }
-
-  hash ^= hash >>> 16
-  hash = Math.imul(hash, 0x85ebca6b)
-  hash ^= hash >>> 13
-
-  return Math.abs(hash) % Math.max(1, Math.round(periodMs))
 }
 
 // Bong ellipse duOi chan - det theo truc sau (copy tu CombatScene).
@@ -382,6 +354,7 @@ export class CombatGridView {
       return
     }
 
+    if (_id === PLAYER_ID && !sprite.healthBarBelowFeet) this.configurePlayerHud(sprite)
     const point = projection.gridToScreen(sprite.row, worldColumn)
 
     sprite.columnFloat = worldColumn
@@ -410,7 +383,7 @@ export class CombatGridView {
       sprite.shadow?.setPosition(screenX, point.y)
       sprite.aura?.setPosition(screenX, point.y)
       sprite.footY = point.y
-      sprite.label.setPosition(screenX, point.y + 6)
+      sprite.label.setPosition(screenX, point.y + 22)
     } else {
       // Flat giu nguyen tung pixel hanh vi legacy (center anchor); boost
       // Chi Mang ap qua setScale vi geometry flat la tinh. setScale PHAI
@@ -418,11 +391,11 @@ export class CombatGridView {
       // value===1 nhung rect van giu scale frame truOc neu bo qua.
       sprite.rect.setPosition(screenX, screenY)
       sprite.rect.setScale(sprite.boost.value)
-      sprite.label.setPosition(screenX, point.y + sprite.rect.displayHeight / 2 + 4)
+      sprite.label.setPosition(screenX, point.y + sprite.rect.displayHeight / 2 + 22)
     }
 
     if (sprite.healthBar) {
-      const headY = this.entityHeadY(sprite) - ENEMY_HP_BAR_OFFSET_Y
+      const headY = (this.host.isPerspective ? point.y : point.y + sprite.rect.displayHeight / 2) + 10
 
       sprite.healthBar.background.setPosition(screenX, headY)
       sprite.healthBar.fill.setPosition(screenX - sprite.healthBar.width / 2, headY)
@@ -475,7 +448,7 @@ export class CombatGridView {
    * lane so a resized projection still bounds it.
    */
   refitEntityLabel(sprite: EntitySprite, name: string): void {
-    this.applyEntityLabelFit(sprite.label, name, this.labelWidthCap(sprite.row))
+    this.applyEntityLabelFit(sprite.label, sprite.hideLabel ? '' : name, this.labelWidthCap(sprite.row))
   }
 
   getOrCreateSprite(
@@ -488,6 +461,7 @@ export class CombatGridView {
     const existing = this.host.sprites.get(id)
 
     if (existing) {
+      if (id === PLAYER_ID) this.configurePlayerHud(existing)
       return existing
     }
 
@@ -658,8 +632,8 @@ export class CombatGridView {
 
       this.applySpriteSize(sprite)
       this.host.sprites.set(id, sprite)
-      this.startIdleMotion(sprite, id, entityKey)
       this.host.startEntityIdle(sprite, id)
+      this.configurePlayerHud(sprite)
 
       return sprite
     }
@@ -779,7 +753,6 @@ export class CombatGridView {
       this.host.sprites.set(id, sprite)
       this.applySpriteSize(sprite)
       this.updateEnemyHealthBar(sprite, healthBar.currentHp, healthBar.maxHp)
-      this.startIdleMotion(sprite, id, enemyEntityKey)
       this.host.startEntityIdle(sprite, id)
 
       return sprite
@@ -902,6 +875,17 @@ export class CombatGridView {
     return sprite
   }
 
+  private configurePlayerHud(sprite: EntitySprite): void {
+    sprite.hideLabel = true
+    sprite.healthBarBelowFeet = true
+    sprite.label.setText('')
+    if (sprite.healthBar) {
+      sprite.healthBar.background.destroy()
+      sprite.healthBar.fill.destroy()
+      sprite.healthBar = undefined
+    }
+  }
+
   updateEnemyHealthBar(sprite: EntitySprite, currentHp: number, maxHp: number) {
     const healthBar = sprite.healthBar
 
@@ -912,48 +896,9 @@ export class CombatGridView {
     healthBar.currentHp = currentHp
     healthBar.maxHp = maxHp
 
-    const ratio = maxHp > 0 ? Phaser.Math.Clamp(currentHp / maxHp, 0, 1) : 0
+    const ratio = maxHp > 0 ? Math.min(1, Math.max(0, currentHp / maxHp)) : 0
 
     healthBar.fill.setScale(ratio, 1)
-  }
-
-  /**
-   * Spec B sec4.3/sec6 B6 - start the idle bob for a `kind: 'static'` entity.
-   *
-   * sec3.2 described enemies as static "nhu hien tai". They were not: walk sway/
-   * bob/tilt were deleted outright on 2026-08-26, leaving rotation 0 and a
-   * straight projected position. So "static plus a slight shake" is a TARGET
-   * state, and this is the half that had to be added rather than removed.
-   *
-   * It costs no art - the whole point of the economy in sec3.2.
-   *
-   * PHASE comes from the runtime id, not from the texture key, and that
-   * distinction is the difference between working and not: five `mortal_wild_boar`
-   * share one texture key, so a per-key phase would make a row of five wolves
-   * breathe as one organism - which reads worse than not breathing at all. The
-   * catalogue varies the PERIOD per species; the delay below varies the phase per
-   * individual.
-   */
-  private startIdleMotion(sprite: EntitySprite, id: string, textureKey: string): void {
-    const presentation = presentationFor(textureKey)
-
-    if (presentation?.kind !== 'static') {
-      return
-    }
-
-    const { amplitudePx, periodMs } = presentation.idleMotion
-
-    sprite.idle = { offsetY: 0 }
-
-    this.host.tweens.add({
-      targets: sprite.idle,
-      offsetY: -amplitudePx,
-      duration: periodMs / 2,
-      delay: phaseDelayMs(id, periodMs),
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    })
   }
 
   /**

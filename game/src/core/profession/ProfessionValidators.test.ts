@@ -10,14 +10,14 @@ import {
 import { SUPPORTED_PROFESSION_REALMS, type ProfessionMaterialMeta } from './ProfessionMaterial'
 import { HERB_AGES, type HerbAge } from '../production/ProductionTypes'
 
-function woodEntry(realmId: string, age: HerbAge): { id: string; profession: ProfessionMaterialMeta } {
-  return { id: `${realmId}_wood_${age}`, profession: { resourceKind: 'wood', realmId, age } }
+function woodEntry(age: HerbAge): { id: string; profession: ProfessionMaterialMeta } {
+  return { id: `material_spirit_wood_${age}`, profession: { resourceKind: 'wood', age } }
 }
 
-function oreEntry(realmId: string, age: HerbAge): { id: string; profession: ProfessionMaterialMeta } {
+function oreEntry(age: HerbAge): { id: string; profession: ProfessionMaterialMeta } {
   return {
-    id: `${realmId}_ore_${age}`,
-    profession: { resourceKind: 'ore', realmId, age },
+    id: `material_spirit_ore_${age}`,
+    profession: { resourceKind: 'ore', age },
   }
 }
 
@@ -36,9 +36,8 @@ function herbEntry(
 describe('validateProfessionMaterialEntry — boot validator', () => {
   it('gỗ đúng convention → pass', () => {
     expect(
-      validateProfessionMaterialEntry('mortal_wood_decade', {
+      validateProfessionMaterialEntry('material_spirit_wood_decade', {
         resourceKind: 'wood',
-        realmId: 'mortal',
         age: 'decade',
       }),
     ).toBeNull()
@@ -65,7 +64,7 @@ describe('validateProfessionMaterialEntry — boot validator', () => {
 
   it('khoáng thiếu age → fail', () => {
     expect(
-      validateProfessionMaterialEntry('mortal_ore_decade', { resourceKind: 'ore', realmId: 'mortal' }),
+      validateProfessionMaterialEntry('material_spirit_ore_decade', { resourceKind: 'ore', realmId: 'mortal' }),
     ).not.toBeNull()
   })
 
@@ -81,7 +80,7 @@ describe('validateProfessionMaterialEntry — boot validator', () => {
 
   it('khoáng id lệch tuổi → fail (id phải khớp <realm>_ore_<age>)', () => {
     expect(
-      validateProfessionMaterialEntry('mortal_ore_decade', {
+      validateProfessionMaterialEntry('material_spirit_ore_decade', {
         resourceKind: 'ore',
         realmId: 'mortal',
         age: 'century',
@@ -114,13 +113,10 @@ describe('validateProfessionMaterialCatalog — completeness', () => {
   function fullCatalog(): Array<{ id: string; profession: ProfessionMaterialMeta }> {
     const entries: Array<{ id: string; profession: ProfessionMaterialMeta }> = []
 
+    for (const age of HERB_AGES) {
+      entries.push(woodEntry(age), oreEntry(age))
+    }
     for (const realmId of SUPPORTED_PROFESSION_REALMS) {
-      for (const age of HERB_AGES) {
-        entries.push(woodEntry(realmId, age))
-
-        entries.push(oreEntry(realmId, age))
-      }
-
       for (let effect = 0; effect < 4; effect++) {
         const baseId = `thao_${realmId}_${effect}`
 
@@ -142,13 +138,13 @@ describe('validateProfessionMaterialCatalog — completeness', () => {
   })
 
   it('thiếu 1 gỗ → fail kèm lỗi rõ ràng', () => {
-    const entries = fullCatalog().filter((entry) => entry.id !== 'qi_refining_wood_decade')
+    const entries = fullCatalog().filter((entry) => entry.id !== 'material_spirit_wood_decade')
 
     const result = validateProfessionMaterialCatalog(entries)
 
     expect(result.valid).toBe(false)
 
-    expect(result.errors.some((error) => error.includes('qi_refining'))).toBe(true)
+    expect(result.errors.some((error) => error.includes('decade'))).toBe(true)
   })
 
   it('thiếu niên đại của một đan phương → fail', () => {

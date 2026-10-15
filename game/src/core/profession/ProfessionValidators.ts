@@ -6,7 +6,7 @@
 // hoang..tien da xoa).
 import { HERB_AGES } from '../production/ProductionTypes'
 import { isHerbProfessionMeta, isProfessionResourceMeta } from './ProfessionMaterial'
-import { SUPPORTED_PROFESSION_REALMS, type ProfessionMaterialMeta } from './ProfessionMaterial'
+import { type ProfessionMaterialMeta } from './ProfessionMaterial'
 import { REALM_TIERS } from '../realm/RealmTierMap'
 
 export interface ValidationResult {
@@ -24,7 +24,7 @@ export function validateProfessionMaterialEntry(
   materialId: string,
   meta: ProfessionMaterialMeta,
 ): string | null {
-  if (!REALM_TIERS.some((realmId) => realmId === meta.realmId)) {
+  if (meta.resourceKind === 'herb' && !REALM_TIERS.some((realmId) => realmId === meta.realmId)) {
     return `${materialId}: realm "${meta.realmId}" không hợp lệ`
   }
 
@@ -35,7 +35,8 @@ export function validateProfessionMaterialEntry(
         return `${materialId}: ${meta.resourceKind} thiếu age hợp lệ (decade..thuong_co)`
       }
 
-      const expected = `${meta.realmId}_${meta.resourceKind}_${meta.age}`
+      if (meta.realmId !== undefined) return `${materialId}: wood/ore must not carry realm metadata`
+      const expected = `material_spirit_${meta.resourceKind}_${meta.age}`
 
       if (materialId !== expected) {
         return `${materialId}: id ${meta.resourceKind} phải là "${expected}"`
@@ -83,11 +84,17 @@ export function validateProfessionMaterialCatalog(
   const woods = new Set<string>()
 
   const herbRecipes = new Map<string, Set<string>>()
+  const seen = new Set<string>()
 
   for (const entry of entries) {
     if (!entry.profession) {
       continue
     }
+    if (seen.has(entry.id)) {
+      errors.push(`catalog: duplicate material ${entry.id}`)
+      continue
+    }
+    seen.add(entry.id)
 
     const error = validateProfessionMaterialEntry(entry.id, entry.profession)
 
@@ -100,9 +107,9 @@ export function validateProfessionMaterialCatalog(
     const meta = entry.profession
 
     if (meta.resourceKind === 'wood') {
-      woods.add(`${meta.realmId}:${meta.age}`)
+      woods.add(meta.age!)
     } else if (meta.resourceKind === 'ore') {
-      ores.add(`${meta.realmId}:${meta.age}`)
+      ores.add(meta.age!)
     } else if (meta.resourceKind === 'herb') {
       const ages = herbRecipes.get(meta.pillRecipeId!) ?? new Set<string>()
 
@@ -112,16 +119,9 @@ export function validateProfessionMaterialCatalog(
     }
   }
 
-  for (const realmId of SUPPORTED_PROFESSION_REALMS) {
-    for (const age of HERB_AGES) {
-      if (!woods.has(`${realmId}:${age}`)) {
-        errors.push(`catalog: thiếu gỗ ${realmId}/${age}`)
-      }
-
-      if (!ores.has(`${realmId}:${age}`)) {
-        errors.push(`catalog: thiếu quáng ${realmId}/${age}`)
-      }
-    }
+  for (const age of HERB_AGES) {
+    if (!woods.has(age)) errors.push(`catalog: missing wood age ${age}`)
+    if (!ores.has(age)) errors.push(`catalog: missing ore age ${age}`)
   }
 
   for (const [recipeId, ages] of herbRecipes) {

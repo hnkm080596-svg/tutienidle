@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GameCard from "@/components/common/GameCard.vue"
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -8,8 +9,8 @@ const { t } = useI18n()
 const paperFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 </script>
 <template>
-  <aside class="skill-detail-card">
-    <div class="skill-card-frame" :style="{ borderImageSource: `url('${paperFrame}')` }" aria-hidden="true" />
+  <GameCard as="aside" class="skill-detail-card" :title="t('skill.detailCardTitle')">
+    
     <header v-if="node"><img :src="node.icon" alt=""><div><h2>{{ node.name }}</h2><p>{{ node.level }} · {{ t(`skill.state.${node.state}`) }}</p></div></header>
     <div class="skill-detail-body">
       <template v-if="node">
@@ -45,11 +46,11 @@ const paperFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/charac
       <p v-if="node.actionLabel" class="skill-hold-hint">{{ node.actionDisabled ? node.actionLabel : t('skill.holdToAct', { action: node.actionLabel }) }}</p>
     </div>
     <p class="skill-notice" role="status" aria-live="polite">{{ notice }}</p>
-  </aside>
+  </GameCard>
 </template>
 <style scoped>
-.skill-detail-card { position:absolute; left:985px; top:198px; width:400px; height:487px; padding:25px 26px 13px; isolation:isolate; display:flex; flex-direction:column; color:#f0dfbb; clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px); }
-.skill-card-frame { position:absolute; inset:0; z-index:-1; pointer-events:none; border:15px solid transparent; border-image-slice:160; border-image-width:15px; border-image-repeat:stretch; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;}
+.skill-detail-card { position:absolute; left:985px; top:198px; width:400px; height:487px; display:flex; flex-direction:column; }
+
 .skill-detail-card header { flex:none; display:flex; align-items:center; gap:14px; min-height:76px; padding-bottom:16px; border-bottom:1px solid #9d8049; }
 header img { width:61px; height:61px; border:3px double #a6813a; border-radius:50%; object-fit:cover; }
 .skill-detail-card h2 { margin:0 0 9px; font-size:25px; line-height:1.2; font-weight:500; color:#f3e0b5; }header p { margin:0; color:#b3a077; font-size:14px; }

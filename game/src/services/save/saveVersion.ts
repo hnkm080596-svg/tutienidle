@@ -235,7 +235,8 @@
 // v89 build as a reservation-witness mismatch - the bump converts that
 // into a clean version gate. v89 saves MIGRATE by pure re-stamp: jobs
 // without the field still verify (the fold omits the absent key).
-export const CURRENT_SAVE_VERSION = 90 as const
+// Fresh age-only resource identities intentionally have no legacy migration.
+export const CURRENT_SAVE_VERSION = 91 as const
 
 // The version-acceptance migration chain, shared by EVERY save gate
 // (local boot inspectLocalSave, cloud SAVE_READY pull, pending-journal
@@ -294,14 +295,7 @@ export function migrateSpiritStoneFlattenV88(
   return { ...save, materials: merged, version: 89 }
 }
 
-/**
- * Applies the whole migration chain to a parsed save payload and
- * returns the re-stamped record, or null when this build cannot
- * consume that version. Chain today: 88 -> flatten -> 89 -> re-stamp
- * -> 90. v89->v90 is a pure re-stamp because rollSeedBase joined the
- * reservation digest as an OPTIONAL field - jobs lacking it still
- * verify (the fold omits absent keys).
- */
+/** Current resource cutover is strict: no re-stamp, alias or conversion. */
 export function migrateSaveToCurrentVersion(
   parsed: Record<string, unknown>,
 ): Record<string, unknown> | null {
@@ -311,12 +305,5 @@ export function migrateSaveToCurrentVersion(
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
     return null
   }
-  let save = parsed
-  if (save.version === 88) {
-    save = migrateSpiritStoneFlattenV88(save)
-  }
-  if (save.version === 89) {
-    save = { ...save, version: CURRENT_SAVE_VERSION }
-  }
-  return save.version === CURRENT_SAVE_VERSION ? save : null
+  return parsed.version === CURRENT_SAVE_VERSION ? parsed : null
 }

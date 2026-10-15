@@ -98,8 +98,8 @@ describe('BuildingSystem.quoteUpgrade (single owner for header/upgrade rules)', 
     maxLevel: 5,
     upgradeCost: [
       [],
-      [{ materialId: 'mortal_wood_decade', amount: 4 }],
-      [{ materialId: 'mortal_wood_decade', amount: 6 }],
+      [{ materialId: 'material_spirit_wood_decade', amount: 4 }],
+      [{ materialId: 'material_spirit_wood_decade', amount: 6 }],
       [],
     ],
   }
@@ -138,13 +138,13 @@ describe('BuildingSystem.quoteUpgrade (single owner for header/upgrade rules)', 
 
     const quote = system.quoteUpgrade('i1', registry, manager, bag, 'qi_refining')
 
-    expect(quote?.nextUpgradeCost).toEqual([{ materialId: 'mortal_wood_decade', amount: 4 }])
+    expect(quote?.nextUpgradeCost).toEqual([{ materialId: 'material_spirit_wood_decade', amount: 4 }])
     expect(quote?.canAfford).toBe(false)
   })
 
   it('happy path — exact upgradeCost[level] entry, affordable', () => {
     const { registry, manager, bag } = setup(1)
-    bag.add({ id: 'mortal_wood_decade', name: 'Gỗ', category: 'wood', sourceType: 'exploration' }, 4)
+    bag.add({ id: 'material_spirit_wood_decade', name: 'Gỗ', category: 'wood', sourceType: 'exploration' }, 4)
 
     const quote = system.quoteUpgrade('i1', registry, manager, bag, 'qi_refining')
 
@@ -152,7 +152,7 @@ describe('BuildingSystem.quoteUpgrade (single owner for header/upgrade rules)', 
       hasNextLevel: true,
       meetsRealmRequirement: true,
       requiredRealmId: 'qi_refining',
-      nextUpgradeCost: [{ materialId: 'mortal_wood_decade', amount: 4 }],
+      nextUpgradeCost: [{ materialId: 'material_spirit_wood_decade', amount: 4 }],
       canAfford: true,
     })
   })
@@ -174,6 +174,23 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
       maxLevel: 9,
     }
   }
+
+  it('pays complete cycles once and preserves fractional output across cycles', () => {
+    const registry = new BuildingRegistry()
+    const manager = new BuildingManager()
+    const template = { ...spring(), baseProductionRate: 0.015 }
+    registry.register(template)
+    const instance: BuildingInstance = { instanceId: 'auto-vein', buildingId: template.id, level: 1, lastCollectedAt: 0 }
+    manager.add(instance)
+    const perCycle = system.getRatePerMinute(instance, template, 'mortal') * 100 / 60
+    expect(system.getCycleSeconds(instance, 'mortal')).toBe(100)
+    expect(system.claimCycles(instance.instanceId, registry, manager, 99, 'mortal').amount).toBe(0)
+    expect(system.claimCycles(instance.instanceId, registry, manager, 100, 'mortal').amount).toBe(Math.floor(perCycle))
+    expect(instance.cycleRemainder).toBeCloseTo(perCycle - Math.floor(perCycle))
+    expect(system.claimCycles(instance.instanceId, registry, manager, 100, 'mortal').amount).toBe(0)
+    expect(system.claimCycles(instance.instanceId, registry, manager, 200, 'mortal').amount).toBe(Math.floor(perCycle * 2) - Math.floor(perCycle))
+    expect(instance.cycleRemainder).toBeCloseTo(perCycle * 2 - Math.floor(perCycle * 2))
+  })
 
   function springInstance(level: number): BuildingInstance {
     return { ...instanceAt(level), buildingId: 'gathering_outpost' }

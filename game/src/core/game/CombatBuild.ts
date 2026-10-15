@@ -293,9 +293,7 @@ export function resolveCombatBuild(
       return []
     }
 
-    const companionEntity = companionToCombatEntity(instance, definition)
-    companionEntity.row = slot.row
-    companionEntity.x = slot.column
+    const companionEntity = companionToCombatEntity(instance, definition, slot)
     const companionKit = resolveCompanionSkillKit(definition, instance)
 
     return [

@@ -1,3 +1,4 @@
+import { standingSlotPosition, PLAYER_SIDE_REGION } from '@/core/battle/BattlefieldRegions'
 import { describe, expect, it } from 'vitest'
 import { companionToCombatEntity } from './CompanionCombat'
 import { getRealmIndex } from '@/core/realm/realmSystem'
@@ -34,8 +35,14 @@ function makeInstance(overrides: Partial<CompanionInstance> = {}): CompanionInst
 }
 
 describe('companionToCombatEntity', () => {
+  it.each([0, 1, 2])('constructs companions at the assigned standing row %i without legacy placeholder coordinates', (row) => {
+    const position = standingSlotPosition(PLAYER_SIDE_REGION, row, 2)
+    const entity = companionToCombatEntity(makeInstance(), TEST_DEFINITION, position)
+    expect({ row: entity.row, column: entity.x }).toEqual(position)
+    expect([3, 5, 7]).toContain(entity.row)
+  })
   it('builds a fresh, alive CombatEntity with the definition id and full HP', () => {
-    const entity = companionToCombatEntity(makeInstance(), TEST_DEFINITION)
+    const entity = companionToCombatEntity(makeInstance(), TEST_DEFINITION, standingSlotPosition(PLAYER_SIDE_REGION, 1, 1))
 
     expect(entity.id).toBe('test_companion')
     expect(entity.alive).toBe(true)
@@ -44,8 +51,8 @@ describe('companionToCombatEntity', () => {
   })
 
   it('sets realmIndex from getRealmIndex(instance.realmId)', () => {
-    const mortal = companionToCombatEntity(makeInstance({ realmId: 'mortal' }), TEST_DEFINITION)
-    const qiRefining = companionToCombatEntity(makeInstance({ realmId: 'qi_refining' }), TEST_DEFINITION)
+    const mortal = companionToCombatEntity(makeInstance({ realmId: 'mortal' }), TEST_DEFINITION, standingSlotPosition(PLAYER_SIDE_REGION, 1, 1))
+    const qiRefining = companionToCombatEntity(makeInstance({ realmId: 'qi_refining' }), TEST_DEFINITION, standingSlotPosition(PLAYER_SIDE_REGION, 1, 1))
 
     expect(mortal.realmIndex).toBe(getRealmIndex('mortal'))
     expect(qiRefining.realmIndex).toBe(getRealmIndex('qi_refining'))
@@ -54,7 +61,7 @@ describe('companionToCombatEntity', () => {
 
   it('scales stats via companionStatsAt: realm-level growth + constellation multiplier', () => {
     // mortal/5 -> globalLevel 5 -> growth = 1 + 0.05 * 4 = 1.2 (speed ignores growth).
-    const leveled = companionToCombatEntity(makeInstance({ realmLevel: 5 }), TEST_DEFINITION)
+    const leveled = companionToCombatEntity(makeInstance({ realmLevel: 5 }), TEST_DEFINITION, standingSlotPosition(PLAYER_SIDE_REGION, 1, 1))
 
     expect(leveled.stats.might).toBe(12)
     expect(leveled.stats.maxHp).toBe(120)
@@ -62,7 +69,7 @@ describe('companionToCombatEntity', () => {
 
     // rank 2 at level 1 -> growth 1, constellation x1.2 on all three stats.
     // speed is not Math.round'ed by companionStatsAt - compare approximately.
-    const ranked = companionToCombatEntity(makeInstance({ constellationRank: 2 }), TEST_DEFINITION)
+    const ranked = companionToCombatEntity(makeInstance({ constellationRank: 2 }), TEST_DEFINITION, standingSlotPosition(PLAYER_SIDE_REGION, 1, 1))
 
     expect(ranked.stats.might).toBe(12)
     expect(ranked.stats.maxHp).toBe(120)
@@ -71,12 +78,12 @@ describe('companionToCombatEntity', () => {
 
   it('applies constellation stat perks on top of the multiplier', () => {
     // rank 2: might = 10 * 1.2 (constellation) then perk percent +50 -> 18.
-    const ranked = companionToCombatEntity(makeInstance({ constellationRank: 2 }), PERKED_DEFINITION)
+    const ranked = companionToCombatEntity(makeInstance({ constellationRank: 2 }), PERKED_DEFINITION, standingSlotPosition(PLAYER_SIDE_REGION, 1, 1))
 
     expect(ranked.stats.might).toBe(18)
 
     // rank 0: perk atRank 1 not met, no constellation bonus either.
-    const unranked = companionToCombatEntity(makeInstance(), PERKED_DEFINITION)
+    const unranked = companionToCombatEntity(makeInstance(), PERKED_DEFINITION, standingSlotPosition(PLAYER_SIDE_REGION, 1, 1))
 
     expect(unranked.stats.might).toBe(10)
   })

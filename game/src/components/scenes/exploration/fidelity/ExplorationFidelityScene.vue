@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import GameCard from "@/components/common/GameCard.vue"
+import GamePanel from '@/components/common/GamePanel.vue'
+import GameTabButton from '@/components/common/GameTabButton.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
@@ -65,28 +68,22 @@ function pickChapter(id: string) {
 }
 </script>
 <template>
-  <section ref="rootRef" class="exploration-scene" :aria-label="t('exploration.title')" @click.self="emit('back')">
-    <div class="map-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
-    <header class="map-head">
-      <h1>{{ t('dongFu.nav.exploration') }}</h1>
-      <img class="map-divider" :src="titleDivider" alt="">
-      <div v-if="model.zones.length > 1" class="exploration-zones" role="group" :aria-label="t('exploration.zones')">
-        <button v-for="zone in model.zones" :key="zone.id" :class="{ active: model.zone === zone.id, 'is-locked': !zone.unlocked }" :aria-pressed="model.zone === zone.id" :disabled="!zone.unlocked" @click="emit('zone', zone.id)">{{ zone.label }}</button>
-      </div>
-      <p class="map-identity">{{ model.title }}<template v-if="model.subtitle"> · {{ model.subtitle }}</template></p>
-    </header>
+  <section ref="rootRef" class="rail-panel-scene exploration-scene" :aria-label="t('exploration.title')" @click.self="emit('back')">
+    <GamePanel :title="t('dongFu.nav.exploration')">
+    
     <div class="map-grid">
       <nav class="map-chapters" :aria-label="t('exploration.chapters')">
-        <button v-for="chapter in chapterRail" :key="chapter.id" type="button" class="chapter-card" :class="{ selected: chapterRail.length === 1 || chapter.id === activeChapterId, 'is-locked': chapter.locked }" :style="{ borderImageSource: `url('${card}')` }" :aria-pressed="chapterRail.length === 1 || chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : `${chapter.progressLabel} · ${chapter.starsLabel}` }}</span></button>
+        <GameCard as="button" v-for="chapter in chapterRail" :key="chapter.id" type="button" class="chapter-card" :class="{ selected: chapterRail.length === 1 || chapter.id === activeChapterId, 'is-locked': chapter.locked }" :style="{ borderImageSource: `url('${card}')` }" :aria-pressed="chapterRail.length === 1 || chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : `${chapter.progressLabel} · ${chapter.starsLabel}` }}</span></GameCard>
       </nav>
       <ExplorationPaperMap :chapter="activeChapter" :terrain="model.terrain" :selected="stage?.id ?? ''" :caption="t('exploration.empty')" @select="emit('select', $event)" />
       <ExplorationPaperDetails :model="model" :stage="stage" :notice="notice" @mode="emit('mode', $event)" @open-build="emit('openBuild')" @start="emit('start')" />
     </div>
     <p v-if="preview" class="preview-label">{{ t('exploration.preview') }}</p>
+    </GamePanel>
   </section>
 </template>
 <style scoped>
-.exploration-scene { position:absolute; inset:0; pointer-events:auto; color:#44331f; font-family:var(--font-display,Georgia,serif); line-height:1.3; }.exploration-scene :deep(*) { box-sizing:border-box; }
+.exploration-scene { position:absolute; inset:0;  color:#44331f; font-family:var(--font-display,Georgia,serif); line-height:1.3; }.exploration-scene :deep(*) { box-sizing:border-box; }
 .map-sheet { position:absolute; left:345px; top:101px; width:1065px; height:608px; background-color:#f2e4c8; background-size:cover; background-position:center; border:3px double #b28a43; box-sizing:border-box; }
 .map-head { position:absolute; left:369px; top:113px; width:1017px; height:52px; border-bottom:1px solid #b28b4680; display:flex; align-items:center; gap:16px; }
 .map-head h1 { margin:0; font:700 38px/1.2 var(--font-display,Georgia,serif); }
@@ -102,10 +99,16 @@ function pickChapter(id: string) {
 .map-chapters h2 { margin:0 0 12px; font-size:21px; font-weight:600; }
 /* Thanh Van chapter card: the shared dark character-card nine-slice,
    same frame the right inspector uses (Minh 2026-10-12). */
-.chapter-card { width:100%; display:grid; gap:6px; padding:14px 12px; border:14px solid transparent; border-image-slice:160; border-image-width:14px; border-image-repeat:stretch; clip-path:inset(4.7px 1.8px 5.3px 1.9px round 5px); box-sizing:border-box; color:#f3e4bc; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 10px) no-repeat; font:15px var(--font-display,Georgia,serif); text-align:left; cursor:pointer; }
+.chapter-card { width:100%; display:grid; gap:6px; box-sizing:border-box; font:15px var(--font-display,Georgia,serif); text-align:left; cursor:pointer; }
 .chapter-card b { font-size:15px; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
 .chapter-card span { font-size:12px; color:#cbb27f; white-space:nowrap; }
 .chapter-card.selected { filter:drop-shadow(0 0 10px #d8ad5566); }
 .chapter-card.is-locked { opacity:.6; }
 .preview-label { position:absolute; left:369px; top:693px; margin:0; color:#806b43; font-size:9px; }
+
+/* Layout instances are relative to the owning panel content. */
+.exploration-scene :deep(.game-panel__content .map-sheet) { display: none; }
+.exploration-scene :deep(.game-panel__content .map-head) { left: 0; top: 0; width: 100%; height: 29px; border: 0; }
+.exploration-scene :deep(.game-panel__content .map-head .map-divider) { display: none; }
+.exploration-scene :deep(.game-panel__content .map-grid) { left: 0; top: 0; width: 100%; height: 100%; }
 </style>

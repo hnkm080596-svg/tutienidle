@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import GameCard from "@/components/common/GameCard.vue"
+import GamePanel from '@/components/common/GamePanel.vue'
 import { computed, ref, shallowRef } from 'vue'
 import ForgeFidelityWorkspace from './ForgeFidelityWorkspace.vue'
 import ForgeBatchBag from './ForgeBatchBag.vue'
@@ -50,9 +52,10 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 </script>
 
 <template>
-  <section ref="rootRef" class="equipment-scene" :aria-label="t('equipment.title')" @click.self="emit('back')" @keydown.esc="inspecting = null">
-    <div class="equipment-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
-    <header class="equipment-heading"><div class="equipment-heading__title"><h1 class="equipment-title">{{ t('equipment.title') }}</h1><img class="equipment-divider" :src="divider" alt=""></div></header>
+  <section ref="rootRef" class="rail-panel-scene equipment-scene" :aria-label="t('equipment.title')" @click.self="emit('back')" @keydown.esc="inspecting = null">
+    <GamePanel :title="t('equipment.title')">
+    
+    
     <!-- Scene-level tab strip per the Codex preview: under the heading,
          above the doll column. The h1 carries `equipment-title` so the
          shared plaque + OngDoGia shine rule hits it like every sibling
@@ -70,27 +73,26 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
       <div class="equipment-sockets" :style="{ '--equipment-circle-frame': `url('${circleFrame}')` }"><div v-for="socket in sockets" :key="socket.id" class="equipment-socket"><EquipmentPaperItem :item="socket.item" :label="socket.label" @click="selected=socket.item??null" @inspect="inspecting = $event" @leave="inspecting = null" /><span>{{ socket.label }}</span></div></div>
     </slot>
 
-    <!-- Stats card (owner ruling 2026-10-08): no title - the card only
-         lists the stats contributed by equipped gear, and the list
-         scrolls without ever showing a scrollbar. -->
-    <div class="equipment-summary" :style="{ '--equipment-card-art': `url('${darkCard}')` }"><slot name="summary"><div><span>{{ t('equipment.stats.hp') }}</span><strong>18.200</strong><span>{{ t('equipment.stats.attack') }}</span><strong>1.260</strong><span>{{ t('equipment.stats.defense') }}</span><strong>840</strong></div></slot></div>
+    <!-- Equipped gear contributions use the shared titled card. -->
+    <GameCard as="div" class="equipment-summary" :title="t('equipment.summary')"><slot name="summary"><div><span>{{ t('equipment.stats.hp') }}</span><strong>18.200</strong><span>{{ t('equipment.stats.attack') }}</span><strong>1.260</strong><span>{{ t('equipment.stats.defense') }}</span><strong>840</strong></div></slot></GameCard>
 
     <!-- The unified right region (ref: bag OR forge at the same rect)
          carries the fixture bag/forge toggle; production mounts the real
          workspace (detail + beta op tabs + canonical BagGrid). -->
     <slot name="workspace">
-      <section v-if="mode==='bag'" class="equipment-bag" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }" :aria-label="t('equipment.bag')"><header><h2>{{ t('equipment.bag') }}</h2><button @click="mode='enhance'">{{t('equipment.forgeTitle')}}</button></header><div class="bag-tabs"><span class="active">{{ t('equipment.bagTabs.all') }}</span><span>{{ t('equipment.bagTabs.weapons') }}</span><span>{{ t('equipment.bagTabs.armor') }}</span><span>{{ t('equipment.bagTabs.accessories') }}</span></div><div class="bag-grid" @scroll="inspecting = null"><EquipmentPaperItem v-for="item in items" :key="item.id" :item="item" :label="item.slot" @click="selected=item;mode='enhance'" @inspect="inspecting = $event" @leave="inspecting = null" /><div v-for="n in emptyBagCells" :key="`empty-${n}`" class="empty-bag-cell" aria-hidden="true" /></div><footer><button @click="emit('action', 'sort')">{{ t('equipment.sort') }}</button><button @click="emit('action', 'filter')">{{ t('equipment.filter') }}</button></footer></section>
-      <section v-if="mode!=='bag'" class="equipment-forge" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }"><header><h2>{{t('equipment.forgeTitle')}}</h2><button @click="mode='bag';inspecting=null">{{t('equipment.bag')}}</button></header><nav><button v-for="id in modes" :key="id" :aria-pressed="mode===id" @click="mode=id;inspecting=null">{{t(`panels.equipmentHall.tabs.${id}`)}}</button></nav><ForgeBatchBag v-if="mode==='dissolve'||mode==='decompose'" :mode="mode" :items="items" @submit="emit('action',$event.mode+':'+$event.itemIds.join(',')+':submit')"/><ForgeFidelityWorkspace v-else-if="forgeItem" compact :mode="mode" :item="forgeItem" @action="emit('action',mode+':'+forgeItem.id+':'+$event)"/></section>
+      <GameCard as="section" v-if="mode==='bag'" class="equipment-bag" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }" :aria-label="t('equipment.bag')"><header><h2>{{ t('equipment.bag') }}</h2><button @click="mode='enhance'">{{t('equipment.forgeTitle')}}</button></header><div class="bag-tabs"><span class="active">{{ t('equipment.bagTabs.all') }}</span><span>{{ t('equipment.bagTabs.weapons') }}</span><span>{{ t('equipment.bagTabs.armor') }}</span><span>{{ t('equipment.bagTabs.accessories') }}</span></div><div class="bag-grid" @scroll="inspecting = null"><EquipmentPaperItem v-for="item in items" :key="item.id" :item="item" :label="item.slot" @click="selected=item;mode='enhance'" @inspect="inspecting = $event" @leave="inspecting = null" /><div v-for="n in emptyBagCells" :key="`empty-${n}`" class="empty-bag-cell" aria-hidden="true" /></div><footer><button @click="emit('action', 'sort')">{{ t('equipment.sort') }}</button><button @click="emit('action', 'filter')">{{ t('equipment.filter') }}</button></footer></GameCard>
+      <GameCard as="section" v-if="mode!=='bag'" class="equipment-forge" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }"><header><h2>{{t('equipment.forgeTitle')}}</h2><button @click="mode='bag';inspecting=null">{{t('equipment.bag')}}</button></header><nav><button v-for="id in modes" :key="id" :aria-pressed="mode===id" @click="mode=id;inspecting=null">{{t(`panels.equipmentHall.tabs.${id}`)}}</button></nav><ForgeBatchBag v-if="mode==='dissolve'||mode==='decompose'" :mode="mode" :items="items" @submit="emit('action',$event.mode+':'+$event.itemIds.join(',')+':submit')"/><ForgeFidelityWorkspace v-else-if="forgeItem" compact :mode="mode" :item="forgeItem" @action="emit('action',mode+':'+forgeItem.id+':'+$event)"/></GameCard>
     </slot>
 
 
     <EquipmentPaperTooltip v-if="inspecting" :item="inspecting" />
     <p v-if="preview" class="equipment-preview">{{ t('equipment.previewStamp') }}</p><p class="equipment-notice" role="status">{{ notice }}</p>
+    </GamePanel>
   </section>
 </template>
 
 <style scoped>
-.equipment-scene { position:absolute; inset:0; pointer-events:auto; color:#30291d; font-family:var(--font-display,Georgia,serif); }
+.equipment-scene { position:absolute; inset:0;  color:#30291d; font-family:var(--font-display,Georgia,serif); }
 .equipment-scene :deep(*) { box-sizing:border-box; }
 /* Sheet = .skill-sheet verbatim: the redesigned panels' shared band
    (24% / 12.5% / 74% / 75% of the 1440x810 design canvas). */
@@ -116,14 +118,14 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
    (same character-card art the preview's EquipmentArtCard mounts) -
    title removed per owner ruling; a single-column name/value list in
    the Tu Si derived-stats pattern, gold values on dark. */
-.equipment-summary { position:absolute; left:365px; top:572px; width:369px; height:119px; padding:11px 14px 12px; border:15px solid transparent; clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px); border-image:var(--equipment-card-art) 160 / 15px stretch;  color:#f3e4c4; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;}
+.equipment-summary { position:absolute; left:365px; top:572px; width:369px; height:119px;}
 /* The list fills the card and scrolls invisibly (owner rule: roll nhung
    khong the hien scroller) - scrollbar-width:none + webkit display:none. */
 .equipment-summary :deep(ul),
 .equipment-summary :deep(dl) { margin:0; height:100%; align-content:start; overflow:auto; scrollbar-width:none; }
 .equipment-summary :deep(ul::-webkit-scrollbar),
 .equipment-summary :deep(dl::-webkit-scrollbar) { display:none; }
-.equipment-bag { position:absolute; left:748px; top:215px; width:642px; height:476px; padding:14px 18px; border:15px solid transparent; clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px); border-image:var(--equipment-card-art) 160 / 15px stretch;  color:#f3e4c4; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;}
+.equipment-bag { position:absolute; left:748px; top:215px; width:642px; height:476px;}
 .equipment-bag header { display:flex; align-items:baseline; justify-content:space-between; }
 .equipment-bag h2 { margin:0; font-size:24px; font-weight:700; color:#f3e4c4; }
 .equipment-bag header span { font-size:12px; color:#c9a95f; }
@@ -139,11 +141,18 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 .equipment-scene button:focus-visible { outline:2px solid #d6ad5d; outline-offset:3px; }
 .equipment-preview { position:absolute; left:372px; top:692px; width:140px; margin:0; font-size:10px; line-height:15px; color:#7c6a48; }
 .equipment-notice { position:absolute; left:750px; top:692px; width:640px; height:13px; margin:0; text-align:right; font-size:12px; color:#62512d; }
-.equipment-forge { position:absolute;left:748px;top:215px;width:642px;height:476px;padding:14px 18px;border:15px solid transparent;clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px);border-image:var(--equipment-card-art) 160 / 15px stretch;color:#f3e4c4;background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;}
+.equipment-forge { position:absolute;left:748px;top:215px;width:642px;height:476px;}
 .equipment-forge header { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px }
 .equipment-forge h2 { font-size:24px;color:#f3e4c4;margin:0;font-weight:700 }
 .equipment-forge header button,.equipment-bag header button { background:transparent;border:1px solid #a1844a;color:#c9b184;padding:5px 10px;font-size:12px;cursor:pointer }
 .equipment-forge nav { display:flex;gap:5px;margin-bottom:16px;border-bottom:1px solid #95734266;height:38px }
 .equipment-forge nav button { flex:1;padding:0 5px;border:0;border-bottom:3px solid transparent;color:#c9b184;background:transparent;font-size:14px;font-weight:700;cursor:pointer }
 .equipment-forge nav button[aria-pressed=true] { color:#f7e4b5;border-color:#977337;background:var(--equipment-tab-brush) center/contain no-repeat;border-bottom-color:transparent }
+
+/* Layout instances are relative to the owning panel content. */
+.equipment-scene :deep(.game-panel__content :is(.equipment-sheet,.equipment-heading)) { display: none; }
+.equipment-scene :deep(.game-panel__content :is(.equipment-workspace,.equipment-bag,.equipment-forge)) { left: auto; right: 0; top: 35px; width: 62.5%; height: calc(100% - 35px); }
+.equipment-scene :deep(.game-panel__content .equipment-summary) { left: 0; top: auto; bottom: 0; width: 36%; height: 113px; }
+.equipment-scene :deep(.game-panel__content :is(.equipment-sockets,.equipment-doll)) { left: 0; top: 35px; width: 36%; height: calc(100% - 162px); }
+.equipment-scene :deep(.game-panel__content .equipment-tabs) { left: auto; right: 0; top: 0; width: 62.5%; height: 35px; }
 </style>

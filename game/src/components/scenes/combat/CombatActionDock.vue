@@ -4,12 +4,12 @@
 // Basic + Special orbs only, Ultimate scope-hidden, Q/W badges RESERVED.
 import CombatSkillDockPanel from '@/components/game/combat/CombatSkillDockPanel.vue'
 
-defineProps<{ fighting: boolean }>()
+defineProps<{ fighting: boolean; layoutVersion?: number }>()
 </script>
 
 <template>
   <div v-if="fighting" class="combat-action-dock">
-    <CombatSkillDockPanel />
+    <CombatSkillDockPanel :layout-version="layoutVersion" />
   </div>
 </template>
 

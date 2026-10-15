@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { readGameUiFrame } from '@/presentation/geometry/GameUiFrame'
 import { computed, ref } from 'vue'
+import GameCard from './GameCard.vue'
+import InventoryTooltipBody from './InventoryTooltipBody.vue'
 import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/vue'
 import { useTooltip } from '@/composables/useTooltip'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import ItemCardBody from '@/components/common/ItemCardBody.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import type { EquipmentTooltipContent, GradedItemTooltipContent, StatBreakdownTooltipContent, TalentTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
@@ -14,9 +16,8 @@ const props = withDefaults(defineProps<{ contained?: boolean }>(), { contained: 
 const floating = ref<HTMLElement | null>(null)
 const open = computed(() => content.value !== null)
 
-// Item-info-card spec section 3: equipment + the graded kinds
-// (material/pill/talisman/formation) all render through the shared
-// ItemCardBody skeleton.
+// Equipment and remaining graded items use the item detail body.
+// Material and pill contents take the purpose-specific inventory path.
 const cardContent = computed<GradedItemTooltipContent | EquipmentTooltipContent | null>(() => {
   const value = content.value
   if (!value) return null
@@ -31,6 +32,10 @@ const cardContent = computed<GradedItemTooltipContent | EquipmentTooltipContent 
     default:
       return null
   }
+})
+const inventoryContent = computed<GradedItemTooltipContent | null>(() => {
+  const value=content.value
+  return value?.kind==='material' || value?.kind==='pill' ? value : null
 })
 
 // Compare pair (spec section 4): the hovered equipment carries its
@@ -64,6 +69,8 @@ const visibleSections = computed(
 // dung de clamp khi availableWidth NHO HON cap nay (an toan viewport),
 // khong duoc ghi de cap khi man hinh du rong.
 function maxWidthForKind(kind: string | undefined): number {
+  if (kind === 'material') return 340
+  if (kind === 'pill') return 360
   if (kind === 'equipment') return 380
   if (kind === 'element') return 300
   if (kind && kind !== 'plain') return 320
@@ -86,9 +93,10 @@ const { floatingStyles } = useFloating(reference, floating, {
   whileElementsMounted: autoUpdate,
   middleware: [
     offset(10),
-    flip({ fallbackPlacements: ['left-start', 'top-start', 'bottom-start'] }),
-    shift({ padding: 12 }),
-    size({
+    flip(() => ({ rootBoundary: readGameUiFrame(), fallbackPlacements: ['left-start', 'top-start', 'bottom-start'] })),
+    shift(() => ({ rootBoundary: readGameUiFrame(), padding: 12 })),
+    size(() => ({
+      rootBoundary: readGameUiFrame(),
       padding: 12,
       apply({ availableWidth, availableHeight, elements }) {
         Object.assign(elements.floating.style, {
@@ -98,7 +106,7 @@ const { floatingStyles } = useFloating(reference, floating, {
           maxHeight: `${availableHeight}px`,
         })
       },
-    }),
+    })),
   ],
 })
 
@@ -158,18 +166,18 @@ function hideBrokenImage(event: Event) {
         :style="{ ...floatingStyles, '--tooltip-accent': qualityAccentColor ?? itemAuraColor, '--tooltip-aura': itemAuraColor, zIndex: OVERLAY_LAYERS.tooltip }"
       >
         <img v-if="elementBannerUrl" class="tooltip__banner" :src="elementBannerUrl" alt="" aria-hidden="true" />
-        <InkNineSlice v-else-if="!contained" chrome-id="frame-xs-tooltip" layer="surface" />
-        <div class="tooltip__content">
+        <component :is="!contained && !elementBannerUrl && !comparePair ? GameCard : 'div'" class="tooltip__content">
         <!-- Compare pair (spec section 4): equipped card LEFT, hovered card
              RIGHT; each is a role=group with its own aria-label so
              screen readers can tell the two cards apart. -->
-        <div v-if="comparePair" class="tooltip__pair">
-          <div class="tooltip__card" role="group" :aria-label="equippedLabel">
+        <InventoryTooltipBody v-if="inventoryContent" :content="inventoryContent" />
+        <div v-else-if="comparePair" class="tooltip__pair">
+          <GameCard class="tooltip__card" role="group" :aria-label="equippedLabel">
             <ItemCardBody :content="comparePair.equipped" :eyebrow="equippedLabel" />
-          </div>
-          <div class="tooltip__card" role="group" :aria-label="viewingLabel">
+          </GameCard>
+          <GameCard class="tooltip__card" role="group" :aria-label="viewingLabel">
             <ItemCardBody :content="comparePair.candidate" :eyebrow="viewingLabel" />
-          </div>
+          </GameCard>
         </div>
 
         <ItemCardBody v-else-if="cardContent" :content="cardContent" />
@@ -237,12 +245,12 @@ function hideBrokenImage(event: Event) {
             <p class="tooltip__section-label">{{ section.label }}</p>
             <div v-for="row in section.rows" :key="row.label" class="tooltip__section-row" :class="[row.tone ? `tooltip__section-row--${row.tone}` : '', row.tier ? `tooltip__section-row--tier-${row.tier}` : '']" :aria-label="row.tier ? `${row.label}, bậc ${row.tier}: ${row.value}` : undefined">
               <span class="tooltip__row-label">{{ row.label }}</span>
-              <span class="tooltip__row-value" :style="row.colorVar ? { color: `var(${row.colorVar})` } : undefined">{{ row.value }}</span>
+              <span class="tooltip__row-value" :style="row.colorVar ? { color: `var(${row.colorVar})` } : undefined">{{ row.value }}<small v-if="row.range" class="tooltip__row-range"> {{ row.range }}</small><small v-if="row.delta" class="tooltip__row-delta" :class="`tooltip__row-delta--${row.deltaTone ?? 'muted'}`"> {{ row.delta }}</small></span>
               <small v-if="row.detail" class="tooltip__row-detail">{{ row.detail }}</small>
             </div>
           </section>
         </template>
-        </div>
+        </component>
       </div>
     </Transition>
   </Teleport>
@@ -250,16 +258,16 @@ function hideBrokenImage(event: Event) {
 
 <style scoped>
 .tooltip {
+  --hk-text-primary: #f0dfb7;
+  --hk-text-secondary: #d5c6a6;
+  --hk-text-muted: #ad9d7c;
   --tooltip-accent: var(--hk-gold-muted);
   position: fixed; width: max-content; max-width: min(240px, calc(100vw - 24px));
-  padding: 8px 10px; overflow: hidden auto;
+  padding: 0; overflow: hidden auto;
   border: 0; border-radius: var(--hk-radius-sm);
   background: transparent;
-  box-shadow: 0 4px 14px var(--hk-shadow-low); color: var(--hk-text-primary); font: var(--text-xs) var(--hk-font-ui); pointer-events: none; isolation: isolate;
+  box-shadow: 0 4px 14px var(--hk-shadow-low); color: var(--hk-text-primary); font: 13px/1.45 var(--hk-font-ui); pointer-events: none; isolation: isolate;
 }
-/* Element banners keep their painted art and dark text (cream art);
-   every other kind renders the frame-xs-tooltip huyen surface. */
-.tooltip::before { content: ''; position: absolute; z-index: 4; inset: 12px auto 12px 5px; width: 2px; background: var(--tooltip-accent); opacity: .72; }
 /* Item aura - soft outer glow in the item's own rank color (bag item
    tooltips only, see itemAuraColor). color-mix keeps it translucent. */
 .tooltip--aura { box-shadow: 0 0 20px color-mix(in srgb, var(--tooltip-aura) 38%, transparent), 0 0 6px color-mix(in srgb, var(--tooltip-aura) 26%, transparent); }
@@ -267,7 +275,7 @@ function hideBrokenImage(event: Event) {
 .tooltip[data-contained] { padding: 12px 15px; border: 1px solid #a58c53; border-radius: 3px; background: #172c25; box-shadow: inset 0 0 0 3px #a58c5326, 0 6px 20px #08181066; }
 .tooltip[data-contained] .tooltip__title { color: #e6d39f; font-size: 16px; }
 .tooltip[data-contained] .tooltip__description { color: #d3cbb4; font-size: 13px; }
-.tooltip--rich { max-width: min(320px, calc(100vw - 24px)); padding: 12px 14px; }
+.tooltip--rich { max-width: min(320px, calc(100vw - 24px)); }
 .tooltip--detailed { max-width: min(380px, calc(100vw - 24px)); }
 .tooltip__header { display: flex; align-items: center; gap: 10px; }
 /* Icon wells keep their deliberate CREAM medallion on the dark huyen
@@ -281,11 +289,11 @@ function hideBrokenImage(event: Event) {
 /* Title truoc day thua huong font-size 12px cua .tooltip goc - cung co
    voi meta/description, chi khac weight/family (2026-08-30 frontend-
    design pass: tieu de tooltip can tach bac ro khoi noi dung). */
-.tooltip__title { margin: 0 0 3px; color: var(--hk-text-primary); font-family: var(--hk-font-display); font-size: var(--text-md); font-weight: 700; line-height: 1.25; }
+.tooltip__title { margin: 0 0 3px; color: var(--hk-text-primary); font-family: var(--hk-font-display); font-size: 17px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
 .tooltip__meta { margin: 0; color: var(--hk-text-muted); font-size: var(--text-xs); }
 /* Stat-breakdown title: aggregate value sits right of the stat name. */
 .tooltip__stat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
-.tooltip__stat-total { color: var(--hk-gold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tooltip__stat-total { color: #f1d28c; font-size: 20px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* pre-line: authored multi-line descriptions (Phap Tu Reimagine special
    previews -- cost %MaxLL + duration + effect + consequence) render as
    lines; single-line descriptions are unaffected. */
@@ -294,8 +302,16 @@ function hideBrokenImage(event: Event) {
 .tooltip__section-label { margin: 0 0 5px; color: color-mix(in srgb, var(--tooltip-accent) 76%, var(--hk-text-primary)); font-size: var(--text-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 .tooltip__section-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; color: var(--hk-text-secondary); line-height: 1.55; }
 .tooltip__row-value { color: var(--hk-text-primary); font-variant-numeric: tabular-nums; text-align: right; } .tooltip__row-detail { grid-column: 1/-1; color: var(--hk-text-muted); }
+.tooltip__row-range,.tooltip__row-delta--muted { color: var(--hk-text-muted); }
+.tooltip__row-delta--positive { color: var(--hk-jade); }
+.tooltip__row-delta--negative { color: var(--hk-cinnabar-bright); }
 .tooltip__section-row--positive .tooltip__row-value { color: var(--hk-jade); } .tooltip__section-row--negative .tooltip__row-value { color: var(--hk-cinnabar-bright); }
 .tooltip__section-row--warning .tooltip__row-value { color: var(--hk-gold); } .tooltip__section-row--muted { color: var(--hk-text-muted); } .tooltip__section-row--special .tooltip__row-value { color: var(--affix-exalted); }
+.tooltip--stat .tooltip__section-row { padding: 3px 0; }
+.tooltip--technique .tooltip__header,.tooltip--talent .tooltip__header { padding-bottom: 10px; border-bottom: 1px solid #ba95544d; }
+.tooltip--technique .tooltip__description,.tooltip--talent .tooltip__description { margin-top: 10px; }
+.tooltip--plain .tooltip__description { font-size: 13px; }
+.tooltip--building .tooltip__building-status { margin-top: 10px; padding-top: 8px; border-top: 1px solid #ba95544d; }
 .tooltip__section-row--tier-1 .tooltip__row-label { color: var(--affix-tier-1); } .tooltip__section-row--tier-2 .tooltip__row-label { color: var(--affix-tier-2); }
 .tooltip__section-row--tier-3 .tooltip__row-label { color: var(--affix-tier-3); } .tooltip__section-row--tier-4 .tooltip__row-label { color: var(--affix-tier-4); } .tooltip__section-row--tier-5 .tooltip__row-label { color: transparent; background: var(--rank-gradient-10); background-clip: text; -webkit-background-clip: text; font-weight: 700; }
 .tooltip__building-status { margin: 5px 0 0; color: var(--hk-jade); font-size: var(--text-xs); }

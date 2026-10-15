@@ -1,4 +1,5 @@
 import { installTienHiepUiAssets } from '@/presentation/assets/TienHiepUiAssets'
+import { applyMotionPreference } from '@/presentation/motionPreference'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
@@ -9,6 +10,7 @@ import './assets/tien-hiep-ui.css'
 import './assets/tien-hiep-secondary-ui.css'
 import './assets/tien-hiep-auxiliary.css'
 import './assets/pc-paper-production.css'
+import './assets/game-ui-frame.css'
 import App from './App.vue'
 import { vTooltip } from './directives/tooltip'
 import { useErrorStore } from './stores/error'
@@ -24,6 +26,7 @@ import type { DiagnosticEvent } from './shared/diagnostics/DiagnosticEvent'
 
 // WS8 - ap UI scale nguoi choi chon TRUOC mount de khong nhap nhay font.
 initUiScale()
+applyMotionPreference()
 // Saved locale applies before mount - no VI flash before hydration.
 initLocale()
 

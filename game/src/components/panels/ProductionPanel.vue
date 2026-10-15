@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GamePanel from '@/components/common/GamePanel.vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -10,6 +11,7 @@ import { useDialogFocus } from '@/composables/useDialogFocus'
 import { useUiStore } from '@/stores/ui'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { formatDuration } from '@/core/format/formatDuration'
+import { TERRITORY_THANH_VAN } from '@/core/production/ProductionCatalog'
 
 // San Xuat (2026-08-25, resource-professions-rework plan sec9.1) - thay
 // ExplorationPanel: moi Dia Gioi hien thi dung ba card Lam/Quang/
@@ -70,6 +72,8 @@ interface SiteRow {
   progress: number
 
   remainingLabel: string
+  cycleSeconds: number
+  baseOutputPerSecond?: { min: number; max: number }
 }
 
 const rows = computed<SiteRow[]>(() => {
@@ -77,7 +81,9 @@ const rows = computed<SiteRow[]>(() => {
 
   void nowMs.value
 
-  return gameManager.buildingOps.getProductionViews(nowMs.value).map((view) => {
+  const ids = TERRITORY_THANH_VAN.productionSiteIds
+  const order = [ids.mine, ids.forest, ids.grotto]
+  return gameManager.buildingOps.getProductionViews(nowMs.value).filter(view => order.includes(view.definition.siteId)).sort((a,b) => order.indexOf(a.definition.siteId) - order.indexOf(b.definition.siteId)).map((view) => {
     const cycleRemainingMs = view.cycleRemainingMs ?? 0
 
     const totalMs = view.cycleTotalMs ?? 1
@@ -121,6 +127,8 @@ const rows = computed<SiteRow[]>(() => {
 
       remainingLabel:
         remainingSeconds > 0 ? formatDuration(remainingSeconds) : t('panels.production.done'),
+      cycleSeconds: totalMs / 1000,
+      baseOutputPerSecond: view.baseOutputPerSecond,
     }
   })
 })
@@ -158,37 +166,22 @@ const productionIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navig
   <SceneDesignCanvas overlay>
     <section
       ref="sceneRef"
-      class="production-panel"
+      class="production-panel rail-panel-scene"
       :aria-label="t('layout.functionOverlay.titles.exploration')"
       tabindex="-1"
       @click.self="closeScene"
     >
-      <div
-        class="production-panel__sheet"
-        :style="{ backgroundImage: `url('${paperSheet}')` }"
-        aria-hidden="true"
-      />
+      <GamePanel :title="t('layout.functionOverlay.titles.exploration')">
 
       <div class="production-panel__frame">
-        <header class="production-panel__title">
-          <h1>{{ t('layout.functionOverlay.titles.exploration') }}</h1>
-        </header>
 
-        <div class="production-heading">
-          <img class="production-heading__icon" :src="productionIcon" alt="" />
-          <div class="production-heading__text">
-            <h2>{{ outpostHeader.template.value?.name }}</h2>
-            <span>{{ t('layout.functionOverlay.levelRange', { level: outpostHeader.instance.value?.level ?? 0, max: outpostHeader.template.value?.maxLevel ?? 0 }) }}</span>
-          </div>
-          <p class="production-panel__summary">{{ t('panels.production.summary') }}</p>
-        </div>
-
-        <ProductionVeinCard :now-ms="nowMs" />
         <div class="production-panel__grid production-sources">
+          <ProductionVeinCard :now-ms="nowMs" />
           <ProductionSiteCard v-for="row in rows" :key="row.siteId" :row="row" />
         </div>
         <p class="production-notice" role="status"></p>
       </div>
+      </GamePanel>
     </section>
   </SceneDesignCanvas>
 </template>
@@ -199,7 +192,6 @@ const productionIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navig
 .production-panel {
   position: absolute;
   inset: 0;
-  pointer-events: auto;
   color: #30271b;
   font-family: var(--font-display);
 }
@@ -319,20 +311,37 @@ const productionIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navig
   --bar-to: var(--jade);
 }
 
-.production-panel__grid {
+:is(#app, body) .production-panel .production-panel__grid.production-sources {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
+  padding: 0;
+  box-sizing: border-box;
+  border: 0;
+  background: transparent;
+}
+
+:is(#app, body) .production-panel .production-sources > :deep(.production-source-card) {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  gap: 0;
+}
+
+.production-sources :deep(.source-body strong) {
+  color: #a5cfac;
+}
+
+.production-sources :deep(.site-card__reward) {
+  color: #cfbc95;
 }
 
 .site-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--scene-forest-accent) 10%, var(--paper-50)), color-mix(in srgb, var(--scene-forest-accent) 4%, var(--paper-100)));
-  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 32%, var(--paper-line));
-  border-radius: var(--radius-md);
 }
 
 .site-card__art {
@@ -427,4 +436,8 @@ const productionIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navig
   cursor: pointer;
 }
 
+
+/* Layout instances are relative to the owning panel content. */
+.production-panel :deep(.game-panel__content .production-panel__frame) { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; background: transparent; border: 0; box-shadow: none; }
+.production-panel :deep(.game-panel__content :is(.production-panel__title,.production-panel__sheet)) { display: none; }
 </style>

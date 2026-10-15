@@ -26,7 +26,7 @@ function selectLanguage(next: AppLocale) { saveLocale(next) }
    tones; the seal-chip slice (renders a stray ring on dark) is replaced
    by a flat bordered pill. */
 .login-settings-content { display: grid; gap: 0; --paper-text: #e6d5ac; --paper-text-soft: #c4b088; --paper-line: #8f784455; --gold: #d4a94e; --hk-text-secondary: #d8c89e; --hk-text-primary: #fff0bd; }
-.login-settings-content :deep(.settings-panel__section) { border: 0; border-radius: 0; padding: 20px 4px; background: transparent; }
+.login-settings-content :deep(.settings-panel__section) { border: 0; border-radius: 0; padding: 48px 12px 20px; background: transparent; }
 .login-settings-content :deep(.settings-panel__section + .settings-panel__section) { border-top: 1px solid #8f784455; }
 .login-settings-content :deep(h4) { font-size: 23px; margin-bottom: 20px; }
 .login-settings-content :deep(.settings-panel__plaque) { display: none; }

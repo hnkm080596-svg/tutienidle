@@ -1,0 +1,44 @@
+.rail-panel-scene {
+  pointer-events: none;
+  --rail-panel-x: 345px;
+  --rail-panel-y: 101px;
+  --rail-panel-width: 1065px;
+  --rail-panel-height: 608px;
+}
+.game-panel {
+  --game-panel-header-top: 19px;
+  --game-panel-line-bottom: calc(65px * 2 / 3);
+  position: absolute;
+  left: var(--rail-panel-x, 345px);
+  top: var(--rail-panel-y, 101px);
+  width: var(--rail-panel-width, 1065px);
+  height: var(--rail-panel-height, 608px);
+  box-sizing: border-box;
+  border: 3px double #b28a43;
+  background-color: #f2e4c8;
+  background-position: center;
+  background-size: cover;
+  isolation: isolate;
+  pointer-events: auto;
+  color: #302519;
+  font-family: var(--font-display, Georgia, serif);
+}
+.game-panel > .game-panel__header {
+  position: absolute; inset: var(--game-panel-header-top) 10px auto; height: 65px;
+  margin: 0; padding: 0; border: 0; background: none;
+}
+.game-panel__heading { width: max-content; max-width: 100%; display: flex; flex-direction: column; align-items: center; }
+.game-panel .game-panel__title {
+  position: static; width: auto; height: 49px; margin: 0; padding: 0;
+  transform: none; font: 400 46px/49px 'UTM OngDoGia', var(--font-display, Georgia, serif);
+  color: #302519; background: none; text-align: left; animation: none;
+}
+.game-panel__line { position: absolute; left: 0; right: 0; bottom: 33.333%; height: 1px; background: #b28a43; pointer-events: none; }
+.game-panel > .game-panel__content {
+  position: absolute; left: 10px; top: calc(var(--game-panel-header-top) + var(--game-panel-line-bottom) + 10px); right: 10px; bottom: 10px;
+  min-width: 0; min-height: 0;
+}
+.game-panel__stack { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 14px; }
+.game-panel__toolbar { display: flex; align-items: center; gap: 12px; flex: 0 0 46px; min-width: 0; }
+.game-panel__tabs { flex: 1; height: 100%; min-width: 0; }
+.game-panel__workspace { position: relative; flex: 1; min-width: 0; min-height: 0; }

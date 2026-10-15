@@ -36,14 +36,14 @@ function expectedWoodPerHour(profileKey: 'low' | 'middle' | 'high'): number[] {
 }
 
 describe('Economy simulation — yield → sink', () => {
-  it('Linh Mộc và Linh Khoáng dùng tên tuổi + tên gốc + realm (gp123 6E C2)', () => {
+  it('wood and ore names retain age without realm suffix', () => {
     const materialName = (id: string) => materials.find((material) => material.id === id)?.name
 
-    expect(materialName('mortal_wood_decade')).toBe('Thập Niên Linh Mộc Phàm Nhân')
-    expect(materialName('mortal_ore_decade')).toBe('Thập Niên Linh Khoáng Phàm Nhân')
-    expect(materialName('mahayana_wood_millennium')).toBe('Thiên Niên Linh Mộc Đại Thừa')
-    expect(materialName('mahayana_ore_millennium')).toBe('Thiên Niên Linh Khoáng Đại Thừa')
-    expect(materialName('mortal_ore_thuong_co')).toBe('Thượng Cổ Linh Khoáng Phàm Nhân')
+    expect(materialName('material_spirit_wood_decade')).toBe('Thập Niên Linh Mộc')
+    expect(materialName('material_spirit_ore_decade')).toBe('Thập Niên Linh Khoáng')
+    expect(materialName('material_spirit_wood_millennium')).toBe('Thiên Niên Linh Mộc')
+    expect(materialName('material_spirit_ore_millennium')).toBe('Thiên Niên Linh Khoáng')
+    expect(materialName('material_spirit_ore_thuong_co')).toBe('Thượng Cổ Linh Khoáng')
   })
 
   it('registry chỉ còn linh thảo của đúng 8 họ đan mới', () => {

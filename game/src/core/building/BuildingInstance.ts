@@ -24,4 +24,5 @@ export interface BuildingInstance {
   // retroactively reprice the whole backlog at the new rate.
   // undefined (old save) -> current-realm fallback = old behavior.
   accrualRealmId?: string
+  cycleRemainder?: number
 }

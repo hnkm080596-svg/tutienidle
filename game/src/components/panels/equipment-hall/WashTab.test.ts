@@ -123,7 +123,7 @@ describe('WashTab — Tẩy Luyện', () => {
 
   it('card so sánh Trước ⇒ Sau hiện khi chọn item ở Tẩy Luyện — bảng theo từng dòng phụ (2026-10-08: layout chung forge, strip + Điểm Rèn caption bỏ)', async () => {
     const mounted = mountTab((manager) => {
-      const ore = materials.find((m) => m.id === 'qi_refining_ore_century')!
+      const ore = materials.find((m) => m.id === 'material_spirit_ore_century')!
       manager.materialBag.add(ore, 100)
       manager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
     })

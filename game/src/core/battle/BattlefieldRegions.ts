@@ -58,3 +58,9 @@ export function standingSlotPosition(
     column: region.columnMin + slotColumn * 2,
   }
 }
+
+// Shared default for gameplay construction and presentation compatibility.
+const centerStandingSlot = Math.floor(STANDING_SLOT_COUNT / 2)
+export const DEFAULT_PLAYER_STANDING_POSITION: Readonly<GridPosition> = standingSlotPosition(
+  PLAYER_SIDE_REGION, centerStandingSlot, centerStandingSlot,
+)

@@ -25,23 +25,23 @@ beforeEach(() => { bag = new MaterialBag() })
 
 describe('DecomposeSystem — immediate ore command', () => {
   it('converts the selected amount with authored grade/age rate and notifies only after commit', () => {
-    addOre('mortal_ore_decade', 12)
+    addOre('material_spirit_ore_decade', 12)
     const onEssenceProduced = vi.fn()
     const system = new DecomposeSystem(bag, { onEssenceProduced })
 
-    expect(system.previewDecomposeOre('mortal_ore_decade', 12)).toEqual({
+    expect(system.previewDecomposeOre('material_spirit_ore_decade', 12)).toEqual({
       ok: true,
       materialId: LUYEN_KHI_TINH_HOA_ID,
       consumed: 12,
       produced: 2,
     })
-    expect(system.decomposeOre('mortal_ore_decade', 12)).toEqual({
+    expect(system.decomposeOre('material_spirit_ore_decade', 12)).toEqual({
       ok: true,
       materialId: LUYEN_KHI_TINH_HOA_ID,
       consumed: 12,
       produced: 2,
     })
-    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
+    expect(bag.getAmount('material_spirit_ore_decade')).toBe(0)
     expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(2)
     expect(onEssenceProduced).toHaveBeenCalledTimes(1)
     expect(onEssenceProduced).toHaveBeenCalledWith(LUYEN_KHI_TINH_HOA_ID, 2)
@@ -49,7 +49,7 @@ describe('DecomposeSystem — immediate ore command', () => {
   it('uses floor conversion so splitting requests cannot increase output', () => {
     const batchedBag = new MaterialBag()
     const splitBag = new MaterialBag()
-    const oreId = 'qi_refining_ore_decade'
+    const oreId = 'material_spirit_ore_decade'
     const ore = materials.find((entry) => entry.id === oreId)!
     batchedBag.add(ore, 12)
     splitBag.add(ore, 12)
@@ -59,7 +59,7 @@ describe('DecomposeSystem — immediate ore command', () => {
     const splitFirst = splitSystem.decomposeOre(oreId, 6)
     const splitSecond = splitSystem.decomposeOre(oreId, 6)
 
-    expect(batched).toMatchObject({ ok: true, produced: 3 })
+    expect(batched).toMatchObject({ ok: true, produced: 2 })
     expect(splitFirst).toMatchObject({ ok: true, produced: 1 })
     expect(splitSecond).toMatchObject({ ok: true, produced: 1 })
     expect(splitBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBeLessThanOrEqual(
@@ -68,49 +68,49 @@ describe('DecomposeSystem — immediate ore command', () => {
   })
 
   it('refuses a sub-unit yield without consuming ore', () => {
-    addOre('mortal_ore_decade', 1)
+    addOre('material_spirit_ore_decade', 1)
     const system = new DecomposeSystem(bag)
 
-    expect(system.decomposeOre('mortal_ore_decade', 1)).toEqual({ ok: false, reason: 'insufficient_amount' })
-    expect(bag.getAmount('mortal_ore_decade')).toBe(1)
+    expect(system.decomposeOre('material_spirit_ore_decade', 1)).toEqual({ ok: false, reason: 'insufficient_amount' })
+    expect(bag.getAmount('material_spirit_ore_decade')).toBe(1)
     expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
   })
 
   it('refuses output overflow before consuming any ore', () => {
-    addOre('mortal_ore_decade', 12)
+    addOre('material_spirit_ore_decade', 12)
     const essence = materials.find((entry) => entry.id === LUYEN_KHI_TINH_HOA_ID)!
     bag.add(essence, (essence.stackLimit ?? 999_999) - 1)
     const system = new DecomposeSystem(bag)
 
-    expect(system.decomposeOre('mortal_ore_decade', 12)).toEqual({ ok: false, reason: 'output_capacity' })
-    expect(bag.getAmount('mortal_ore_decade')).toBe(12)
+    expect(system.decomposeOre('material_spirit_ore_decade', 12)).toEqual({ ok: false, reason: 'output_capacity' })
+    expect(bag.getAmount('material_spirit_ore_decade')).toBe(12)
     expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe((essence.stackLimit ?? 999_999) - 1)
   })
 
   it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
     'rejects invalid amount %s without mutation',
     (amount) => {
-      addOre('mortal_ore_decade', 12)
+      addOre('material_spirit_ore_decade', 12)
       const system = new DecomposeSystem(bag)
-      expect(system.decomposeOre('mortal_ore_decade', amount)).toEqual({ ok: false, reason: 'invalid_amount' })
-      expect(bag.getAmount('mortal_ore_decade')).toBe(12)
+      expect(system.decomposeOre('material_spirit_ore_decade', amount)).toEqual({ ok: false, reason: 'invalid_amount' })
+      expect(bag.getAmount('material_spirit_ore_decade')).toBe(12)
       expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
     },
   )
 
   it('rejects invalid ore and insufficient stock without producing essence', () => {
-    addOre('mortal_ore_decade', 1)
+    addOre('material_spirit_ore_decade', 1)
     const system = new DecomposeSystem(bag)
     expect(system.decomposeOre(LUYEN_KHI_TINH_HOA_ID, 1)).toEqual({ ok: false, reason: 'invalid_ore' })
-    expect(system.decomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'insufficient_ore' })
-    expect(bag.getAmount('mortal_ore_decade')).toBe(1)
+    expect(system.decomposeOre('material_spirit_ore_decade', 2)).toEqual({ ok: false, reason: 'insufficient_ore' })
+    expect(bag.getAmount('material_spirit_ore_decade')).toBe(1)
     expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
   })
 
   it('applies the same /6 floor to authored ore, wood, and herb families', () => {
     const ids = [
-      'mortal_ore_decade',
-      'mortal_wood_decade',
+      'material_spirit_ore_decade',
+      'material_spirit_wood_decade',
       materials.find((entry) => entry.profession?.resourceKind === 'herb' && entry.profession.realmId === 'mortal' && entry.profession.age === 'decade')!.id,
     ]
     for (const id of ids) {
@@ -130,47 +130,47 @@ describe('DecomposeSystem — immediate ore command', () => {
   })
 
   it('generic decomposition credits outputs through the production bag path', () => {
-    addOre('mortal_ore_decade', 12)
+    addOre('material_spirit_ore_decade', 12)
     const onEssenceProduced = vi.fn()
     const system = new DecomposeSystem(bag, { onEssenceProduced })
 
-    expect(system.previewDecompose(['mortal_ore_decade'])).toEqual([
+    expect(system.previewDecompose(['material_spirit_ore_decade'])).toEqual([
       { materialId: LUYEN_KHI_TINH_HOA_ID, minAmount: 2, maxAmount: 2 },
     ])
-    expect(system.decompose(['mortal_ore_decade'])).toBe(true)
-    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
+    expect(system.decompose(['material_spirit_ore_decade'])).toBe(true)
+    expect(bag.getAmount('material_spirit_ore_decade')).toBe(0)
     expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(2)
     expect(onEssenceProduced).toHaveBeenCalledTimes(1)
     expect(onEssenceProduced).toHaveBeenCalledWith(LUYEN_KHI_TINH_HOA_ID, 2)
   })
 
   it('generic output adapter receives credit once and capacity failure preserves inputs', () => {
-    addOre('mortal_ore_decade', 12)
+    addOre('material_spirit_ore_decade', 12)
     const adapter = vi.fn()
     const adaptedSystem = new DecomposeSystem(bag, { deliverOutput: adapter })
-    expect(adaptedSystem.decompose(['mortal_ore_decade'])).toBe(true)
+    expect(adaptedSystem.decompose(['material_spirit_ore_decade'])).toBe(true)
     expect(adapter).toHaveBeenCalledTimes(1)
     expect(adapter).toHaveBeenCalledWith({ materialId: LUYEN_KHI_TINH_HOA_ID, amount: 2 })
     expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
 
     const capacityBag = new MaterialBag()
-    const ore = materials.find((entry) => entry.id === 'mortal_ore_decade')!
+    const ore = materials.find((entry) => entry.id === 'material_spirit_ore_decade')!
     const essence = materials.find((entry) => entry.id === LUYEN_KHI_TINH_HOA_ID)!
     capacityBag.add(ore, 12)
     capacityBag.add(essence, (essence.stackLimit ?? 999_999) - 1)
     const capacitySystem = new DecomposeSystem(capacityBag)
-    expect(capacitySystem.decompose(['mortal_ore_decade'])).toBe(false)
-    expect(capacityBag.getAmount('mortal_ore_decade')).toBe(12)
+    expect(capacitySystem.decompose(['material_spirit_ore_decade'])).toBe(false)
+    expect(capacityBag.getAmount('material_spirit_ore_decade')).toBe(12)
   })
 
   it('lists detached ore-only snapshots', () => {
-    addOre('mortal_ore_decade', 3)
+    addOre('material_spirit_ore_decade', 3)
     bag.add(materials.find((entry) => entry.id === LUYEN_KHI_TINH_HOA_ID)!, 8)
     const system = new DecomposeSystem(bag)
     const rows = system.getAvailableOres()
     rows[0]!.amount = 100
-    expect(rows).toEqual([{ materialId: 'mortal_ore_decade', amount: 100 }])
-    expect(system.getAvailableOres()).toEqual([{ materialId: 'mortal_ore_decade', amount: 3 }])
+    expect(rows).toEqual([{ materialId: 'material_spirit_ore_decade', amount: 100 }])
+    expect(system.getAvailableOres()).toEqual([{ materialId: 'material_spirit_ore_decade', amount: 3 }])
   })
 
   it('keeps old save settings/timers inert across restore and serialization', () => {
@@ -186,8 +186,36 @@ describe('DecomposeSystem — immediate ore command', () => {
 
 describe('parseOre', () => {
   it('parses authored ore IDs only', () => {
-    expect(parseOre('mortal_ore_decade')).toEqual({ grade: 'cuu_pham', age: 'decade' })
+    expect(parseOre('material_spirit_ore_decade')).toEqual({ grade: 'cuu_pham', age: 'decade' })
     expect(parseOre('unregistered_ore_decade')).toBeNull()
-    expect(parseOre('mortal_wood_decade')).toBeNull()
+    expect(parseOre('material_spirit_wood_decade')).toBeNull()
+  })
+})
+
+describe('repeated mixed decomposition', () => {
+  it('keeps sub-unit herbs inert until replenished and allows the next conversion', () => {
+    const herbId = 'hoi_linh_thao_mortal_decade'
+    addOre('material_spirit_ore_decade', 6)
+    addOre(herbId, 5)
+    const system = new DecomposeSystem(bag)
+    expect(system.listDecomposableIds()).toEqual(['material_spirit_ore_decade'])
+    expect(system.decomposeWithResult(['material_spirit_ore_decade', herbId])).toEqual({ ok: true })
+    expect(bag.getAmount(herbId)).toBe(5)
+    expect(system.listDecomposableIds()).toEqual([])
+    expect(system.decomposeWithResult([herbId])).toEqual({ ok: false, reason: 'insufficient_amount' })
+    expect(bag.getAmount(herbId)).toBe(5)
+    addOre(herbId, 1)
+    expect(system.listDecomposableIds()).toEqual([herbId])
+    expect(system.decomposeWithResult([herbId])).toEqual({ ok: true })
+    expect(bag.getAmount(herbId)).toBe(0)
+    expect(bag.getAmount(DECOMPOSE_OUTPUT_BY_FAMILY.herb)).toBe(1)
+  })
+
+  it('reports capacity rejection without consuming any selected stack', () => {
+    addOre('material_spirit_ore_decade', 12)
+    const essence = materials.find((entry) => entry.id === LUYEN_KHI_TINH_HOA_ID)!
+    bag.add(essence, essence.stackLimit ?? 999_999)
+    expect(new DecomposeSystem(bag).decomposeWithResult(['material_spirit_ore_decade'])).toEqual({ ok: false, reason: 'output_capacity' })
+    expect(bag.getAmount('material_spirit_ore_decade')).toBe(12)
   })
 })

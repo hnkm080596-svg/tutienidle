@@ -36,6 +36,7 @@ export interface CharacterClipRange {
    * manifest by pack-character-art.mjs. Absent when unmarked.
    */
   impactFrameIndex?: number
+  chargeStartFrameIndex?: number
   /** Optional playback order using existing atlas frames; duplicates hold a pose. */
   frameSequence?: readonly number[]
 }
@@ -110,7 +111,7 @@ function variant(
     attack?: [number, number, number]
     ult?: [number, number, number]
   },
-  opts: { avatarSize?: { w: number; h: number }; avatarFile?: string; cast?: Record<string, { src?: string; range: [number, number, number]; impactFrameIndex?: number; frameSequence?: readonly number[] }> } = {},
+  opts: { avatarSize?: { w: number; h: number }; avatarFile?: string; cast?: Record<string, { src?: string; range: [number, number, number]; impactFrameIndex?: number; chargeStartFrameIndex?: number; frameSequence?: readonly number[] }> } = {},
 ): CharacterArtVariant {
   const castClips: Record<string, CharacterClipRange> = {}
   for (const [key, entry] of Object.entries(opts.cast ?? {})) {
@@ -121,6 +122,7 @@ function variant(
     const source = clip(slug, src, entry.range[0], entry.range[1], entry.range[2])
     castClips[key] = { ...source,
       ...(entry.impactFrameIndex === undefined ? {} : { impactFrameIndex: entry.impactFrameIndex }),
+      ...(entry.chargeStartFrameIndex === undefined ? {} : { chargeStartFrameIndex: entry.chargeStartFrameIndex }),
       ...(entry.frameSequence ? { frameSequence: entry.frameSequence } : {}),
     }
   }
@@ -173,7 +175,7 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     { w: 348, h: 514 },
     { x: 0.008621, y: 0, w: 0.971264, h: 1 },
     { idle: [1, 33, 1], attack: [1, 17, 1], death: [1, 17, 2] },
-    { avatarSize: { w: 512, h: 512 }, cast: { linh_bao: { range: [1, 17, 2] } } },
+    { avatarSize: { w: 512, h: 512 }, cast: { linh_bao: { range: [1, 17, 2], chargeStartFrameIndex: 4 } } },
   ),
   ngu_kiem: variant(
     'ngu_kiem',

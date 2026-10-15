@@ -156,6 +156,19 @@ describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)',
 })
 
 describe('SlotView - static presentation mode (item-info-card 2026-09-14)', () => {
+  it('read-only tooltip opt-in preserves non-actionable rendering', () => {
+    const onClick = vi.fn()
+    const { container, unmount } = mountSlot({ item: null, label: 'Resource', static: true, staticTooltip: true, tooltip: { title: 'Resource info' }, onClick })
+    const root = container.querySelector<HTMLElement>('.slot-view')!
+    expect(root.tagName).toBe('SPAN')
+    expect(root.tabIndex).toBe(0)
+    root.dispatchEvent(new Event('pointerenter'))
+    expect(useTooltip().content.value).toEqual({ title: 'Resource info' })
+    root.click()
+    expect(onClick).not.toHaveBeenCalled()
+    unmount()
+    expect(useTooltip().content.value).toBeNull()
+  })
   it('static mode: renders span role=img, no button, no tooltip emission, no click', () => {
     const onClick = vi.fn()
     const { container, unmount } = mountSlot({

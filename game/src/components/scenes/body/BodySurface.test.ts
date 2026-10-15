@@ -179,7 +179,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
         player.$state.realmId = 'mortal'
       })
       await nextTick()
-      expect(fresh.container.querySelector('.body-heading p')?.textContent)
+      expect(fresh.container.querySelector('.body-identity')?.textContent)
         .toContain('Phàm Thể')
       fresh.unmount()
 
@@ -194,7 +194,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       // Completed refinement makes meridian the default chapter - open
       // the Luyen The seal first.
       await selectChapter(transformed, 'body_refinement')
-      expect(transformed.container.querySelector('.body-heading p')?.textContent)
+      expect(transformed.container.querySelector('.body-identity')?.textContent)
         .toContain('Bảo Thể')
       transformed.unmount()
     })
@@ -206,13 +206,13 @@ describe('BodySurface (scene 08 fidelity)', () => {
         player.$state.realmId = 'mortal'
       })
       await nextTick()
-      expect(view.container.querySelector('.body-heading p')?.textContent)
+      expect(view.container.querySelector('.body-identity')?.textContent)
         .toContain('Phàm Thể')
 
       store!.$state.physiqueGrade = 'bao'
       view.bumpState()
       await nextTick()
-      expect(view.container.querySelector('.body-heading p')?.textContent)
+      expect(view.container.querySelector('.body-identity')?.textContent)
         .toContain('Bảo Thể')
       view.unmount()
     })

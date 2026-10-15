@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GameCard from "@/components/common/GameCard.vue"
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SkillUiNode, SkillUiEdge } from './skillUi'
@@ -238,7 +239,7 @@ const viewTouched = ref(false)
 // Default ratio picked by Minh on screen (2026-10-07): 0.91 effective.
 const OPEN_VIEW_SCALE = 0.91
 const frozenScale = ref<number | null>(null)
-const rootEl = useTemplateRef<HTMLElement>('rootEl')
+const rootEl = useTemplateRef<HTMLElement>('graphViewport')
 let dragMoved = false
 let dragStart: { px: number; py: number; x: number; y: number } | null = null
 let nodeDrag: { id: string; px: number; py: number; x: number; y: number; scale: number } | null = null
@@ -296,15 +297,6 @@ function resetViewToRoot() {
     x: s * (props.size / 2 - p.x),
     y: s * (props.size / 2 - p.y),
   }
-}
-// Focus-induced scroll: browsers scroll an overflow:hidden box to reveal
-// a focused node (the mount select does this), quietly shifting the whole
-// tree ~scrollTop px off the computed vantage. The paper never scrolls by
-// design - pan is the only offset - so any scroll snaps back to 0.
-function onScrollReset(event: Event) {
-  const el = event.currentTarget as HTMLElement
-  el.scrollTop = 0
-  el.scrollLeft = 0
 }
 // Mount opens the panel: fixed view + the main node pre-selected so the
 // detail panel reads it before the user touches anything.
@@ -456,12 +448,16 @@ const rootStyle = computed(() =>
 )
 </script>
 <template>
-  <div
-    ref="rootEl"
+  <GameCard as="div"
+    :title="t('skill.treeCardTitle')"
     class="skill-paper-tree"
     :class="{ dragging, design: designMode }"
     :style="rootStyle"
     :aria-label="t('skill.tree')"
+
+  >
+    <template #viewport>
+    <div ref="graphViewport" class="skill-graph-window"
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
@@ -469,10 +465,8 @@ const rootStyle = computed(() =>
     @wheel.prevent="onWheel"
     @dblclick="onResetView"
     @contextmenu="onContextMenu"
-    @scroll="onScrollReset"
-  >
-    <div class="skill-paper-backdrop" :style="{ borderImageSource: `url('${backdrop}')` }" aria-hidden="true" />
-    <div class="skill-graph-window" @scroll="onScrollReset">
+
+>
     <div class="skill-graph" :style="graphStyle">
       <svg class="skill-tree-lines" :viewBox="viewBox" aria-hidden="true">
         <g v-for="edge in connections" :key="`${edge.from}-${edge.to}`" :class="['skill-edge', { muted: edge.muted, lit: edge.lit }]">
@@ -506,15 +500,16 @@ const rootStyle = computed(() =>
         <button type="button" @click="resetDesign">Về Mặc Định</button>
       </template>
     </div>
-  </div>
+    </template>
+  </GameCard>
 </template>
 <style scoped>
 /* Node discs always paint above every link/light line (edge svg is
    z-index 1; positioned nodes z-index 2) so art never sits under light. */
 .skill-positioned-node { position:absolute; transform:translate(-50%,-50%); z-index:2; }
-.skill-paper-tree { position:absolute; left:365px; top:198px; width:600px; height:487px; overflow:hidden; cursor:grab; touch-action:none; user-select:none; clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px); }
-.skill-paper-backdrop { position:absolute; inset:0; pointer-events:none; border:15px solid transparent; border-image-slice:160; border-image-width:15px; border-image-repeat:stretch; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;}
-.skill-graph-window { position:absolute; inset:9.4px 6.5px 10.1px 6.5px; overflow:hidden; touch-action:none; user-select:none; cursor:grab; }
+.skill-paper-tree { position:absolute; left:365px; top:198px; width:600px; height:487px; overflow:clip; cursor:grab; touch-action:none; user-select:none; }
+
+.skill-graph-window { position:absolute; inset:0; overflow:clip; touch-action:none; user-select:none; cursor:grab; }
 .skill-paper-tree.dragging { cursor:grabbing; }
 .skill-paper-tree :deep(img) { -webkit-user-drag:none; }
 .skill-graph { position:absolute; left:50%; top:50%; transform-origin:center; }

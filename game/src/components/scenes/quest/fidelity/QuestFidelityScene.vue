@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GamePanel from '@/components/common/GamePanel.vue'
 // Scene 18 (Nhiem Vu / quest) paper surface, Codex landscape port:
 // the sheet is the shared flat paper page at the common panel band
 // (24%/12.5%/74%/75% of the 1440x810 canvas, same as skill-sheet /
@@ -45,13 +46,10 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 
 <template>
-  <section ref="rootRef" class="quest-scene" :aria-label="t('panels.quest.title')" @click.self="emit('back')">
-    <div class="quest-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
-    <header class="quest-heading">
-      <h1 class="quest-title">{{ t('panels.quest.title') }}</h1>
-      <img class="quest-divider" :src="titleDivider" alt="">
-      <p class="quest-intro">{{ t('panels.quest.intro') }}</p>
-    </header>
+  <section ref="rootRef" class="rail-panel-scene quest-scene" :aria-label="t('panels.quest.title')" @click.self="emit('back')">
+    <GamePanel :title="t('panels.quest.title')">
+    
+    
 
     <div class="quest-columns">
       <nav class="quest-groups">
@@ -104,11 +102,12 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
     <p v-if="preview" class="quest-preview">{{ t('preview') }}</p>
     <p class="quest-notice" role="status">{{ notice }}</p>
+    </GamePanel>
   </section>
 </template>
 
 <style scoped>
-.quest-scene{position:absolute;inset:0;pointer-events:auto;font-family:var(--font-display,Georgia,serif)}
+.quest-scene{position:absolute;inset:0;font-family:var(--font-display,Georgia,serif)}
 .quest-scene :deep(*){box-sizing:border-box}
 /* Sheet = .skill-sheet/.equipment-sheet verbatim: flat shared paper
    page on the common band (345/101/1065/608) - renamed off
@@ -141,4 +140,9 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .quest-list-fallback .ready{color:#9ccc82}
 .quest-preview{position:absolute;left:367px;top:693px;margin:0;font-size:10px;line-height:15px;color:#7d6a45}
 .quest-notice{position:absolute;left:750px;top:693px;width:640px;height:13px;margin:0;text-align:right;font-size:12px;color:#62512d}
+
+/* Layout instances are relative to the owning panel content. */
+.quest-scene :deep(.game-panel__content :is(.quest-sheet,.quest-heading)) { display: none; }
+.quest-scene :deep(.game-panel__content .quest-columns) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; }
+.quest-scene :deep(.game-panel__content .quest-notice) { left: 0; right: 0; top: auto; bottom: 0; width: 100%; }
 </style>

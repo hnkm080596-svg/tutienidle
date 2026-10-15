@@ -9,6 +9,8 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
+import { DEFAULT_PARTY_FORMATION } from '../../game/PartyFormation'
+import { ENEMY_SIDE_REGION, standingSlotPosition } from '../BattlefieldRegions'
 
 // QA adversarial probes (2026-09-04 quick review) - Slice 1 TurnBattleSystem.
 
@@ -45,6 +47,15 @@ function makeParticipant(
 }
 
 describe('TurnBattleSystem adversarial (QA probes)', () => {
+  it('default player prioritizes the enemy middle row ahead of nearer enemies on other standing rows', () => {
+    const slot = DEFAULT_PARTY_FORMATION[0]!
+    const actor = makeParticipant('player', createCombatant({ id: 'player', x: slot.column, row: slot.row }), 10, 0)
+    const nearCell = standingSlotPosition(ENEMY_SIDE_REGION, 0, 0)
+    const sameRowCell = standingSlotPosition(ENEMY_SIDE_REGION, 1, 2)
+    const nearer = makeParticipant('nearer', createCombatant({ id: 'nearer', x: nearCell.column, row: nearCell.row }), 10, 1)
+    const sameRow = makeParticipant('same-row', createCombatant({ id: 'same-row', x: sameRowCell.column, row: sameRowCell.row }), 10, 2)
+    expect(selectTarget(actor, [nearer, sameRow])?.id).toBe('same-row')
+  })
   it('INV-S1-2: maxTurns=0 terminate ngay với state defeat, không hang', () => {
     const battle: TurnBattle = {
       players: [makeParticipant(

@@ -1,3 +1,6 @@
+
+/* Instance panels own their internal presentation. */
+@scope (:root) to (:is(.game-panel, .combat-panel__content, .game-card, .game-action-button, .game-tab-button, .game-dropdown-button, .chip-select, .slot-view)) {
 /* PC workspaces use their actual read models and existing command controls. */
 :is(#app, body) .tran-phap-panel {
   grid-template-columns: minmax(0, 1fr) minmax(280px, .85fr);
@@ -102,11 +105,12 @@
 :is(#app, body) .quan-khi-panel__choice { padding: 22px; min-height: 140px; background: #27251f; border-color: #b89455; }
 :is(#app, body) .quan-khi-panel__choice-name { font: 700 23px/1.35 var(--font-display); }
 :is(#app, body) .quan-khi-panel__choice-desc { font-size: 15px; line-height: 1.7; color: #d5c6a6; }
-:is(#app, body) #global-tooltip:not(.tooltip--element) { max-width: min(410px,calc(100vw - 24px)); padding: 24px 28px; }
 :is(#app, body) .offline-summary__rows { display: grid; gap: 12px; margin: 24px 0; }
 :is(#app, body) :is(.confirm-modal__actions,.offline-summary__actions,.abandon-modal__actions) { display: flex; justify-content: flex-end; gap: 16px; margin-top: 24px; }
 @media (max-width: 1300px) {
   :is(#app, body) .tran-phap-panel { grid-template-columns: minmax(0,1fr) minmax(240px,.85fr); gap: 14px; }
   :is(#app, body) .tran-phap-panel__formation-list { padding: 14px; }
   :is(#app, body) .tran-phap-panel__formation-button { min-height: 74px; padding: 12px; }
+}
+
 }

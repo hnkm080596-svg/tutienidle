@@ -2,9 +2,10 @@
 import { computed, ref, watch } from 'vue'
 import { i18n } from '@/i18n'
 import OverlayPanel from './OverlayPanel.vue'
-import GameButton from './GameButton.vue'
-import Chip from './primitives/Chip.vue'
-import InkNineSlice from './primitives/InkNineSlice.vue'
+import RailPanelDialog from './RailPanelDialog.vue'
+import GameActionButton from './GameActionButton.vue'
+import GameTabButton from './GameTabButton.vue'
+import GameCard from './GameCard.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { BUILD_IDENTITY } from '@/shared/build/BuildIdentity'
 import {
@@ -41,6 +42,7 @@ import type { DiagnosticEvent } from '@/shared/diagnostics/DiagnosticEvent'
 
 const props = withDefaults(defineProps<{
   open: boolean
+  rail?: boolean
   /** Overlay z-index; raised when the dialog opens above the app-error
    *  surface (which itself sits at OVERLAY_LAYERS.appError). */
   layer?: number
@@ -360,7 +362,7 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
 
 <template>
   <Teleport to="body">
-    <OverlayPanel
+    <component :is="rail ? RailPanelDialog : OverlayPanel"
       :open="open"
       :title="title"
       variant="paper"
@@ -370,18 +372,18 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
       data-testid="feedback-dialog"
       @close="onClose"
     >
-      <div class="feedback-dialog">
+      <component :is="rail ? GameCard : 'div'" class="feedback-dialog" :class="{ 'feedback-dialog--rail': rail }">
         <!-- Success state: stable server report id replaces the form. -->
         <div v-if="result?.status === 'accepted'" class="feedback-dialog__success" data-testid="feedback-success">
           <p class="feedback-dialog__success-title">{{ i18n.global.t('betaFeedback.status.accepted') }}</p>
           <p class="feedback-dialog__report-id" data-testid="feedback-report-id">{{ result.reportId }}</p>
           <div class="feedback-dialog__success-actions">
-            <GameButton variant="secondary" size="sm" data-testid="feedback-copy-id" @click="copyReportId">
+            <GameActionButton data-testid="feedback-copy-id" @click="copyReportId">
               {{ copied ? i18n.global.t('betaFeedback.actions.copied') : i18n.global.t('betaFeedback.actions.copyId') }}
-            </GameButton>
-            <GameButton variant="primary" size="sm" data-testid="feedback-done" @click="emit('close')">
+            </GameActionButton>
+            <GameActionButton data-testid="feedback-done" @click="emit('close')">
               {{ i18n.global.t('panels.common.close') }}
-            </GameButton>
+            </GameActionButton>
           </div>
           <p class="feedback-dialog__hint">{{ i18n.global.t('betaFeedback.hints.reportId') }}</p>
         </div>
@@ -392,17 +394,17 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
           <div class="feedback-dialog__field">
             <span class="feedback-dialog__label" id="feedback-category-label">{{ i18n.global.t('betaFeedback.fields.category') }}</span>
             <div class="feedback-dialog__categories" role="radiogroup" aria-labelledby="feedback-category-label">
-              <Chip
+              <GameTabButton
                 v-for="option in FEEDBACK_CATEGORIES"
                 :key="option"
                 role="radio"
                 :aria-checked="category === option"
-                :active="category === option"
+                :selected="category === option"
                 :data-testid="`feedback-category-${option}`"
                 @click="category = option"
               >
                 {{ i18n.global.t(`betaFeedback.categories.${option}`) }}
-              </Chip>
+              </GameTabButton>
             </div>
           </div>
 
@@ -410,8 +412,7 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
             <label class="feedback-dialog__label" for="feedback-description">
               {{ i18n.global.t('betaFeedback.fields.description') }}
             </label>
-            <div class="feedback-dialog__field-frame">
-              <InkNineSlice chrome-id="text-field" layer="surface" />
+            <GameCard class="feedback-dialog__field-frame">
               <textarea
                 id="feedback-description"
                 v-model="description"
@@ -422,7 +423,7 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
                 :placeholder="i18n.global.t('betaFeedback.placeholders.description')"
                 :aria-describedby="fieldError ? 'feedback-error' : 'feedback-description-hint'"
               />
-            </div>
+            </GameCard>
             <div class="feedback-dialog__meta">
               <small id="feedback-description-hint" class="feedback-dialog__hint">
                 {{ i18n.global.t('betaFeedback.hints.redaction') }}
@@ -435,8 +436,7 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
             <label class="feedback-dialog__label" for="feedback-steps">
               {{ i18n.global.t('betaFeedback.fields.steps') }}
             </label>
-            <div class="feedback-dialog__field-frame">
-              <InkNineSlice chrome-id="text-field" layer="surface" />
+            <GameCard class="feedback-dialog__field-frame">
               <textarea
                 id="feedback-steps"
                 v-model="steps"
@@ -446,15 +446,14 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
                 :maxlength="FEEDBACK_LIMITS.maxStepsChars * 2"
                 :placeholder="i18n.global.t('betaFeedback.placeholders.steps')"
               />
-            </div>
+            </GameCard>
           </div>
 
           <div class="feedback-dialog__field">
             <label class="feedback-dialog__label" for="feedback-contact">
               {{ i18n.global.t('betaFeedback.fields.contact') }}
             </label>
-            <div class="feedback-dialog__field-frame">
-              <InkNineSlice chrome-id="text-field" layer="surface" />
+            <GameCard class="feedback-dialog__field-frame">
               <input
                 id="feedback-contact"
                 v-model="contact"
@@ -464,7 +463,7 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
                 :maxlength="FEEDBACK_LIMITS.maxContactChars * 2"
                 :placeholder="i18n.global.t('betaFeedback.placeholders.contact')"
               />
-            </div>
+            </GameCard>
           </div>
 
           <div class="feedback-dialog__attach">
@@ -515,23 +514,23 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
           </p>
 
           <div class="feedback-dialog__actions">
-            <GameButton class="ghost-on-paper" variant="ghost" size="sm" data-testid="feedback-export" @click="onExport">
+            <GameActionButton class="ghost-on-paper" data-testid="feedback-export" @click="onExport">
               {{ exported ? i18n.global.t('betaFeedback.actions.exported') : i18n.global.t('betaFeedback.actions.export') }}
-            </GameButton>
-            <GameButton
-              variant="primary"
-              size="sm"
-              :disabled="!canSubmit"
-              :loading="submitting"
+            </GameActionButton>
+            <GameActionButton
+
+
+              :disabled="!canSubmit || submitting"
+              :aria-busy="submitting"
               data-testid="feedback-submit"
               @click="onSubmit"
             >
               {{ i18n.global.t('betaFeedback.actions.submit') }}
-            </GameButton>
+            </GameActionButton>
           </div>
         </template>
-      </div>
-    </OverlayPanel>
+      </component>
+    </component>
   </Teleport>
 </template>
 
@@ -573,8 +572,9 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
 /* The drawn text-field chrome owns the field shell (dark metal - the
    small-chrome rule); the input itself stays transparent on top of it
    and keeps light text for the dark field. */
-.feedback-dialog__field-frame {
+.feedback-dialog__field-frame.game-card {
   position: relative;
+  padding: 0;
 }
 
 .feedback-dialog__textarea,
@@ -583,7 +583,9 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
   z-index: 3;
   width: 100%;
   box-sizing: border-box;
-  padding: 10px 14px;
+  display: block;
+  min-height: 46px;
+  padding: 14px 16px;
   border: 0;
   background: transparent;
   color: var(--hk-text-primary, #ede6d6);
@@ -730,4 +732,7 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
   overflow-wrap: anywhere;
   user-select: all;
 }
+.feedback-dialog--rail.game-card { --paper-text: #f3e4c4; --paper-text-soft: #d3bd92; --paper-line: #b28a4355; padding: 16px 20px; margin: 0; }
+.feedback-dialog__actions > .game-action-button,.feedback-dialog__success-actions > .game-action-button { min-width: 170px; height: 44px; font-size: 16px; }
+.feedback-dialog__categories > .game-tab-button { min-width: 120px; height: 38px; }
 </style>

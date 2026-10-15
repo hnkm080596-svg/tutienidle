@@ -6,6 +6,7 @@
 // temp-art strike marker row.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import CombatArtSurface from '@/components/scenes/combat/CombatArtSurface.vue'
 
 const props = defineProps<{
   realmName: string
@@ -17,13 +18,14 @@ const flames = computed(() => Math.min(props.strikesTaken, 7))
 </script>
 
 <template>
-  <div class="tribulation-realm-card" data-hk-region="realm-card">
+  <CombatArtSurface family="tribulation" art="title-plaque" class="tribulation-realm-card" data-hk-region="realm-card">
+    <h1 class="tribulation-realm-card__scene-title">{{ t('tribulation.overlay.sceneTitle') }}</h1>
     <p class="tribulation-realm-card__title">{{ t('tribulation.overlay.realmCardTitle', { name: realmName }) }}</p>
     <p class="tribulation-realm-card__progress">{{ t('tribulation.overlay.progressLabel') }}: {{ chapterProgress }}</p>
     <div class="tribulation-realm-card__flames" aria-hidden="true">
       <i v-for="n in flames" :key="n" class="tribulation-realm-card__flame art-needed" data-art-id="tribulation-realm-flame" />
     </div>
-  </div>
+  </CombatArtSurface>
 </template>
 
 <style scoped>
@@ -57,4 +59,9 @@ const flames = computed(() => Math.min(props.strikesTaken, 7))
   background: radial-gradient(circle at 50% 70%, #ffd489, var(--hk-gold-muted, #b99a55) 60%, #6b4c1e);
   box-shadow: 0 0 6px color-mix(in srgb, #ffd489 70%, transparent);
 }
+.tribulation-realm-card.combat-art-surface { top: 52px; width: 700px; height: 130px; box-sizing: border-box; padding: 16px 110px; background: transparent; border: 0; border-radius: 0; }
+.tribulation-realm-card__scene-title { margin: 0 0 3px; font: 700 43px/1.15 var(--font-display); color: #f3e7bd; }
+.tribulation-realm-card__title { margin: 0 0 4px; font-size: 18px; color: #dbbb75; }
+.tribulation-realm-card__progress { margin: 0; font-size: 15px; color: #e9dcc4; }
+.tribulation-realm-card__flames { display: none; }
 </style>

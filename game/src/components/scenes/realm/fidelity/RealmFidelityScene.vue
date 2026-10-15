@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GamePanel from '@/components/common/GamePanel.vue'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
@@ -18,15 +19,10 @@ const rootRef = ref<HTMLElement | null>(null)
 useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 <template>
-  <section ref="rootRef" class="realm-paper-scene" :aria-label="t('panels.wheel.slots.realm')" @click.self="emit('back')">
-    <div class="realm-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
-    <header class="realm-head">
-      <div class="realm-head__title">
-        <h1>{{ t('realm.title') }}</h1>
-        <img class="realm-divider" :src="titleDivider" alt="">
-      </div>
-      <p class="realm-subtitle">{{ t('realm.subtitle') }}</p>
-    </header>
+  <section ref="rootRef" class="rail-panel-scene realm-paper-scene" :aria-label="t('panels.wheel.slots.realm')" @click.self="emit('back')">
+    <GamePanel :title="t('panels.wheel.slots.realm')">
+    
+    
     <div class="realm-timeline">
       <RealmTimeline :current="model.currentFloor" :selected="selected" :max="model.maxFloor" @select="emit('selectFloor', $event)">
         <RealmFocusCard :key="selected" :model="model" :selected="selected" @advance="emit('advance')" @breakthrough="emit('breakthrough')" @quan-khi="emit('quanKhi')" />
@@ -35,17 +31,18 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
     <section class="realm-earned">
       <h3>{{ t('panels.realm.sections.passives', { realm: model.name }) }}</h3>
       <ul v-if="model.passives.length">
-        <li v-for="passive in model.passives" :key="passive.id" :title="passive.description">
+        <li v-for="passive in model.passives" :key="passive.id" v-tooltip="{title:passive.name,description:passive.description}">
           <strong>{{ passive.name }}</strong><small v-for="line in passive.effectLines" :key="line">{{ line }}</small>
         </li>
       </ul>
       <p v-else class="realm-earned-empty">{{ t('realm.noPassives') }}</p>
     </section>
     <p v-if="preview" class="realm-preview-label">{{ t('preview') }}</p>
+    </GamePanel>
   </section>
 </template>
 <style scoped>
-.realm-paper-scene { position:absolute; inset:0; pointer-events:auto; font-family:var(--font-display,Georgia,serif); color:#392c1d; }.realm-paper-scene :deep(*) { box-sizing:border-box; }
+.realm-paper-scene { position:absolute; inset:0;  font-family:var(--font-display,Georgia,serif); color:#392c1d; }.realm-paper-scene :deep(*) { box-sizing:border-box; }
 /* Shared paper chrome - same sheet box + backdrop the other ported panels
    use (inventory-sheet convention): x345 y101 w1065 h608. */
 .realm-sheet { position:absolute; left:345px; top:101px; width:1065px; height:608px; background-color:#f2e4c8; background-size:cover; background-position:center; background-repeat:no-repeat; border:3px double #b28a43; }
@@ -63,4 +60,9 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .realm-earned li strong { font-weight:500; white-space:nowrap; }
 .realm-earned li small { color:#6b5f42; }
 .realm-earned-empty { margin:6px 0 0; font-size:13px; color:#7a6a4d; font-style:italic; }
+
+/* Layout instances are relative to the owning panel content. */
+.realm-paper-scene :deep(.game-panel__content :is(.realm-sheet,.realm-head)) { display: none; }
+.realm-paper-scene :deep(.game-panel__content .realm-timeline) { left: 0; top: 0; width: 100%; height: calc(100% - 124px); }
+.realm-paper-scene :deep(.game-panel__content .realm-earned) { left: 0; top: auto; bottom: 0; width: 100%; height: 112px; }
 </style>

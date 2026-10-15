@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from '@/presentation/motionPreference'
 ﻿import Phaser from 'phaser'
 import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
 import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
@@ -32,6 +33,7 @@ import {
   type LaneIndex,
 } from '@/core/battle/BattleLane'
 import { getCombatInsets, getFallbackCombatInsets } from '@/presentation/geometry/combatInsets'
+import { combatPlaybackDelta, getCombatPlaybackSpeed } from '@/presentation/combat/CombatPlaybackSpeed'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
 import { readKiemBar } from '@/presentation/bridges/kiemBarBridge'
@@ -68,7 +70,6 @@ import {
 import {
   GOURD_MOUTH_ANCHOR,
   GOURD_PLACEHOLDER_SIZE,
-  GOURD_TEXTURE_KEY,
   GOURD_TEXTURE_URL,
   computeGourdPlacement,
   easeRewardProgress,
@@ -452,6 +453,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // Variant Thanh VAcn ca"seca PHIASN aEUR" peek (cache module) traoGBP preset ca"' A'a"<nh
   // spring/morning lAoc boot; battle_end cha"n + swap variant kao? tiao?p.
   private thanhVanVariant: ThanhVanVariant = peekThanhVanVariant()
+  private pendingThanhVanVariant?: ThanhVanVariant
 
   /** true gia"-a battle_start vA  battle_end aEUR" caoJPYm swap backdrop gia"-a traon. */
   private inBattle = false
@@ -644,8 +646,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         },
         createSprite: (key, frame) => this.add.image(0, 0, key, frame),
         isCurrent: ref => this.gameManagerRef?.getPendingPlaybackToken() === ref.token,
-        reducedMotion: typeof matchMedia === 'function'
-          && matchMedia('(prefers-reduced-motion: reduce)').matches,
+        reducedMotion: prefersReducedMotion(),
       })
     }
     return this._hoaCauPresentation
@@ -684,8 +685,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
           }
           return false
         },
-        reducedMotion: typeof matchMedia === 'function'
-          && matchMedia('(prefers-reduced-motion: reduce)').matches,
+        reducedMotion: prefersReducedMotion(),
       })
     }
     return this._tamMuoiAuraPresentation
@@ -693,7 +693,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private get skillPlayback(): SkillPresentationRunner {
     if (!this._skillPlayback) {
-      const reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+      const reducedMotion = prefersReducedMotion()
       const anchorPoint = (fact: ActorAnchorFact) =>
         this.bodyAnchorScreen(fact.entityId, 'centre')
           ?? this.lastKnownScreenPositions?.get(fact.entityId)
@@ -712,25 +712,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
           return this.isPerspective && foot
             ? uprightVfxDepth(foot.y, this.entityFootMinY, this.entityFootMaxY, fact.column)
             : DEPTH_UPRIGHT_VFX
-        },
-        // The impulse slides the sprite's offsetX channel so it never fights
-        // per-frame position writes; direction follows the declared anchor
-        // vector, with the scene facing convention as the no-target fallback.
-        // Direction comes from the playback-scoped cast the driver passes
-        // through (context.cast) - there is deliberately no scene-level copy:
-        // 'complete'-phase resumes never re-deliver onSkillCast, so an
-        // event-scoped field could go stale next to the runner's context.
-        actorImpulse: (fact, durationMs, impulsePx, cast) => {
-          const sprite = this.spriteFor(fact.entityId)
-          if (!sprite) return
-          const origin = cast ? anchorPoint(cast.source) : undefined
-          const destination = cast?.declaredTargets[0]
-            ? anchorPoint(cast.declaredTargets[0])
-            : undefined
-          const direction = origin && destination && destination.x !== origin.x
-            ? Math.sign(destination.x - origin.x)
-            : fact.entityId === PLAYER_ID ? 1 : -1
-          this.playHorizontalImpulse(sprite, direction * impulsePx, durationMs)
         },
         cameraImpulse: (durationMs, intensity) => applyScreenShake(this.cameras.main, durationMs, intensity, false),
       }, reducedMotion ? 'low' : 'standard', reducedMotion)
@@ -764,6 +745,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     if (!port || !this.skillPlayback.canStart(cast, port)) return
 
     const sprite = this.spriteFor(cast.source.entityId)
+    if (sprite?.rect instanceof Phaser.GameObjects.Sprite) {
+      sprite.rect.anims.timeScale = getCombatPlaybackSpeed()
+    }
     const playback = sprite
       ? this.animationPlayback.startCastPlayback(sprite, cast.source.entityId, cast)
       : { source: 'none' as const }
@@ -786,7 +770,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       )
     }
 
-    this.skillPlayback.start(cast, port, castMs === undefined ? undefined : { castMs })
+    const chargeStartMs = playback.clip?.chargeStartFrameIndex === undefined
+      ? undefined : playback.clip.chargeStartFrameIndex * 1000 / playback.clip.frameRate
+    this.skillPlayback.start(cast, port, castMs === undefined ? undefined : { castMs, chargeStartMs })
     if (fireballCast) {
       const timing = castMs !== undefined && castMs > 0 && castMs < 4000
         ? castMs : getSkillPresentationRecipe(cast.presetId).castMs
@@ -984,17 +970,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // fallback Graphics placeholder. Da"+/-ng Ma" T Lao|N ma"-i create();
     // auto-refight KHA"NG tao!o lao!i ha"" lA' vA  streams cA(c) ta"+/- hoA n taoJPYt vA o
     // A'Aong mia"+ng nA3 (Asec7.4).
-    if (!this.gourdGraphics) {
-      if (this.textures.exists(GOURD_TEXTURE_KEY)) {
-        this.gourdGraphics = this.add.image(0, 0, GOURD_TEXTURE_KEY)
-      } else {
-        this.gourdGraphics = this.add.graphics()
-      }
-
-      this.gourdGraphics.setDepth(DEPTH_OVERLAY_UI - 4)
-    }
-
-    this.refreshRewardGourd(this.canvasHeight, this.gourdBottomInset)
 
     // Scene nA y cha"o/oo A'AEdega"GBPc start() SAU KHI 'battle_start' A'AGBP emit (xem
     // MainScene.ts) aEUR" quA!i/player A'aosecu tiAan A'AGBP ta""n tao!i a"Y core ra""i. Player
@@ -1081,10 +1056,15 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   update(_time: number, delta: number) {
-    this._hoaCauPresentation?.update(delta)
-    this._tamMuoiAuraPresentation?.update(delta)
-    this._skillPlayback?.update(delta)
+    const playbackDelta = combatPlaybackDelta(delta)
+    this.tweens.timeScale = getCombatPlaybackSpeed()
+    this._hoaCauPresentation?.update(playbackDelta)
+    this._tamMuoiAuraPresentation?.update(playbackDelta)
+    this._skillPlayback?.update(playbackDelta)
     for (const [id, sprite] of this.sprites) {
+      if (sprite.rect instanceof Phaser.GameObjects.Sprite) {
+        sprite.rect.anims.timeScale = getCombatPlaybackSpeed()
+      }
       const visualX = this.getInterpolatedX(id)
 
       if (visualX === undefined) {
@@ -1145,7 +1125,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // Phap The seal burn loop rides the same frame clock as the bar poll.
     const seal = this.hoaTheSeal
     if (seal?.visible) {
-      this.hoaTheSealMs += delta
+      this.hoaTheSealMs += playbackDelta
       seal.setFrame(`frame_${this.hoaTheSealFrame()}`)
     }
 
@@ -1235,7 +1215,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       reveal beat. The authored burn tail loops from ms 0 at the authored
       rate. Reduced motion parks on the tail's first frame. */
   private hoaTheSealFrame(): number {
-    if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (prefersReducedMotion()) {
       return HOA_THE_BURN_START_FRAME
     }
     return HOA_THE_BURN_START_FRAME
@@ -1297,7 +1277,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       width,
       height,
       topInset: measuredInsets.measured ? measuredInsets.top : fallbackInsets.top,
-      bottomInset: measuredInsets.measured ? measuredInsets.bottom : fallbackInsets.bottom,
+      // Party cards have fixed design-frame dimensions. ResizeObserver runs
+      // after Phaser resize, so its previous physical measurement is stale.
+      bottomInset: fallbackInsets.bottom,
       rightInset: measuredInsets.measured ? measuredInsets.right : fallbackInsets.right,
     }
 
@@ -1440,7 +1422,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /** Aia"fm hAot LIVE aEUR" luA'n lA  mia"+ng ha"" lA', khA'ng bao gia" lA  Player (Asec7.2). */
-  gourMouthPoint(): { x: number; y: number } {
+  gourMouthPoint(): { x: number; y: number } | undefined {
     return this.rewardGourd.gourMouthPoint()
   }
 
@@ -2109,6 +2091,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // callback khA'ng swap gia"-a traon; na"n hia"+n tao!i gia"- nguyAan ta">i
     // battle_end Kao3/4 TIao3/4P.
     this.backdropGeneration++
+    if (!options?.rebind) this.commitPendingThanhVanBackdrop()
 
     // DoT accumulator (Asec7.2) aEUR" traon ma">i, da"n bucket cA(c).
     this.dotAccumulators.clear()
@@ -2211,20 +2194,34 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.initGameGeneration = context.gameGeneration
 
     this.onBattleStart({ rebind: isSameSessionRebind })
+    let isResultRebind = isSameSessionRebind
 
     const gameManager = readOptionalGate(this.registry, 'gameManager')
 
     if (context.sessionId && gameManager?.getCombatPresentationSnapshot) {
       const snapshot = gameManager.getCombatPresentationSnapshot(context.sessionId)
       if (snapshot) {
+        isResultRebind = snapshot.entities.phase === 'victory' || snapshot.entities.phase === 'defeat'
         this.onTurnBattleEntitySnapshot(snapshot.entities)
       }
     }
 
     const adapter = readOptionalGate(this.registry, 'sceneAdapter')
-    adapter?.reportReady(context)
-
-    this.applyResumePlayback(gameManager?.preparePresentationResume?.())
+    const finishReady = () => {
+      if (this.initTransitionId !== context.transitionId || this.initSessionId !== context.sessionId
+        || this.initGameGeneration !== context.gameGeneration) return
+      if (!isResultRebind && !this.commitPendingThanhVanBackdrop()) return
+      adapter?.reportReady(context)
+      this.applyResumePlayback(gameManager?.preparePresentationResume?.())
+    }
+    if (!isResultRebind && this.pendingThanhVanVariant) {
+      this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+        const status = this.sys?.settings?.status
+        if (status !== undefined && status < Phaser.Scenes.SHUTDOWN) finishReady()
+      })
+      return
+    }
+    finishReady()
   }
 
   private applyResumePlayback(resume: ResumePlayback | null | undefined): void {
@@ -2367,20 +2364,20 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     const desired = selectNextThanhVanVariant(this.thanhVanVariant)
+    this.pendingThanhVanVariant = desired
 
     const sameVariant =
       desired.season === this.thanhVanVariant.season &&
       desired.time === this.thanhVanVariant.time
 
     if (sameVariant && this.backdrop) {
+      this.pendingThanhVanVariant = undefined
       return
     }
 
     const missing = thanhVanLoadList(desired).filter((entry) => !this.textures.exists(entry.key))
 
     if (missing.length === 0) {
-      this.swapThanhVanBackdrop(desired)
-
       return
     }
 
@@ -2388,25 +2385,19 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.load.image(entry.key, resolveAssetUrl(entry.url))
     }
 
-    const generation = ++this.backdropGeneration
-
-    // Guard scene chao?t gia"-a lAoc taoGBPi: handler kia"fm tra scene cA2n active.
-    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
-      if (!this.scene || !this.sys.isActive()) {
-        return
-      }
-
-      // Cha"o/oo laosecn yAau caosecu Ma"sI NHao*T A'AEdega"GBPc swap, vA  cha"o/oo khi chAEdega cA3 traon ma">i
-      // (onBattleStart A'AGBP tAfng token).
-      if (generation === this.backdropGeneration && !this.inBattle) {
-        this.swapThanhVanBackdrop(desired)
-      }
-    })
-
     this.load.start()
   }
 
   /** Hua"* backdrop Thanh VAcn hia"+n hA nh vA  da"+/-ng lao!i ta"" texture A'AGBP load. */
+  private commitPendingThanhVanBackdrop(): boolean {
+    const desired = this.pendingThanhVanVariant
+    if (!desired) return true
+    if (thanhVanLoadList(desired).some(entry => !this.textures.exists(entry.key))) return false
+    this.swapThanhVanBackdrop(desired)
+    this.pendingThanhVanVariant = undefined
+    return true
+  }
+
   private swapThanhVanBackdrop(variant: ThanhVanVariant) {
     this.thanhVanVariant = variant
 

@@ -1,0 +1,33 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>Combat VFX preview</title><style>body{margin:0;background:#111a17;color:#dcc99e;font-family:serif}header{padding:12px}button{padding:8px 16px;margin-right:10px;border:1px solid #ad915c;background:#18241e;color:#efdab0}#stage{width:100%;height:640px}small{opacity:.7}</style><header><button disabled id="hit">Linh Bạo · Trúng</button><button disabled id="miss">Linh Bạo · Miss</button><button disabled id="speed">×1</button><button disabled id="charge">Xem tụ hỏa</button><button disabled id="ram">Xem Húc</button><button disabled id="impact">Xem miss + nổ</button><small>Preview trình diễn · không đọc hay thay đổi save</small></header><div id="stage"></div><script type="module">
+import Phaser from 'phaser'
+import { resolveAssetUrl } from '/src/presentation/assets/AssetBaseUrl.ts'
+import { PhaserSkillVfxDriver } from '/src/game/support/skill-vfx/PhaserSkillVfxDriver.ts'
+import { SkillPresentationRunner } from '/src/presentation/skills/SkillPresentationRunner.ts'
+import { getSkillPresentationRecipe } from '/src/data/vfx/SkillPresentationRecipes.ts'
+import { CombatActionFeedback } from '/src/game/scenes/combat/combat-action-feedback.ts'
+import { getCombatPlaybackSpeed, setCombatPlaybackSpeed, combatPlaybackDelta } from '/src/presentation/combat/CombatPlaybackSpeed.ts'
+import { staticArtFormFor, resolveCombatEntityKey } from '/src/presentation/art/CombatPresentationCatalogue.ts'
+const source={entityId:'player',row:5,column:2},target={entityId:'enemy',row:5,column:9}
+let demo
+class Preview extends Phaser.Scene {
+  preload(){this.load.image('target','/assets/enemies/mortal/mortal-wild-boar-v1.png');this.load.atlas('vfx-sheet-mob-ram','/assets/vfx/mob-ram/ram.png','/assets/vfx/mob-ram/ram.json');this.load.atlas('hoa-cau-charge','/assets/vfx/hoa-cau-thuat/charge/hoa-tu-charge.png','/assets/vfx/hoa-cau-thuat/charge/hoa-tu-charge.json')}
+  create(){
+    demo=this;this.add.text(48,60,'Tụ hỏa trắng → Impact → Nổ tại mục tiêu',{fontSize:24,color:'#dac391'});this.target=this.textures.exists('target')?this.add.image(850,325,'target').setDisplaySize(220,220):this.add.rectangle(850,325,160,200,0x42554a)
+    this.target.setDepth(3);this.add.text(810,450,'Mục tiêu',{color:'#d2bb90'});const actor=this.add.rectangle(220,325,45,150,0x9e906d)
+    const bodies={player:{rect:actor},enemy:{rect:this.target}}
+    this.feedback=new CombatActionFeedback({spriteFor:id=>bodies[id],playHorizontalImpulse:(body,dx,duration)=>this.tweens.add({targets:body.rect,x:body.rect.x+dx,duration,yoyo:true}),tweens:this.tweens,showFloatingText:body=>{const text=this.add.text(body.rect.x,body.rect.y-110,'Miss',{color:'#8be9fd'});this.tweens.add({targets:text,y:text.y-25,alpha:0,duration:600,onComplete:()=>text.destroy()})}})
+    const driver=new PhaserSkillVfxDriver({graphics:()=>this.add.graphics(),sprite:(key,frame)=>this.textures.exists(key)?this.add.image(0,0,key,frame):undefined,anchor:fact=>({x:fact.entityId==='player'?220:850,y:325}),ground:fact=>({x:fact.entityId==='player'?220:850,y:430}),uprightDepth:()=>10,cameraImpulse:()=>{}},'standard',false)
+    this.driver=driver;this.runner=new SkillPresentationRunner(driver,getSkillPresentationRecipe);document.querySelectorAll('button').forEach(b=>b.disabled=false)
+  }
+  play(missed,preset='linh_bao_burst'){
+    this.frozen=false;document.body.dataset.frozen='';this.tweens.resumeAll();this.tweens.killTweensOf(this.target);this.runner.cancel();this.target.setPosition(850,325).setAlpha(1);this.serial=(this.serial??0)+1
+    const ref={sessionId:1,requestId:`preview-${this.serial}`,token:`preview-${this.serial}`};let pending=ref.token
+    const port={getPendingPlaybackToken:()=>pending,acknowledgeActionImpact:()=>{if(missed)this.feedback.onDodge({sourceId:'player',targetId:'enemy'});this.runner.resolve({ref,sealed:true,groups:[{groupId:'primary',role:'primary',resolvedSkillId:'linh_bao',presetId:preset,source,actualTargets:[target],footprint:{kind:'cells',cells:[{row:5,column:9}]},outcomes:[{kind:'hit',outcomeId:ref.token,target,hitOrdinal:0,landed:!missed,crit:false,hpDamage:missed?0:10,killed:false}]}]})},acknowledgeActionComplete:()=>{pending=null}}
+    this.runner.start({ref,rootSkillId:'linh_bao',resolvedSkillId:'linh_bao',presetId:preset,source,declaredTargets:[target],candidateInstanceCount:1,disposition:'action',slotRole:'special'},port,{castMs:1000,chargeStartMs:400})
+  }
+  update(time,delta){this.tweens.timeScale=getCombatPlaybackSpeed();if(!this.frozen)this.runner?.update(combatPlaybackDelta(delta))}
+}
+new Phaser.Game({type:Phaser.AUTO,parent:'stage',width:1280,height:640,backgroundColor:'#17221c',scene:Preview})
+document.querySelector('#charge').onclick=()=>{demo.play(false);demo.runner.update(650);demo.frozen=true};document.querySelector('#impact').onclick=()=>{demo.play(true);demo.runner.update(1000);demo.runner.update(80);demo.frozen=true;setTimeout(()=>{demo.tweens.pauseAll();document.body.dataset.frozen='impact'},110/getCombatPlaybackSpeed())}
+document.querySelector('#ram').onclick=()=>{demo.runner.cancel();demo.driver.reset();demo.frozen=true;const recipe=getSkillPresentationRecipe('ram');const ref={sessionId:1,requestId:'ram-preview',token:'ram-preview'};const group={groupId:'primary',role:'primary',resolvedSkillId:'generic_physical',presetId:'ram',source,actualTargets:[target],footprint:{kind:'cells',cells:[{row:5,column:9}]},outcomes:[{kind:'hit',outcomeId:'ram-preview',target,hitOrdinal:0,landed:true,crit:false,hpDamage:10,killed:false}]};for(const cue of recipe.impact)demo.driver.open(cue,{ref,recipe,phase:'resolved',group,primaryLanded:true}).sample(120)};document.querySelector('#hit').onclick=()=>demo.play(false);document.querySelector('#miss').onclick=()=>demo.play(true);document.querySelector('#speed').onclick=e=>{setCombatPlaybackSpeed(getCombatPlaybackSpeed()===1?2:1);e.target.textContent=`×${getCombatPlaybackSpeed()}`}
+</script></html>

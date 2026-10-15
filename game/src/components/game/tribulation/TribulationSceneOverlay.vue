@@ -9,6 +9,7 @@ import TribulationRealmCard from '@/components/scenes/tribulation/TribulationRea
 import TribulationHpCluster from '@/components/scenes/tribulation/TribulationHpCluster.vue'
 import TribulationMindCard from '@/components/scenes/tribulation/TribulationMindCard.vue'
 import TribulationResultBanner from '@/components/scenes/tribulation/TribulationResultBanner.vue'
+import CombatPanel from '@/components/scenes/combat/CombatPanel.vue'
 
 const { t } = useI18n()
 const gameManager = useGameManager()
@@ -42,7 +43,7 @@ function answer(index: number) {
 </script>
 
 <template>
-  <div v-if="active" class="tribulation-ui">
+  <CombatPanel v-if="active"><div class="tribulation-ui">
     <TribulationChapterTracker
       :chapter-names="active.chapterNames"
       :chapter-index="active.chapterIndex"
@@ -75,10 +76,11 @@ function answer(index: number) {
     />
 
     <TribulationResultBanner v-if="isFinished" :title="resultTitle" :text="resultText" />
-  </div>
+  </div></CombatPanel>
 </template>
 
 <style scoped>
 .tribulation-ui { position:absolute; inset:0; z-index:15; pointer-events:none; color:var(--scene-tribulation-text); text-align:center; }
 .tribulation-ui :deep(.bar__fill) { transition:width .15s linear; }
+.tribulation-ui :deep(.tribulation-ui__tracker) { top: 191px; width: 580px; font-size: 13px; }
 </style>

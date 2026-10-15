@@ -1,95 +1,84 @@
 <script setup lang="ts">
+import { computed, inject, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import PcPaperButton from '@/components/common/PcPaperButton.vue'
+import GameCard from '@/components/common/GameCard.vue'
+import GameActionButton from '@/components/common/GameActionButton.vue'
+import SlotView from '@/components/common/SlotView.vue'
 import type { ArchitectureBuildingModel } from '@/core/game/ArchitectureReadModel'
+import type { ArchitectureCost } from '@/core/game/ArchitectureReadModel'
+import { GAME_MANAGER_KEY } from '@/composables/useGameState'
+import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
 
-defineProps<{ model: ArchitectureBuildingModel; artUrl: string }>()
-const emit = defineEmits<{ details: []; upgrade: [] }>()
-const { t, locale } = useI18n()
-
-function effectValue(value: number, unit: string): string {
-  const formatted = new Intl.NumberFormat(locale.value, { maximumFractionDigits: 2 }).format(value)
-  if (unit === 'percent') return `${formatted}%`
-  if (unit === 'multiplier') return `×${formatted}`
-  if (unit === 'perMinute') return `${formatted}/${t('architecture.minuteShort')}`
-  return formatted
+type ProductionModel=ReturnType<typeof import('@/core/game/ArchitectureReadModel').getArchitectureProductionModels>[number]
+const props=defineProps<{ model:ArchitectureBuildingModel|ProductionModel; artUrl:string }>()
+const emit=defineEmits<{ upgrade:[] }>()
+const { t,locale }=useI18n()
+const manager=inject(GAME_MANAGER_KEY,null)
+const buildMaterialTooltip=createMaterialTooltipBuilder(t)
+function costTooltip(cost:ArchitectureCost) {
+  const extraRows=[{label:t('architecture.costs'),value:String(cost.required)}]
+  return manager?.materialRegistry.has(cost.id)
+    ? buildMaterialTooltip(manager.materialRegistry.get(cost.id),{owned:cost.owned,extraRows})
+    : {title:cost.name,description:t('architecture.costAmount',{owned:cost.owned,required:cost.required})}
 }
+const hovered=ref(false)
+const preview=computed(()=>hovered.value && props.model.canUpgrade)
+const maxed=computed(()=> 'maxed' in props.model ? props.model.maxed : props.model.level >= props.model.maxLevel)
+const name=computed(()=> 'kind' in props.model ? t(`panels.production.sourceNames.${props.model.kind}`) : props.model.id === 'gathering_outpost' ? t('panels.production.linMach.title') : props.model.name)
+function value(amount:number,unit:string) {
+  const n=new Intl.NumberFormat(locale.value,{maximumFractionDigits:2}).format(amount)
+  return unit==='percent' ? `${n}%` : unit==='multiplier' ? `×${n}` : unit==='perMinute' ? `${n}/${t('architecture.minuteShort')}` : n
+}
+const current=computed(()=> {
+  const m=props.model
+  return 'currentEffects' in m ? m.currentEffects.map(e=>({key:e.key,label:t(`architecture.effects.${e.key}`),value:value(e.value,e.unit)})) : [{key:'speed',label:t('panels.production.speedSuffix'),value:value(m.currentSpeed,'multiplier')}]
+})
+const next=computed(()=> {
+  const m=props.model
+  return 'nextEffects' in m ? m.nextEffects.map(e=>({key:e.key,label:t(`architecture.effects.${e.key}`),value:value(e.value,e.unit)})) : m.nextSpeed === null ? [] : [{key:'speed',label:t('panels.production.speedSuffix'),value:value(m.nextSpeed,'multiplier')}]
+})
 </script>
-
 <template>
-  <article class="architecture-card" data-testid="architecture-building-card" :data-building-id="model.id">
-    <header class="architecture-card__heading">
-      <img class="architecture-card__art" :src="artUrl" :alt="''" @error="($event.target as HTMLImageElement).hidden = true">
-      <div class="architecture-card__identity">
-        <h2>{{ model.name }}</h2>
-        <p>{{ model.description }}</p>
+  <GameCard as="article" class="architecture-card" :title="name" data-testid="architecture-building-card" :data-building-id="model.id">
+    <template #viewport><div class="architecture-card__landscape" :style="{backgroundImage:`url('${artUrl}')`}" /></template>
+    <div class="architecture-card__content">
+      <div class="architecture-card__level">{{ t('architecture.level',{level:model.level,max:model.maxLevel}) }}</div>
+      <div class="architecture-card__effects" :class="{'is-preview':preview}">
+        <section><h3>{{ t('architecture.current') }}</h3><ul><li v-for="e in current" :key="e.key"><span>{{ e.label }}</span><strong>{{ e.value }}</strong></li></ul><p v-if="!current.length">{{ t('architecture.noEffect') }}</p></section>
+        <span v-if="preview" class="architecture-card__arrow" aria-hidden="true">⇒</span>
+        <section v-if="preview"><h3>{{ t('architecture.next') }} · {{ model.level+1 }}</h3><ul><li v-for="e in next" :key="e.key"><span>{{ e.label }}</span><strong>{{ e.value }}</strong></li></ul></section>
       </div>
-      <span class="architecture-card__level">{{ t('architecture.level', { level: model.level, max: model.maxLevel }) }}</span>
-    </header>
-
-    <div class="architecture-card__effects">
-      <section>
-        <h3>{{ t('architecture.current') }}</h3>
-        <ul v-if="model.currentEffects.length">
-          <li v-for="effect in model.currentEffects" :key="effect.key">
-            <span>{{ t(`architecture.effects.${effect.key}`) }}</span><strong>{{ effectValue(effect.value, effect.unit) }}</strong>
-          </li>
-        </ul>
-        <p v-else class="architecture-card__quiet">{{ t('architecture.noEffect') }}</p>
-      </section>
-      <section v-if="!model.maxed && model.nextEffects.length">
-        <h3>{{ t('architecture.next') }}</h3>
-        <ul>
-          <li v-for="effect in model.nextEffects" :key="effect.key">
-            <span>{{ t(`architecture.effects.${effect.key}`) }}</span><strong>{{ effectValue(effect.value, effect.unit) }}</strong>
-          </li>
-        </ul>
-      </section>
+      <div class="architecture-card__costs" :aria-label="t('architecture.costs')">
+        <div v-for="cost in model.costs" :key="cost.id" :class="{'is-missing':cost.owned<cost.required}">
+          <SlotView class="architecture-card__cost-slot" static static-tooltip variant="preview" :item="null" :icon="cost.icon" :label="cost.name" :tooltip="costTooltip(cost)" />
+          <span>{{ t('architecture.costAmount',{owned:cost.owned,required:cost.required}) }}</span>
+        </div>
+      </div>
+      <div class="architecture-card__actions" v-tooltip="!maxed && !model.canUpgrade ? {title:t('architecture.upgrade'),description:'reason' in model && model.reason ? t(`architecture.reasons.${model.reason}`) : 'reasons' in model ? model.reasons.map(reason=>t(`architecture.productionReasons.${reason}`)).join('\n') : ''} : undefined">
+        <GameActionButton v-if="!maxed" :disabled="!model.canUpgrade" @mouseenter="hovered=true" @mouseleave="hovered=false" @click="emit('upgrade')">{{t('architecture.upgrade')}}</GameActionButton>
+        <span v-else>{{t('architecture.maximum')}}</span>
+      </div>
     </div>
-
-    <ul v-if="model.costs.length" class="architecture-card__costs" :aria-label="t('architecture.costs')">
-      <li v-for="cost in model.costs" :key="cost.id" :class="{ 'is-missing': cost.owned < cost.required }">
-        <img v-if="cost.icon" :src="cost.icon" alt="" @error="($event.target as HTMLImageElement).hidden = true">
-        <span>{{ cost.name || t('architecture.unknownMaterial') }}</span>
-        <strong>{{ t('architecture.costAmount', { owned: cost.owned, required: cost.required }) }}</strong>
-      </li>
-    </ul>
-    <p v-else class="architecture-card__state">{{ t(model.artOnly ? 'architecture.artOnlyBrief' : 'architecture.maximum') }}</p>
-
-    <footer class="architecture-card__actions">
-      <PcPaperButton variant="secondary" :data-testid="'architecture-details'" @click="emit('details')">{{ t('architecture.details') }}</PcPaperButton>
-      <PcPaperButton v-if="!model.maxed" data-testid="architecture-building-upgrade" @click="emit('upgrade')">{{ t('architecture.upgrade') }}</PcPaperButton>
-      <span v-else-if="!model.artOnly" class="architecture-card__maximum">{{ t('architecture.maximum') }}</span>
-    </footer>
-  </article>
+  </GameCard>
 </template>
-
 <style scoped>
-.architecture-card { min-width:0; min-height:0; display:grid; grid-template-rows:auto 1fr auto auto; gap:8px; padding:13px 15px 11px; border:1px solid #a78345; border-radius:5px; background:linear-gradient(135deg,#fff8e8e8,#ead8b4d9); box-shadow:inset 0 0 0 3px #c9a66538,0 3px 9px #5d421426; color:#382a17; }
-.architecture-card__heading { display:grid; grid-template-columns:82px minmax(0,1fr) auto; align-items:center; gap:12px; min-height:82px; }
-.architecture-card__art { width:82px; height:82px; object-fit:cover; border:2px solid #a9813e; border-radius:4px; background:#b3976680; box-shadow:0 2px 6px #45321955; }
-.architecture-card__identity { min-width:0; }
-.architecture-card__identity h2 { margin:0 0 5px; font:700 22px/1.15 var(--pc-font-title); color:#302315; }
-.architecture-card__identity p { display:-webkit-box; margin:0; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:13px; line-height:1.35; color:#715d3b; }
-.architecture-card__level { align-self:start; padding:5px 9px; border:1px solid #9b7636; border-radius:15px; background:#362915; color:#f4dfad; white-space:nowrap; font-size:12px; font-weight:700; }
-.architecture-card__effects { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; min-height:68px; }
-.architecture-card__effects section { min-width:0; padding:6px 8px; border-top:1px solid #b18d4d88; background:#fff8e166; }
-.architecture-card__effects h3 { margin:0 0 4px; font:700 12px/1.2 var(--pc-font-body); color:#745323; }
-.architecture-card__effects ul,.architecture-card__costs { list-style:none; margin:0; padding:0; }
-.architecture-card__effects li { display:flex; justify-content:space-between; gap:6px; font-size:12px; line-height:1.4; }
-.architecture-card__effects li strong { color:#35533e; white-space:nowrap; }
-.architecture-card__quiet { margin:0; color:#746342; font-size:12px; }
-.architecture-card__costs { display:flex; align-items:center; gap:10px; min-height:32px; overflow:hidden; }
-.architecture-card__costs li { display:grid; grid-template-columns:22px minmax(0,1fr); align-items:center; gap:1px 5px; min-width:0; padding-right:9px; border-right:1px solid #a7854e55; font-size:10px; color:#685635; }
-.architecture-card__costs li:last-child { border-right:0; }
-.architecture-card__costs img { grid-row:span 2; width:22px; height:22px; object-fit:contain; }
-.architecture-card__costs span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.architecture-card__costs strong { color:#382b18; font-size:11px; white-space:nowrap; }
-.architecture-card__costs .is-missing strong { color:#9b3023; }
-.architecture-card__state,.architecture-card__maximum { margin:0; color:#6f572e; font-size:12px; font-weight:700; }
-.architecture-card__actions { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-.architecture-card__actions :deep(.pc-paper-button) { min-height:38px; padding:6px 16px; font-size:15px; }
-.architecture-card__actions :deep(.pc-paper-button--secondary) { color:#f4e4c0; text-shadow:0 1px #17140e; }
-.architecture-card__maximum { margin-left:auto; }
-@media (max-width:740px) { .architecture-card__heading { grid-template-columns:64px minmax(0,1fr) auto; gap:8px; } .architecture-card__art { width:64px;height:64px; } .architecture-card__identity h2 { font-size:18px; } }
+.architecture-card { min-width:0; min-height:0; margin-top:12px; height:calc(100% - 12px); display:flex; flex-direction:column; }
+.architecture-card__landscape { position:absolute; inset:0; background:center/cover no-repeat; opacity:.8; }
+.architecture-card__landscape::after { content:''; position:absolute; inset:0; background:linear-gradient(rgba(7,12,10,.15),rgba(7,12,10,.85) 65%); }
+.architecture-card__content { position:relative; z-index:1; min-height:0; flex:1; display:grid; grid-template-rows:24px minmax(0,1fr) 48px 38px; gap:8px; color:#eadbb9; text-shadow:0 1px 3px #000; }
+.architecture-card__level { font-size:13px; text-align:center; display:grid; place-items:center; }
+.architecture-card__effects { flex:1; min-height:40px; display:grid; grid-template-columns:1fr; align-content:center; }
+.architecture-card__effects.is-preview { grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr); gap:4px; }
+.architecture-card__effects h3 { font-size:11px; margin:0 0 3px; color:#e9c77d; }
+.architecture-card__effects ul { padding:0; margin:0; list-style:none; }
+.architecture-card__effects li { font-size:11px; display:flex; justify-content:space-between; gap:4px; }
+.architecture-card__effects strong { color:#b9dcab; white-space:nowrap; }
+.architecture-card__effects p { margin:0; font-size:11px; }
+.architecture-card__arrow { align-self:center; color:#e9c77d; }
+.architecture-card__costs { display:flex; gap:12px; align-items:center; justify-content:center; }
+.architecture-card__costs > div { display:grid; justify-items:center; gap:3px; min-width:0; font-size:10px; }
+.architecture-card__cost-slot { width:32px; height:32px; }
+.architecture-card__costs .is-missing { color:#dd947b; }
+.architecture-card__actions { display:flex; justify-content:center; align-items:center; font-size:12px; }
+.architecture-card__actions .game-action-button { width:160px; height:32px; font-size:14px; }
 </style>

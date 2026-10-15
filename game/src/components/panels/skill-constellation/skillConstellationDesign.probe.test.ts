@@ -120,12 +120,12 @@ describe('skill constellation design mode', () => {
     const { container, unmount } = mountPanel()
     await nextTick()
     expect(container.querySelector('.design-export')).toBeNull()
-    const graph = container.querySelector('.constellation-graph') as HTMLElement
+    const graph = container.querySelector('.constellation-viewport') as HTMLElement
     stubRect(graph)
     const host = nodeHost(container, 'hoa_linh_ngo')
-    host.dispatchEvent(pointer('pointerdown', { pointerId: 1, clientX: 100, clientY: 100 }))
-    graph.dispatchEvent(pointer('pointermove', { pointerId: 1, clientX: 160, clientY: 140 }))
-    graph.dispatchEvent(pointer('pointerup', { pointerId: 1, clientX: 160, clientY: 140 }))
+    host.dispatchEvent(pointer('pointerdown', { button: 0, pointerId: 1, clientX: 100, clientY: 100 }))
+    graph.dispatchEvent(pointer('pointermove', { button: 0, pointerId: 1, clientX: 160, clientY: 140 }))
+    graph.dispatchEvent(pointer('pointerup', { button: 0, pointerId: 1, clientX: 160, clientY: 140 }))
     expect(skillDesignOverrides.value).toEqual({})
     expect(localStorage.getItem(DESIGN_CONST_KEY)).toBeNull()
     unmount()
@@ -138,20 +138,20 @@ describe('skill constellation design mode', () => {
     const { container, unmount } = mountPanel()
     await nextTick()
     expect(container.querySelector('.design-export')).not.toBeNull()
-    const graph = container.querySelector('.constellation-graph') as HTMLElement
+    const graph = container.querySelector('.constellation-viewport') as HTMLElement
     stubRect(graph)
 
     const point = layout.points.find((p) => p.nodeId === 'hoa_linh_ngo')!
     const host = nodeHost(container, 'hoa_linh_ngo')
     // viewBox 480x300 mapped onto a 480x300 box: 1 screen px = 1 unit.
-    host.dispatchEvent(pointer('pointerdown', { pointerId: 1, clientX: 50, clientY: 50 }))
-    graph.dispatchEvent(pointer('pointermove', { pointerId: 1, clientX: 90, clientY: 80 }))
+    host.dispatchEvent(pointer('pointerdown', { button: 0, pointerId: 1, clientX: 50, clientY: 50 }))
+    graph.dispatchEvent(pointer('pointermove', { button: 0, pointerId: 1, clientX: 90, clientY: 80 }))
     await nextTick()
     expect(skillDesignOverrides.value['fire:hoa_linh_ngo']).toEqual({
       x: point.x + 40,
       y: point.y + 30,
     })
-    graph.dispatchEvent(pointer('pointerup', { pointerId: 1, clientX: 90, clientY: 80 }))
+    graph.dispatchEvent(pointer('pointerup', { button: 0, pointerId: 1, clientX: 90, clientY: 80 }))
     const stored = JSON.parse(localStorage.getItem(DESIGN_CONST_KEY) ?? '{}')
     expect(stored['fire:hoa_linh_ngo']).toEqual({ x: point.x + 40, y: point.y + 30 })
 
@@ -178,12 +178,12 @@ describe('skill constellation design mode', () => {
     setSkillDesignMode(true)
     const { container, unmount } = mountPanel()
     await nextTick()
-    const graph = container.querySelector('.constellation-graph') as HTMLElement
+    const graph = container.querySelector('.constellation-viewport') as HTMLElement
     stubRect(graph)
     const host = nodeHost(container, 'hoa_linh_ngo')
-    host.dispatchEvent(pointer('pointerdown', { pointerId: 2, clientX: 10, clientY: 10 }))
-    graph.dispatchEvent(pointer('pointermove', { pointerId: 2, clientX: 12, clientY: 12 }))
-    graph.dispatchEvent(pointer('pointerup', { pointerId: 2, clientX: 12, clientY: 12 }))
+    host.dispatchEvent(pointer('pointerdown', { button: 0, pointerId: 2, clientX: 10, clientY: 10 }))
+    graph.dispatchEvent(pointer('pointermove', { button: 0, pointerId: 2, clientX: 12, clientY: 12 }))
+    graph.dispatchEvent(pointer('pointerup', { button: 0, pointerId: 2, clientX: 12, clientY: 12 }))
     expect(skillDesignOverrides.value).toEqual({})
     unmount()
   })

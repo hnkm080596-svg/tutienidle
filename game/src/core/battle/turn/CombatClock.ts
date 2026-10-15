@@ -33,6 +33,7 @@ export type FreezeReason =
   | 'turn-in-flight'
   | 'authority-pause'
   | 'user-pause'
+  | 'ui-assets'
 
 export interface ClockSource {
   start(onFrame: (elapsedSeconds: number) => void): void

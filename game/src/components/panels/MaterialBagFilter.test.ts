@@ -26,14 +26,14 @@ import { i18n } from '@/i18n'
 import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 
 const WOOD: Material = {
-  id: 'mortal_wood_decade',
+  id: 'material_spirit_wood_decade',
   name: 'Thập Niên Linh Mộc',
   category: 'wood',
   sourceType: 'exploration',
 }
 
 const ORE: Material = {
-  id: 'mortal_ore_decade',
+  id: 'material_spirit_ore_decade',
   name: 'Thập Niên Linh Khoáng',
   category: 'ore',
   sourceType: 'exploration',
@@ -212,8 +212,8 @@ describe('MaterialBag — filter/search (plan §3.2 B4)', () => {
 
   function seedAll() {
     gameManager.catalogOps.registerMaterials([WOOD, ORE, ESSENCE, OTHER, HERB_DECADE, HERB_CENTURY])
-    gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_wood_decade'), 3)
-    gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_ore_decade'), 2)
+    gameManager.materialBag.add(gameManager.materialRegistry.get('material_spirit_wood_decade'), 3)
+    gameManager.materialBag.add(gameManager.materialRegistry.get('material_spirit_ore_decade'), 2)
     gameManager.materialBag.add(gameManager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 5)
     gameManager.materialBag.add(gameManager.materialRegistry.get('doan_bao_thach'), 1)
     gameManager.materialBag.add(gameManager.materialRegistry.get(HERB_DECADE.id), 4)

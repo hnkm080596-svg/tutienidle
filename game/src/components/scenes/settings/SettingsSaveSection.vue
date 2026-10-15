@@ -3,8 +3,7 @@
 // warning note + save/reload/export/import/reset actions.
 import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
-import GameButton from '@/components/common/GameButton.vue'
-import PcPaperButton from '@/components/common/PcPaperButton.vue'
+import GameActionButton from '@/components/common/GameActionButton.vue'
 import SettingsSectionFrame from './SettingsSectionFrame.vue'
 
 defineProps<{
@@ -28,15 +27,15 @@ const importInput = ref<HTMLInputElement>()</script>
 
   <SettingsSectionFrame :title="t('panels.settings.sections.save')" :label="t('panels.settings.sections.saveAria')" data-hk-region="save">
     <div class="settings-panel__actions">
-      <GameButton variant="secondary" data-testid="settings-save-button" @click="emit('save')">{{ t('panels.settings.actions.save') }}</GameButton>
+      <GameActionButton data-testid="settings-save-button" @click="emit('save')">{{ t('panels.settings.actions.save') }}</GameActionButton>
 
-      <GameButton variant="secondary" @click="emit('load')">{{ t('panels.settings.actions.reload') }}</GameButton>
+      <GameActionButton @click="emit('load')">{{ t('panels.settings.actions.reload') }}</GameActionButton>
 
-      <GameButton variant="secondary" @click="emit('export')">{{ t('panels.settings.actions.export') }}</GameButton>
+      <GameActionButton @click="emit('export')">{{ t('panels.settings.actions.export') }}</GameActionButton>
 
-      <PcPaperButton variant="secondary" @click="importInput?.click()">
+      <GameActionButton @click="importInput?.click()">
         {{ t('panels.settings.actions.import') }}
-      </PcPaperButton>
+      </GameActionButton>
       <input
         ref="importInput"
         class="settings-panel__import-input"
@@ -45,9 +44,9 @@ const importInput = ref<HTMLInputElement>()</script>
         @change="(e) => emit('importFile', e)"
       />
 
-      <GameButton class="settings-panel__danger" variant="danger" @click="emit('reset')">
+      <GameActionButton class="settings-panel__danger" @click="emit('reset')">
         {{ remoteAuthoritative ? t('panels.settings.actions.resetCloud') : t('panels.settings.actions.reset') }}
-      </GameButton>
+      </GameActionButton>
     </div>
   </SettingsSectionFrame>
 </template>
@@ -62,15 +61,16 @@ const importInput = ref<HTMLInputElement>()</script>
   margin: 0 0 12px;
 }
 .settings-panel__actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
-.settings-panel__actions > .game-button,
-.settings-panel__actions > .pc-paper-button {
+.settings-panel__actions > .game-action-button {
   width: 100%;
+  height: 44px;
+  font-size: 16px;
 }
+.settings-panel__danger { grid-column: 1 / -1; color: #e5a08b; }
 .settings-panel__import-input {
   display: none;
 }

@@ -30,7 +30,7 @@ export const QUESTS: Quest[] = [
     id: 'main_02_lam_chi_san',
     name: 'Lâm Chi Sản',
     description: 'Mở Sản Xuất, để Thanh Vân Lâm tự khai thác — nộp 3 Thập Niên Linh Mộc Phàm Nhân.',
-    condition: { kind: 'collect', materialId: 'mortal_wood_decade', amount: 3 },
+    condition: { kind: 'collect', materialId: 'material_spirit_wood_decade', amount: 3 },
     reward: { reward: { spiritStone: 10 } },
     cadence: 'once',
     chainId: 'mainline',
@@ -50,7 +50,7 @@ export const QUESTS: Quest[] = [
     id: 'main_04_quang_chi_nguyen',
     name: 'Quáng Chi Nguyên',
     description: 'Huyền Thiết Quảng chảy về Khí Đường — nộp 3 Thập Niên Linh Khoáng Phàm Nhân.',
-    condition: { kind: 'collect', materialId: 'mortal_ore_decade', amount: 3 },
+    condition: { kind: 'collect', materialId: 'material_spirit_ore_decade', amount: 3 },
     reward: { reward: { spiritStone: 15 } },
     cadence: 'once',
     chainId: 'mainline',
@@ -132,7 +132,7 @@ export const QUESTS: Quest[] = [
     id: 'collect_qi_refining_ore_decade_1',
     name: 'Thu Thập Thập Niên Linh Khoáng',
     description: 'Nộp 3 Thập Niên Linh Khoáng để nhận thưởng.',
-    condition: { kind: 'collect', materialId: 'qi_refining_ore_decade', amount: 3 },
+    condition: { kind: 'collect', materialId: 'material_spirit_ore_decade', amount: 3 },
     reward: { reward: { spiritStone: 30 } },
     cadence: 'once',
     chainId: 'mainline',
@@ -234,7 +234,7 @@ export const QUESTS: Quest[] = [
     // r10-INT 2026-10-05: chapter bands moved Truc Co floors to
     // foundation-era ore - keep the collect target on the band the
     // quest text describes (yeu thu hau son), not the LK floor band.
-    condition: { kind: 'collect', materialId: 'foundation_establishment_ore_decade', amount: 30 },
+    condition: { kind: 'collect', materialId: 'material_spirit_ore_decade', amount: 30 },
     reward: { reward: { cultivation: 4000 } },
     cadence: 'once',
     requiredRealmId: 'foundation_establishment',

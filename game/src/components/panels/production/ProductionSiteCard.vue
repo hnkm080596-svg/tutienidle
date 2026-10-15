@@ -10,9 +10,7 @@ import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import ProductionSourceArtCard from '@/components/common/art/ProductionSourceArtCard.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
-import { betaRecipeFamilyOfId } from '@/core/betaScope'
-import { formatStat } from '@/core/stats/StatLabels'
+import { formatNumber } from '@/core/format/NumberFormatter'
 import type { ProductionSiteRow } from './productionViewTypes'
 
 const props = defineProps<{ row: ProductionSiteRow }>()
@@ -29,15 +27,15 @@ const { bumpState } = useStateVersion()
 const KIND_ART: Record<string, { icon: string; landscape: string }> = {
   forest: {
     icon: '/assets/materials/linh_moc.png',
-    landscape: '/assets/ui/tien-hiep-2026-10/source/world-vista-warm-v1.png',
+    landscape: '/assets/ui/tien-hiep-2026-10/production/blessed-forest-v1.png',
   },
   mine: {
     icon: '/assets/materials/linh_khoang.png',
-    landscape: '/assets/ui/tien-hiep-2026-10/realm/landscape-3-v1.png',
+    landscape: '/assets/ui/tien-hiep-2026-10/production/spirit-mine-v1.png',
   },
   grotto: {
     icon: '/assets/materials/herbs/tu_linh_thao/decade.png',
-    landscape: '/assets/ui/tien-hiep-2026-10/source/opening-vista-warm-v1.png',
+    landscape: '/assets/ui/tien-hiep-2026-10/production/herb-grotto-v1.png',
   },
 }
 
@@ -48,37 +46,21 @@ const iconUrl = computed(() => resolveAssetUrl(art.value.icon))
 const landscapeUrl = computed(() => resolveAssetUrl(art.value.landscape))
 
 const statLines = computed(() => {
-  const speed = `×${formatStat('productionSpeedMultiplier', props.row.productionSpeedMultiplier)} ${t('panels.production.speedSuffix')}`
-
-  const next = props.row.nextProductionSpeedMultiplier
-    ? ` · ${t('panels.production.nextSpeedPrefix')}${formatStat('productionSpeedMultiplier', props.row.nextProductionSpeedMultiplier)}`
-    : ''
-
   const lines = [
-    `${t('panels.production.level', { level: props.row.level, max: props.row.maxLevel })} · ${speed}${next}`,
+    t('panels.production.level', { level: props.row.level, max: props.row.maxLevel }),
+    t('panels.production.cycleDuration', { seconds: formatNumber(props.row.cycleSeconds) }),
   ]
 
   return lines
 })
 
-// CONSUMER-01: the grotto advertises only beta-admitted families - the
-// grotto can never produce a scope-hidden recipe, so
-// PILL_FAMILIES.length would overstate the card against the alchemy
-// authority seam. (Moved verbatim from the panel.)
 const rewardLine = computed(() => {
-  if (props.row.kind === 'forest') {
-    return t('panels.production.rewards.forest')
-  }
-
-  if (props.row.kind === 'mine') {
-    return t('panels.production.rewards.mine')
-  }
-
-  return t('panels.production.rewards.grotto', {
-    count: PILL_FAMILIES.filter((family) => betaRecipeFamilyOfId(family.id) !== null).length,
-  })
+  const range = props.row.baseOutputPerSecond
+  if (!range) return ''
+  const formatRate = (value: number) => value.toLocaleString('vi-VN', { maximumFractionDigits: 3 })
+  const amount = range.min === range.max ? formatRate(range.min) : `${formatRate(range.min)}–${formatRate(range.max)}`
+  return t('panels.production.resourceRate', { amount, resource: t(`panels.production.resources.${props.row.kind}`) })
 })
-
 const statusLabel = computed(() =>
   props.row.isProducing
     ? t('panels.production.statusProducing', { time: props.row.remainingLabel })
@@ -101,9 +83,9 @@ function toggleAuto() {
     :data-kind="row.kind"
     :icon="iconUrl"
     :landscape="landscapeUrl"
-    :name="row.name"
-    :type-label="row.kindLabel"
-    :description="row.description"
+    :name="t(`panels.production.sourceNames.${row.kind}`)"
+    :type-label="t(`panels.production.resources.${row.kind}`)"
+    :description="t(`panels.production.descriptions.${row.kind}`)"
     :stat-lines="statLines"
     :reward-line="rewardLine"
     :fill="fill"
@@ -112,6 +94,7 @@ function toggleAuto() {
     :auto-checked="row.autoRestart"
     upgrade-label=""
     :show-upgrade="false"
+    :show-auto="false"
     @toggle="toggleAuto"
   />
 </template>

@@ -8,7 +8,7 @@ withDefaults(defineProps<{ gold?: boolean; disabled?: boolean; filterArt?: boole
 const emit = defineEmits<{ click: [event: MouseEvent] }>()
 </script>
 <template>
-  <button type="button" class="equipment-art-button" :class="{ gold, 'filter-art': filterArt, 'square-art': squareArt }" :disabled="disabled" @click="emit('click', $event)">
+  <button type="button" class="equipment-art-button game-panel__button" :class="{ gold, 'filter-art': filterArt, 'square-art': squareArt }" :disabled="disabled" @click="emit('click', $event)">
     <slot />
   </button>
 </template>
@@ -35,16 +35,10 @@ const emit = defineEmits<{ click: [event: MouseEvent] }>()
   background: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png') center / contain no-repeat;
   pointer-events: none;
 }
-.equipment-art-button.gold { color: #30210e; }
-.equipment-art-button.gold::before {
-  background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png');
-}
+.equipment-art-button.gold { color: #f2e3c2; }
+.equipment-art-button:not(:disabled):hover { color: #30210e; }
 .equipment-art-button:not(:disabled):hover::before {
-  background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-hover-v2.png');
-}
-.equipment-art-button.gold:not(:disabled):hover::before {
   background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png');
-  filter: brightness(1.08);
 }
 .equipment-art-button:not(:disabled):active { color: #f2e3c2; transform: translateY(1px); }
 .equipment-art-button:not(:disabled):active::before {

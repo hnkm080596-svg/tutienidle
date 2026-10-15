@@ -11,7 +11,8 @@
 // the panel emits `close` and the rail flips back to the chip.
 import { shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import GameCard from '@/components/common/GameCard.vue'
+import GameActionButton from '@/components/common/GameActionButton.vue'
 import CombatAiPanel from '@/components/game/combat/CombatAiPanel.vue'
 
 const { t } = useI18n()
@@ -19,28 +20,25 @@ const aiOpen = shallowRef(false)
 </script>
 
 <template>
-  <button
+  <GameActionButton
     v-if="!aiOpen"
     class="combat-ai-rail__reopen"
     type="button"
-    :title="t('combat.overlay.aiPanel.title')"
+    v-tooltip="{ title: t('combat.overlay.aiPanel.title') }"
     @click="aiOpen = true"
   >
-    <InkNineSlice chrome-id="button-compact" layer="surface" />
     <span class="combat-ai-rail__reopen-label">{{ t('combat.overlay.aiPanel.title') }}</span>
-  </button>
+  </GameActionButton>
 
-  <div v-else class="combat-ai-rail" data-hk-region="ai-panel">
-    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+  <GameCard v-else class="combat-ai-rail" data-hk-region="ai-panel">
     <CombatAiPanel @close="aiOpen = false" />
-  </div>
+  </GameCard>
 </template>
 
 <style scoped>
 .combat-ai-rail { position: relative; isolation: isolate; }
 
-/* InkNineSlice 'surface' renders at z-index 1 - contents need 2. */
-.combat-ai-rail > :not(.ink-nine-slice) { position: relative; z-index: 2; }
+.combat-ai-rail > .combat-ai-panel { position: relative; z-index: 2; }
 
 /* Collapsed state: the reopen chip keeps the rail's anchor but takes a
    fraction of the footprint - battlefield stays clear until asked. */
@@ -68,4 +66,6 @@ const aiOpen = shallowRef(false)
   outline: 2px solid var(--chrome-300);
   outline-offset: 2px;
 }
+.combat-ai-rail.game-card { padding: 0; }
+.combat-ai-rail__reopen.game-action-button { height: 40px; min-width: 150px; }
 </style>

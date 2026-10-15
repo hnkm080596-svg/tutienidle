@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import GameCard from "@/components/common/GameCard.vue"
+import GamePanel from '@/components/common/GamePanel.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import GameActionButton from '@/components/common/GameActionButton.vue'
+import GameTabButton from '@/components/common/GameTabButton.vue'
+import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 import SlotView from '@/components/common/SlotView.vue'
 import type { AlchemyRecipeChoice, AlchemyRecipeDisplay, AlchemyJobDisplay } from './alchemyUi'
 
@@ -31,8 +35,6 @@ const rootRef = ref<HTMLElement | null>(null)
 useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
 const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
-const recipeBtnSecondary = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png')
-const recipeBtnPrimary = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-primary-v1.png')
 const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 const cauldron = resolveAssetUrl('/assets/ui/huyen-kim/alchemy/alchemy-cauldron-v2.png')
 
@@ -155,19 +157,17 @@ function jobSubline(job: AlchemyJobDisplay) {
 </script>
 
 <template>
-  <section ref="rootRef" class="alchemy-scene" :aria-label="t('alchemy.title')" @click.self="emit('back')">
-    <div class="alchemy-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
-    <header class="alchemy-head">
-      <div class="alchemy-head__title"><h1>{{ t('alchemy.title') }}</h1><img class="alchemy-divider" :src="titleDivider" alt=""></div>
-      <span class="alchemy-subtitle">{{ t('alchemy.subtitle') }}</span>
-    </header>
+  <section ref="rootRef" class="rail-panel-scene alchemy-scene" :aria-label="t('alchemy.title')" @click.self="emit('back')">
+    <GamePanel :title="t('alchemy.title')">
+    
+    
 
     <div class="alchemy-cols">
       <!-- Cot trai 20%: day nut dan phuong. -->
-      <nav class="alchemy-recipes" :aria-label="t('alchemy.recipe')" :style="{ '--alchemy-btn-secondary': `url('${recipeBtnSecondary}')`, '--alchemy-btn-primary': `url('${recipeBtnPrimary}')` }">
-        <button v-for="entry in recipes" :key="entry.id" type="button" :class="['recipe-row', { selected: recipe?.id === entry.id }]" :aria-pressed="recipe?.id === entry.id" :data-recipe-id="entry.id" @click="emit('select', entry.id)">
+      <nav class="alchemy-recipes" :aria-label="t('alchemy.recipe')">
+        <GameTabButton v-for="entry in recipes" :key="entry.id" class="recipe-row" :selected="recipe?.id === entry.id" :data-recipe-id="entry.id" @click="emit('select', entry.id)">
           <span class="recipe-label">{{ entry.name }}</span>
-        </button>
+        </GameTabButton>
         <p v-if="recipes.length === 0" class="alchemy-empty">{{ t('alchemy.emptyRecipes') }}</p>
       </nav>
 
@@ -177,7 +177,9 @@ function jobSubline(job: AlchemyJobDisplay) {
           <svg class="alchemy-flow" aria-hidden="true"><template v-for="(d, i) in flowPaths" :key="i"><path :d="d" class="flow-line flow-line--base" /><path v-if="brewing" :d="d" pathLength="100" class="flow-line flow-line--stream" /><path v-if="brewPulse" :d="d" pathLength="100" class="flow-line flow-line--pulse" /></template></svg>
           <div class="alchemy-cauldron">
             <img :src="cauldron" alt="">
-            <SlotView v-if="pillCell" class="alchemy-pill-slot" :item="pillCell" :icon="pillCell.icon" :label="pillCell.label" :tooltip="pillCell.tooltip" variant="circle" />
+            <div v-if="pillCell" class="alchemy-pill-slot">
+              <SlotView static static-tooltip :item="pillCell" :icon="pillCell.icon" :label="pillCell.label" :tooltip="pillCell.tooltip" variant="circle" />
+            </div>
           </div>
           <div class="alchemy-slots">
             <div v-if="herbCell" class="alchemy-slot">
@@ -189,42 +191,45 @@ function jobSubline(job: AlchemyJobDisplay) {
               <span class="alchemy-slot__count">{{ cost.value }}</span>
             </div>
           </div>
-          <div class="alchemy-variant-picker" role="listbox" :aria-label="t('alchemy.variantPicker')">
+          <GameCard as="div" class="alchemy-variant-picker" role="listbox" :aria-label="t('alchemy.variantPicker')">
             <div v-for="v in recipe.variants" :key="v.id" class="alchemy-variant-pick">
-              <SlotView :item="v" :icon="v.icon" :label="v.name" :description="v.description" :tooltip="v.tooltip ?? { title: v.name, description: v.description }" :equipment-quality-rank="v.equipmentQualityRank" :rarity-rank="v.rarityRank" :rarity-rank-scale="v.rarityRankScale" :name-segments="v.nameSegments" variant="bag" :class="{ 'is-picked': v.id === variant }" @click="pickVariant(v.id)" />
+              <SlotView :item="v" :icon="v.icon" :label="v.name" :description="v.description" :tooltip="v.tooltip ?? { title: v.name, description: v.description }" :equipment-quality-rank="v.equipmentQualityRank" :rarity-rank="v.rarityRank" :rarity-rank-scale="v.rarityRankScale" :name-segments="v.nameSegments" variant="bag" :state="{ interaction: v.id === variant ? 'selected' : 'idle' }" @click="pickVariant(v.id)" />
               <span class="alchemy-slot__count">{{ v.amount }}</span>
             </div>
-          </div>
+          </GameCard>
           <div class="alchemy-brew">
-            <EquipmentArtButton filter-art :gold="!recipe.brewDisabled" :disabled="recipe.brewDisabled" @click="onBrew">{{ t('alchemy.startBrewing') }}</EquipmentArtButton>
+            <GameActionButton :gold="!recipe.brewDisabled" :disabled="recipe.brewDisabled" @click="onBrew">{{ t('alchemy.startBrewing') }}</GameActionButton>
           </div>
         </template>
         <p v-else class="alchemy-empty alchemy-mid__empty">{{ t('alchemy.emptyDetail') }}</p>
       </div>
 
       <!-- Cot phai 30%: card chua cac job chong len nhau. -->
-      <aside class="alchemy-jobs" :aria-label="t('alchemy.queueTitle')">
-        <div class="alchemy-jobs__head"><h2>{{ t('alchemy.queueTitle') }}</h2><span>{{ jobs.length }} / {{ capacity }}</span></div>
+      <GameCard as="aside" class="alchemy-jobs" :title="t('alchemy.queueTitle')" :aria-label="t('alchemy.queueTitle')">
+        <div class="alchemy-jobs__head"><span>{{ jobs.length }} / {{ capacity }}</span></div>
+        <div class="alchemy-jobs__list">
         <article v-for="job in jobs" :key="job.id" :class="['job-card', job.state === 'waiting' ? 'job-card--waiting' : 'job-card--brewing']">
-          <img :src="job.icon" alt="">
+          <SlotView class="job-card__slot" static static-tooltip variant="bag" :item="job" :icon="job.icon" :label="job.name" />
           <div class="job-card__info">
             <div class="job-card__title"><h3>{{ job.name }}<em v-if="(job.quantity ?? 1) > 1" class="job-card__qty">×{{ job.quantity }}</em></h3><span class="job-card__state">{{ t(job.state === 'waiting' ? 'alchemy.waitingJob' : 'alchemy.activeKiln') }}</span></div>
-            <div class="job-card__bar"><span :style="{ width: `${Math.max(0, Math.min(100, job.progress))}%` }" /></div>
+            <EquipmentEnergyTube class="job-card__bar" :fill="Math.max(0, Math.min(100, job.progress))" :color="job.state === 'active' ? '#f5cd6d' : '#b59b58'" />
             <small>{{ jobSubline(job) }}</small>
           </div>
-          <button class="job-card__cancel" :aria-label="t('alchemy.cancelJob')" :title="t('alchemy.cancelJob')" @click="emit('cancel', job.id)">×</button>
+          <GameActionButton class="job-card__cancel" :gold="false" :aria-label="t('alchemy.cancelJob')" v-tooltip="{title:t('alchemy.cancelJob')}" @click="emit('cancel', job.id)">×</GameActionButton>
         </article>
         <div v-for="index in emptyJobSlots" :key="`empty-${index}`" class="job-card job-card--empty"><span>◇</span><small>{{ t('alchemy.emptySlot') }}</small></div>
-      </aside>
+        </div>
+      </GameCard>
     </div>
     <p v-if="preview" class="alchemy-preview-label">{{ t('alchemy.previewStamp') }}</p>
+    </GamePanel>
   </section>
 </template>
 
 <style scoped>
 /* Shared paper chrome - same sheet box the other ported panels use
    (inventory-sheet convention): x345 y101 w1065 h608. */
-.alchemy-scene { position:absolute; inset:0; pointer-events:auto; font-family:var(--font-display,Georgia,serif); color:#392c1d; line-height:1.3; }
+.alchemy-scene { position:absolute; inset:0;  font-family:var(--font-display,Georgia,serif); color:#392c1d; line-height:1.3; }
 .alchemy-scene :deep(*) { box-sizing:border-box; }
 .alchemy-sheet { position:absolute; left:345px; top:101px; width:1065px; height:608px; background-color:#f2e4c8; background-size:cover; background-position:center; background-repeat:no-repeat; border:3px double #b28a43; box-shadow:0 12px 22px #0008; }
 .alchemy-head { position:absolute; left:372px; top:123px; width:1011px; height:61px; display:flex; align-items:flex-start; justify-content:flex-start; padding-left:54px; background:linear-gradient(#b28a43,#b28a43) left bottom/64px 1px no-repeat,linear-gradient(#b28a43,#b28a43) right bottom/calc(100% - 448px) 1px no-repeat; }
@@ -239,75 +244,69 @@ function jobSubline(job: AlchemyJobDisplay) {
 .alchemy-recipes { width:202px; min-width:0; overflow-y:auto; scrollbar-width:thin; display:flex; flex-direction:column; gap:6px; padding:2px; }
 /* Nut chon dan phuoc - art tab Trang Bi: pill nine-slice secondary,
    tab dang chon doi sang primary + chu toi. Chi con ten dan. */
-.recipe-row { position:relative; isolation:isolate; display:flex; align-items:center; justify-content:center; width:100%; padding:4px 12px; border:0; color:#f4e4c0; background:transparent; text-align:center; font:700 17px var(--font-display,Georgia,serif); cursor:pointer; }
-.recipe-row::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--alchemy-btn-secondary) var(--pc-button-slice) stretch; pointer-events:none; }
-.recipe-row.selected { color:#2f2415; text-shadow:0 1px #fff7; }
-.recipe-row.selected::before { border-image-source:var(--alchemy-btn-primary); }
-.recipe-row:not(.selected):hover { color:#fff3d6; }
-.recipe-row:focus-visible { outline:2px solid #375f47; outline-offset:1px; }
+.recipe-row { width:100%; flex:0 0 auto; }
 
 .alchemy-mid { flex:1; min-width:0; position:relative; display:flex; flex-direction:column; align-items:stretch; }
 .alchemy-flow { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; z-index:1; }
 /* Line cung xam mac dinh; khi bam Luyen Dan co lop sang chay tu nguyen lieu ve dan. */
 .alchemy-flow .flow-line { fill:none; stroke-linecap:round; stroke-linejoin:miter; }
 .alchemy-flow .flow-line--base { stroke:#9a8a6a; stroke-width:1.6; opacity:.85; }
-.alchemy-flow .flow-line--pulse { stroke:#ffe9a8; stroke-width:2; stroke-dasharray:8 200; stroke-linecap:round; animation:alchemy-pulse 1.15s linear forwards; filter:drop-shadow(0 0 3px #f5cd6d) drop-shadow(0 0 7px #f0b93f); }
-@keyframes alchemy-pulse { to { stroke-dashoffset:-208; } }
+.alchemy-flow .flow-line--pulse { stroke:#ffe9a8; stroke-width:2; stroke-dasharray:14 86; stroke-linecap:round; animation:alchemy-pulse 1.15s linear forwards; filter:drop-shadow(0 0 3px #f5cd6d) drop-shadow(0 0 7px #f0b93f); }
+@keyframes alchemy-pulse { to { stroke-dashoffset:-100; } }
 /* Khi co job dang chay: day chay sang lien tuc (loop), tach khoi pulse 1 lan. */
 .alchemy-flow .flow-line--stream { stroke:#f5cd6d; stroke-width:1.4; stroke-dasharray:4 18; opacity:.9; animation:alchemy-stream .9s linear infinite; filter:drop-shadow(0 0 2px #f0b93f); }
 @keyframes alchemy-stream { to { stroke-dashoffset:-22; } }
-/* Sao bang quet cheo qua tung o nguyen lieu + vien dan khi dang luyen. */
-.alchemy-mid.is-brewing .alchemy-slot::after,
-.alchemy-mid.is-brewing .alchemy-pill-slot::after { content:''; position:absolute; left:-12px; top:8px; width:18px; height:2px; background:linear-gradient(90deg, transparent, #ffe9a8 55%, #fff); border-radius:2px; box-shadow:0 0 5px #f5cd6d; transform:rotate(-38deg); opacity:0; animation:alchemy-meteor 1.7s linear infinite; pointer-events:none; z-index:5; }
-@keyframes alchemy-meteor { 0% { transform:translate(0,0) rotate(-38deg); opacity:0; } 12% { opacity:1; } 70% { opacity:.9; } 100% { transform:translate(88px,60px) rotate(-38deg); opacity:0; } }
-.alchemy-mid.is-brewing .alchemy-slot:nth-child(2)::after { animation-delay:.45s; }
-.alchemy-mid.is-brewing .alchemy-slot:nth-child(3)::after { animation-delay:.9s; }
-.alchemy-mid.is-brewing .alchemy-slot:nth-child(4)::after { animation-delay:1.3s; }
-.alchemy-mid.is-brewing .alchemy-pill-slot::after { width:24px; animation-duration:1.3s; }
-@keyframes alchemy-meteor-pill { 0% { transform:translate(0,0) rotate(-38deg); opacity:0; } 15% { opacity:1; } 75% { opacity:.9; } 100% { transform:translate(112px,72px) rotate(-38deg); opacity:0; } }
-.alchemy-mid.is-brewing .alchemy-pill-slot::after { animation-name:alchemy-meteor-pill; }
 .alchemy-cauldron { position:absolute; inset:0; pointer-events:none; display:flex; justify-content:center; align-items:flex-start; }
-#app .alchemy-pill-slot { border-radius:50%; border:3px solid #e6bd65; box-shadow:0 0 0 1px #3a2c12, 0 0 14px 2px #f5cd6d55; background:radial-gradient(circle at 50% 42%, #241d12 0%, #120d07 74%); }
+#app .alchemy-pill-slot :deep(.slot-view) { border-radius:50%; border:3px solid #e6bd65; box-shadow:0 0 0 1px #3a2c12, 0 0 14px 2px #f5cd6d55; background:radial-gradient(circle at 50% 42%, #241d12 0%, #120d07 74%); }
 .alchemy-pill-slot { position:absolute; left:50%; top:169px; transform:translate(-50%,-50%); width:84px; height:84px; z-index:3; pointer-events:auto; }
+.alchemy-pill-slot :deep(.slot-view) { width:100%; height:100%; }
 .alchemy-pill-slot :deep(.slot-view__ring-art) { display:none; }
-.alchemy-pill-slot :deep(.slot-view__icon-wrap) { inset:14%; }
+.alchemy-pill-slot :deep(.slot-view__icon-wrap) { inset:14%; animation:alchemy-pill-float 3.6s ease-in-out infinite; }
+.alchemy-pill-slot :deep(.slot-view__icon-wrap img) { animation:alchemy-pill-turn 5s ease-in-out infinite; }
+@keyframes alchemy-pill-float { 0%,100% { transform:translateY(3px); } 50% { transform:translateY(-5px); } }
+@keyframes alchemy-pill-turn { 0%,100% { transform:rotate(-6deg); } 50% { transform:rotate(6deg); } }
+@media (prefers-reduced-motion:reduce) {
+  .alchemy-pill-slot :deep(.slot-view__icon-wrap), .alchemy-pill-slot :deep(.slot-view__icon-wrap img), .alchemy-flow .flow-line { animation:none; }
+}
 .alchemy-cauldron img { width:auto; height:308px; object-fit:contain; opacity:.8; filter:drop-shadow(0 10px 10px #70421d35); }
 .alchemy-slots { display:flex; gap:32px; margin-top:auto; justify-content:center; position:relative; z-index:2; }
 .alchemy-slot { display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; }
 .alchemy-slot:first-child, .alchemy-slot:last-child { transform:translateY(calc(-1 * var(--outer-raise, 28px))); }
 .alchemy-slot :deep(.slot-view) { flex:0 0 56px; width:56px; }
 .alchemy-slot__count { font-size:11px; color:#6d5730; letter-spacing:.5px; }
-.alchemy-variant-picker { display:flex; gap:10px; justify-content:center; padding:10px 12px; margin-top:8px; background:#160f07e8; border:1px solid #e6bd6566; border-radius:8px; box-shadow:0 8px 20px #000c; align-self:center; position:relative; z-index:4; }
+.alchemy-variant-picker { display:flex; gap:10px; justify-content:center; margin-top:8px; align-self:center; position:relative; z-index:4; }
 .alchemy-variant-pick { display:flex; flex-direction:column; align-items:center; gap:4px; }
 .alchemy-variant-picker :deep(.slot-view) { flex:0 0 56px; width:56px; }
-.alchemy-variant-picker :deep(.slot-view.is-picked) { box-shadow:0 0 0 2px #e6bd65, 0 0 10px 2px #f5cd6d88; filter:brightness(1.2); }
 .alchemy-brew { display:flex; justify-content:center; }
-.alchemy-brew .equipment-art-button { width:min(255px, 68%); font-size:20px; padding:0 6px; }
+.alchemy-brew .game-action-button { width:255px; max-width:100%; height:calc(255px * 324 / 1225); font-size:24px; padding:8px 29px; }
 .alchemy-mid__empty { margin:auto; text-align:center; }
 
-.alchemy-jobs { width:303px; min-width:0; position:relative; isolation:isolate; padding:14px 16px; color:#f3e4c4; clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px); display:flex; flex-direction:column; gap:8px; overflow-y:auto; scrollbar-width:thin; }
-.alchemy-jobs::before { content:''; position:absolute; inset:0; z-index:-1; pointer-events:none; border:15px solid transparent; border-image:url('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png') 160 / 15px stretch; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat; }
+.alchemy-jobs { width:303px; min-width:0; position:relative; display:flex; flex-direction:column; gap:8px; margin-top:12px; height:calc(100% - 12px); }
+.alchemy-jobs__list { flex:1; min-height:0; display:flex; flex-direction:column; gap:8px; overflow-y:auto; scrollbar-width:none; }
+.alchemy-jobs__list::-webkit-scrollbar { display:none; }
 .alchemy-jobs__head { display:flex; justify-content:space-between; align-items:center; color:#c9ab6f; padding-bottom:6px; border-bottom:1px solid #a98d4f66; }
 .alchemy-jobs__head h2 { font-weight:500; font-size:15px; margin:0; }
 .alchemy-jobs__head span { font-size:12px; }
-.job-card { display:flex; gap:9px; align-items:center; padding:8px 10px; border:1px solid #8f744066; border-radius:4px; background:#2e2c22cc; position:relative; }
-.job-card > img { width:36px; height:36px; object-fit:contain; }
-.job-card--brewing { border-color:#e6bd65aa; box-shadow:0 0 10px #f5cd6d33 inset, 0 0 8px #f5cd6d22; }
+.job-card { display:flex; gap:9px; align-items:center; padding:8px 0; border-bottom:1px solid #8f744066; position:relative; flex:none; }
+.job-card__slot { width:36px; height:36px; flex:0 0 36px; }
+.job-card--brewing { border-bottom-color:#e6bd65aa; }
 .job-card__info { flex:1; min-width:0; }
 .job-card__title { display:flex; align-items:baseline; justify-content:space-between; gap:6px; margin:0 16px 6px 0; }
 .job-card__info h3 { font-size:13px; font-weight:500; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .job-card__qty { font-style:normal; color:#f5cd6d; margin-left:4px; font-size:11px; }
 .job-card__state { font-size:9px; letter-spacing:.5px; color:#c9ab6f; flex:0 0 auto; }
-.job-card__bar { height:5px; background:#b5a07955; border:1px solid #a3884b55; border-radius:3px; overflow:hidden; }
-.job-card__bar span { display:block; height:100%; background:linear-gradient(90deg,#426b4e,#b59b58); }
-.job-card--brewing .job-card__bar span { background:linear-gradient(90deg,#5a8a66,#f5cd6d); }
+.job-card__bar { height:5px; }
 .job-card__info small { display:block; margin-top:4px; font-size:10px; color:#8b713f; }
-.job-card__cancel { position:absolute; right:5px; top:4px; width:22px; height:22px; border:0; background:none; color:#8c7241; font-size:17px; cursor:pointer; }
+.job-card__cancel.game-action-button { position:absolute; right:5px; top:4px; width:28px; height:22px; min-height:0; aspect-ratio:auto; padding:0; font-size:17px; }
 .job-card__cancel:focus-visible { outline:2px solid #3c694e; }
-.job-card--empty { border-style:dashed; background:none; justify-content:center; color:#998458; gap:6px; }
+.job-card--empty { border-bottom-style:dashed; justify-content:center; color:#998458; gap:6px; }
 .job-card--empty small { font-size:12px; }
 .job-card--empty span { font-size:18px; }
 
 .alchemy-empty { color:#8b7042; font-size:13px; text-align:center; margin:18px 4px; }
 .alchemy-preview-label { position:absolute; left:372px; top:706px; font-size:10px; color:#7d6c48; }
+
+/* Layout instances are relative to the owning panel content. */
+.alchemy-scene :deep(.game-panel__content :is(.alchemy-sheet,.alchemy-head)) { display: none; }
+.alchemy-scene :deep(.game-panel__content .alchemy-cols) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; }
 </style>

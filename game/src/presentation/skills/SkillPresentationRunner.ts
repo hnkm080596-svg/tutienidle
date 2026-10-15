@@ -81,7 +81,7 @@ export class SkillPresentationRunner {
    * fallback would be beaten by the mechanical settle, so recipe timing
    * wins and the bad marker surfaces as a diagnostic fault (sec.37).
    */
-  start(cast: SkillCastPresentation, port: PlaybackPort, timing?: { castMs?: number }): void {
+  start(cast: SkillCastPresentation, port: PlaybackPort, timing?: { castMs?: number; chargeStartMs?: number }): void {
     if (!this.canStart(cast, port)) return
     this.cancel()
     const recipe = this.recipe(cast.presetId)
@@ -92,9 +92,14 @@ export class SkillPresentationRunner {
         : (this.fault(new Error(`cast timing override ${castMs}ms rejected - recipe castMs used`)),
           recipe.castMs)
     const context: SkillCueContext = { ref: cast.ref, recipe, phase: 'cast', cast }
+    const start = timing?.chargeStartMs ?? 0
+    const chargeStart = Number.isFinite(start) && start >= 0 && start < duration ? start : 0
     this.active = {
       ref: cast.ref, port, phase: 'cast', elapsed: 0, duration,
-      cues: recipe.cast.map(cue => ({ cue, context, offset: cue.offsetMs, ended: false })),
+      cues: recipe.cast.map(cue => ({
+        cue: cue.fitCastPhase ? { ...cue, offsetMs: chargeStart, durationMs: duration - chargeStart } : cue,
+        context, offset: cue.fitCastPhase ? chargeStart : cue.offsetMs, ended: false,
+      })),
     }
     this.sample(this.active)
   }

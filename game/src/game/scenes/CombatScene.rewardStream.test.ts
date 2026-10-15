@@ -1,11 +1,8 @@
 ﻿// @vitest-environment jsdom
 //
-// Reward stream integration (player-body-anchor-reward-gourd-plan sec9):
-// - Diem phat theo priority chest-anchor -> screen cache -> grid cache.
-// - Diem hut LUON la mieng ho lo, KHONG phai Player - teleport Player
-//   giua tween khong doi dich.
-// - Pulse ho lo dung MOT nhIp moi reward event.
-// - clearSceneState don sach gourd + caches (khong ro ri qua shutdown).
+// Reward stream presentation: source anchors retain their fallback chain;
+// all reward particles target the live player and never pulse a gourd.
+// Shutdown still clears any compatibility-era gourd resources.
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
@@ -13,7 +10,6 @@ import type { CombatScene } from './CombatScene'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import {
   computeGourdPlacement,
-  resolveGourdMouth,
 } from '../support/RewardGourd'
 
 function chainableRecorder() {
@@ -80,7 +76,7 @@ function createScene() {
   scene.canvasWidth = 1200
   scene.canvasHeight = 800
 
-  scene.sprites = new Map()
+  scene.sprites = new Map([['player', makeEntitySprite(300, 400)]])
   scene.statuses = new Map()
   scene.dyingIds = new Set()
   scene.spawnVfxHandles = new Map()
@@ -162,7 +158,7 @@ const REWARD_EVENT = {
   color: 0xffd54f,
 }
 
-describe('CombatScene â€” reward stream Ä‘iá»ƒm phÃ¡t (plan Â§7.1)', () => {
+describe('CombatScene - reward stream follows player', () => {
   it('má»©c 1: enemy dÃ¹ng anchor thÃ¢n trung tÃ­nh tá»« bounds sprite, KHÃ”NG mÆ°á»£n anchor Player', () => {
     const { scene } = createScene()
 
@@ -239,8 +235,8 @@ describe('CombatScene â€” reward stream Ä‘iá»ƒm phÃ¡t (plan Â§7.1
   })
 })
 
-describe('CombatScene â€” reward stream hÃºt vá» há»“ lÃ´ (plan Â§7.2)', () => {
-  it('target lock: p=1 cháº¡m ÄÃšNG miá»‡ng há»“ lÃ´; Player "teleport" khÃ´ng Ä‘á»•i Ä‘Ã­ch', () => {
+describe('CombatScene - reward stream follows player', () => {
+  it('reward target follows the player after movement', () => {
     const { scene, tweenConfigs, createdObjects } = createScene()
 
     scene.sprites.set('player', makeEntitySprite(999, 888))
@@ -263,6 +259,7 @@ describe('CombatScene â€” reward stream hÃºt vá» há»“ lÃ´ (plan
 
     playerSprite.rect.x = 50
     playerSprite.rect.y = 60
+    playerSprite.footY = 60
 
     // Chay onUpdate tOi cuoi quy dao.
     state.progress = 1
@@ -273,13 +270,13 @@ describe('CombatScene â€” reward stream hÃºt vá» há»“ lÃ´ (plan
 
     const lastCall = setPositionCalls.at(-1)!
 
-    const mouth = resolveGourdMouth(scene.gourdPlacement)
+    const mouth = scene.bodyAnchorScreen('player', 'centre')
 
     expect(lastCall.args[0]).toBeCloseTo(mouth.x, 4)
     expect(lastCall.args[1]).toBeCloseTo(mouth.y, 4)
   })
 
-  it('pulse há»“ lÃ´ ÄÃšNG Má»˜T nhá»‹p má»—i reward event', () => {
+  it('reward events no longer schedule a gourd pulse', () => {
     const { scene, delayedCalls } = createScene()
 
     scene.sprites.set('enemy_1', makeEntitySprite(100, 100))
@@ -290,7 +287,7 @@ describe('CombatScene â€” reward stream hÃºt vá» há»“ lÃ´ (plan
       (entry) => entry.callback.name === '' || true,
     )
 
-    expect(pulseSchedules).toHaveLength(1)
+    expect(pulseSchedules).toHaveLength(0)
   })
 })
 

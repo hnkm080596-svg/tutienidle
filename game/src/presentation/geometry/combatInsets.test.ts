@@ -6,6 +6,7 @@
 // `right` - moi publisher GIU NGUYEN truong cua publisher con lai.
 import { describe, expect, it, afterEach } from 'vitest'
 import {
+  publishPartyDockHeight,
   clearSkillDockWidth,
   publishSkillDockWidth,
   publishTopBarHeight,
@@ -20,14 +21,14 @@ afterEach(() => {
 })
 
 describe('combatInsets — top-only (6A-T3)', () => {
-  it('setCombatInsets ép bottom = 0 bất kể giá trị传入', () => {
+  it('setCombatInsets ép accepts measured party dock bottom', () => {
     setCombatInsets({ top: 100, bottom: 999, right: 0 })
 
     const insets = getCombatInsets()
 
     expect(insets.measured).toBe(true)
     expect(insets.top).toBe(100)
-    expect(insets.bottom).toBe(0)
+    expect(insets.bottom).toBe(999)
   })
 
   it('bottom âm cũng kẹp 0; top âm kẹp 0', () => {
@@ -43,7 +44,7 @@ describe('combatInsets — top-only (6A-T3)', () => {
     const fallback = getFallbackCombatInsets(1080)
 
     expect(fallback.top).toBe((1080 * (64 + 56)) / 1440)
-    expect(fallback.bottom).toBe(0)
+    expect(fallback.bottom).toBe(1080 * 228 / 810)
     expect(fallback.right).toBe(0)
   })
 
@@ -69,6 +70,13 @@ describe('combatInsets — top-only (6A-T3)', () => {
 })
 
 describe('combatInsets — dedicated publishers (Task 7, spec §7.5)', () => {
+  it('preserves the party dock when top and right publishers run', () => {
+    publishPartyDockHeight(228)
+    publishTopBarHeight(64)
+    publishSkillDockWidth(20)
+    clearSkillDockWidth()
+    expect(getCombatInsets().bottom).toBe(228)
+  })
   afterEach(() => {
     resetCombatInsets()
   })

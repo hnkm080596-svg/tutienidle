@@ -21,7 +21,7 @@ import {
   herbBaseId,
   herbMaterialId,
 } from '../profession/ProfessionMaterial'
-import { stoneCostRealmFactor } from '../economy/EconomyRealmPace'
+import { productionUpgradeStoneCost } from '../economy/EconomyRealmPace'
 
 export const TERRITORY_THANH_VAN: TerritoryDefinition = {
   id: 'thanh_van',
@@ -57,11 +57,11 @@ const SITE_UPGRADE_COSTS = (): ProductionSiteDefinition['upgradeCosts'] => {
   return REALM_TIERS.slice(1).map((realmId, index) => {
     const targetTier = index + 2
     return {
-      woodMaterialId: buildProfessionMaterialId('wood', realmId, ageByTier[targetTier] ?? 'decade'),
+      woodMaterialId: buildProfessionMaterialId('wood', ageByTier[targetTier] ?? 'decade'),
       woodAmount: Math.round(5 * Math.pow(1.65, index)),
       // 2026-10-05 pace retune: upgrade fee scales with the realm whose
       // production it unlocks (x1/x8/x50 via stoneCostRealmFactor).
-      spiritStone: Math.round(100 * Math.pow(2.2, index)) * stoneCostRealmFactor(realmId),
+      spiritStone: productionUpgradeStoneCost(index, realmId),
     }
   })
 }
@@ -113,30 +113,13 @@ export const THANH_VAN_PRODUCTION_SITES: readonly ProductionSiteDefinition[] = [
 // =========================
 
 /** Lam: dung mot loai go theo realm x 5 tuoi (sec5.2 + gp123 6E C2). */
-export const THANH_VAN_FOREST_REWARDS: readonly ForestRewardDefinition[] = TERRITORY_THANH_VAN.realmIds.flatMap(
-  (realmId) =>
-    HERB_AGES.map((age) => ({
-      materialId: buildProfessionMaterialId('wood', realmId, age),
-      realmId,
-      age,
-      // So luong theo tuoi nam o balance; definition giu 0 de resolver
-      // tra MATERIAL_AGE_AMOUNTS - tranh lech hai nguon su that.
-      amount: 0,
-    })),
-)
+export const THANH_VAN_FOREST_REWARDS: readonly ForestRewardDefinition[] = HERB_AGES.map(age => ({
+  materialId: buildProfessionMaterialId('wood', age), age, amount: 0,
+}))
 
-/** Quang: ba realm tier x nam tuoi (sec5.3 + gp123 6E C2). */
-export const THANH_VAN_MINE_REWARDS: readonly MineRewardDefinition[] = HERB_AGES.flatMap(
-  (age) =>
-    TERRITORY_THANH_VAN.realmIds.map((realmId) => ({
-      materialId: buildProfessionMaterialId('ore', realmId, age),
-      realmId,
-      age,
-      // So luong theo tuoi nam o balance; definition giu 0 de resolver
-      // tra MATERIAL_AGE_AMOUNTS - tranh lech hai nguon su that.
-      amount: 0,
-    })),
-)
+export const THANH_VAN_MINE_REWARDS: readonly MineRewardDefinition[] = HERB_AGES.map(age => ({
+  materialId: buildProfessionMaterialId('ore', age), age, amount: 0,
+}))
 
 /**
  * Dong Thien: every non-retired pill family owns EXACTLY ONE primary
@@ -236,26 +219,15 @@ export function validateTerritory(
     }
   }
 
-  // Rewards phai phu du 3 realm tier cua Dia Gioi.
-  for (const realmId of territory.realmIds) {
-    if (!forestRewards.some((reward) => reward.realmId === realmId)) {
-      errors.push(`Lâm ${territory.id}: thiếu gỗ cho tier ${realmId}`)
-    }
-
-    if (!mineRewards.some((reward) => reward.realmId === realmId)) {
-      errors.push(`Quáng ${territory.id}: thiếu quáng cho tier ${realmId}`)
-    }
-
-    if (!grottoHerbs.some((herb) => herb.realmId === realmId)) {
-      errors.push(`Động Thiên ${territory.id}: thiếu thảo cho tier ${realmId}`)
-    }
+  for (const age of HERB_AGES) {
+    if (forestRewards.filter(row => row.age === age).length !== 1) errors.push(`Forest ${territory.id}: expected one ${age} reward`)
+    if (mineRewards.filter(row => row.age === age).length !== 1) errors.push(`Mine ${territory.id}: expected one ${age} reward`)
   }
-
-  // Realm cua reward phai thuoc Dia Gioi.
-  for (const reward of [...forestRewards, ...mineRewards, ...grottoHerbs]) {
-    if (!territory.realmIds.includes(reward.realmId)) {
-      errors.push(`${territory.id}: reward ${reward.materialId} ngoài phạm vi Địa Giới`)
-    }
+  for (const realmId of territory.realmIds) {
+    if (!grottoHerbs.some(herb => herb.realmId === realmId)) errors.push(`Grotto ${territory.id}: missing herbs for ${realmId}`)
+  }
+  for (const reward of grottoHerbs) {
+    if (!territory.realmIds.includes(reward.realmId)) errors.push(`${territory.id}: herb ${reward.materialId} outside territory`)
   }
 
   return { valid: errors.length === 0, errors }

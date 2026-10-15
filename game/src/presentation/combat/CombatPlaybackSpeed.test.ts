@@ -1,0 +1,21 @@
+import { afterEach, expect, it, vi } from 'vitest'
+afterEach(() => { vi.unstubAllGlobals(); vi.resetModules() })
+it('persists playback speed across a fresh module load without touching world clocks', async () => {
+  const values = new Map<string, string>()
+  vi.stubGlobal('localStorage', { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value) })
+  vi.resetModules()
+  const first = await import('./CombatPlaybackSpeed')
+  first.setCombatPlaybackSpeed(2)
+  vi.resetModules()
+  const second = await import('./CombatPlaybackSpeed')
+  expect(second.getCombatPlaybackSpeed()).toBe(2)
+  expect(second.combatPlaybackDelta(100)).toBe(200)
+})
+it('keeps the selected session speed when browser storage is unavailable', async () => {
+  vi.stubGlobal('localStorage', { getItem: () => { throw new Error('blocked') }, setItem: () => { throw new Error('blocked') } })
+  vi.resetModules()
+  const speed = await import('./CombatPlaybackSpeed')
+  expect(speed.getCombatPlaybackSpeed()).toBe(1)
+  speed.setCombatPlaybackSpeed(2)
+  expect(speed.getCombatPlaybackSpeed()).toBe(2)
+})

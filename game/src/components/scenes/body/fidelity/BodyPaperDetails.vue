@@ -3,13 +3,14 @@ import { inject, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
-import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import GameActionButton from '@/components/common/GameActionButton.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 import SlotView from '@/components/common/SlotView.vue'
 import { GAME_MANAGER_KEY } from '@/composables/useGameState'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { prefersReducedMotion } from '@/presentation/motionPreference'
 import { BODY_POUR_VISUAL, type BodyPaperModel, type BodyPaperPour, type BodyPaperUnit } from './bodyUi'
 
 const props = defineProps<{ model: BodyPaperModel; unit: BodyPaperUnit | null; notice: string; pour?: BodyPaperPour | null }>()
@@ -122,7 +123,7 @@ function startPour(spec: BodyPaperPour) {
     }
     pourVisual.progressAbs = spec.tierProgress
   }
-  if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+  if (prefersReducedMotion()) return
   const card = cardRef.value?.$el as HTMLElement | undefined
   const slotEl = card?.querySelector<HTMLElement>('.equipment-material-icon')
   const tubeEl = card?.querySelector<HTMLElement>('.equipment-energy-tube')
@@ -287,6 +288,7 @@ function startPour(spec: BodyPaperPour) {
       <img :src="navIcon" alt="">
       <h2>{{ unit?.title ?? model.chapterLabel }}</h2>
     </div>
+    <p class="body-identity">{{ model.identity }}</p>
     <template v-if="unit">
       <div class="body-progress-value">
         <span>{{ pourLabel ?? unit.progressLabel ?? model.progressLabel }}</span>
@@ -323,18 +325,20 @@ function startPour(spec: BodyPaperPour) {
         >
           <div class="equipment-material-icon">
             <SlotView
-variant="equipment" static :item="null"
+              variant="equipment" static :item="null"
               :icon="cost.icon ?? materialIcon(cost.id)" :label="cost.name"
-              :amount="pourHave !== null && cost.need > 0 ? Math.max(0, Math.round(pourHave)) : cost.have"
-/>
+            />
           </div>
+          <b>x{{ formatNumber(pourHave !== null && cost.need > 0 ? Math.max(0, Math.round(pourHave)) : cost.have) }}</b>
         </div>
         <p v-if="!unit.costs.length" class="body-empty-row">{{ t('body.noCost') }}</p>
       </div>
       <!-- Submit states = the Trang Bi machine (owner ruling 2026-10-09):
            dark filter-art pill while locked, gold selected art once the
            unit is investable. -->
-      <EquipmentArtButton v-if="unit.actionLabel && !model.chapterComplete" filter-art class="body-invest" :gold="!unit.actionDisabled" :disabled="unit.actionDisabled" @click="emit('invest')">{{ unit.actionLabel }}</EquipmentArtButton>
+      <div v-if="unit.actionLabel && !model.chapterComplete" class="body-invest-tooltip" v-tooltip="unit.actionDisabled ? {title:unit.actionLabel,description:[...unit.gates,...unit.costs.filter(cost=>!cost.met).map(cost=>`${cost.name}: ${t('architecture.costAmount',{owned:cost.have,required:cost.need})}`)].join('\n')} : undefined">
+        <GameActionButton class="body-invest" :gold="!unit.actionDisabled" :disabled="unit.actionDisabled" @click="emit('invest')">{{ unit.actionLabel }}</GameActionButton>
+      </div>
     </template>
     <template v-else>
       <p class="body-empty-row">{{ model.lockHint ?? t('body.empty') }}</p>
@@ -394,12 +398,13 @@ variant="equipment" static :item="null"
 /* Same Cuong Hoa submit (owner ruling 2026-10-09): fixed-width
    filter-art pill, the 1225/324 ratio grows the frame with the
    text - smaller size + centered per his live review. */
-.body-invest { width:220px; flex:none; font-size:18px; padding:0; margin:8px auto 0; }
+.body-invest.game-action-button { width:255px; height:calc(255px * 324 / 1225); min-height:48px; flex:none; font-size:24px; padding:8px 29px; margin:8px auto 0; }
+.body-invest-tooltip { flex:none; align-self:center; }
 .body-notice { position:absolute; left:14px; right:14px; bottom:6px; margin:0; font-size:11px; color:#c9a95f; min-height:14px; text-align:center; }
 /* Pour stream motes (owner ruling 2026-10-09/10) - warm-gold glowing dots
    teleported to document.body so the card clip-path cannot clip the arc.
    The layer is fixed to the viewport and ignores pointer input. */
 /* z-index via OVERLAY_LAYERS.bodyPour (inline style). */
-.body-pour-layer { position:fixed; left:0; top:0; pointer-events:none; }
+.body-pour-layer { position:fixed; inset:0; pointer-events:none; }
 .body-pour-mote { position:absolute; left:0; top:0; border-radius:50%; background:#eec76c; box-shadow:0 0 5px 2px #eec76c, 0 0 12px 4px #eec76c55; will-change:transform,opacity; }
 </style>

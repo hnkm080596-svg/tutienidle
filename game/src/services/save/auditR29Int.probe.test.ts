@@ -201,7 +201,7 @@ describe('auditR29 INT probe - tick/settle nowMs guard parity (P)', () => {
 
   it('P3 legacy decompose deadlines are inert after restore (r29-INT-1 superseded)', () => {
     const bag = new MaterialBag()
-    const ore = materials.find((m) => m.id === 'mortal_ore_decade')!
+    const ore = materials.find((m) => m.id === 'material_spirit_ore_decade')!
     bag.add(ore, 100_000)
     const oreAmountBefore = bag.get(ore.id)?.amount
     const system = new DecomposeSystem(bag)

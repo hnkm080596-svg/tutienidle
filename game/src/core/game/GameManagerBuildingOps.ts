@@ -115,7 +115,7 @@ export class GameManagerBuildingOps {
   // Linh Tuyen (producesMaterialId) - thu hoach do vao MaterialBag nhu
   // material binh thuong (plan Workstream F); claim() tra amount +
   // materialId, GameManager resolve template va cong bag.
-  collectBuilding(instanceId: string, player: PlayerData, currentTime = this.nowSeconds()): number {
+  collectBuilding(instanceId: string, player: PlayerData, currentTime = this.nowSeconds(), cycles = false): number {
     // Pre-check registry TRUOC khi claim reset moc thoi gian (review
     // 2026-08-28): neu materialId khong resolve duoc ma van claim, san
     // luong bi mat trang (moc da reset, bag khong duoc cong).
@@ -131,7 +131,7 @@ export class GameManagerBuildingOps {
       return 0
     }
 
-    const claimed = this.deps.buildingSystem.claim(
+    const claimed = cycles ? this.deps.buildingSystem.claimCycles(instanceId, this.deps.buildingRegistry, this.deps.buildingManager, currentTime, player.realmId) : this.deps.buildingSystem.claim(
       instanceId,
       this.deps.buildingRegistry,
       this.deps.buildingManager,
@@ -154,6 +154,22 @@ export class GameManagerBuildingOps {
     }
 
     return claimed.amount
+  }
+
+  settleAutomaticProduction(player: PlayerData): void {
+    for (const definition of this.deps.productionSystem.getSiteDefinitions()) {
+      this.deps.productionSystem.setAutoRestart(definition.siteId, true)
+    }
+    const vein = this.deps.buildingManager.getByBuildingId('gathering_outpost')
+    if (vein) this.collectBuilding(vein.instanceId, player, this.nowSeconds(), true)
+  }
+
+  getAutomaticProductionView(instanceId: string, currentTime = this.nowSeconds()): { seconds: number; amount: number; progress: number } | undefined {
+    const instance = this.deps.buildingManager.get(instanceId)
+    const player = this.deps.getActivePlayer()
+    if (!instance || !player) return undefined
+    const seconds = this.deps.buildingSystem.getCycleSeconds(instance, player.realmId)
+    return { seconds, amount: this.getBuildingRatePerMinute(instanceId) * seconds / 60, progress: Math.min(1, Math.max(0, (currentTime - instance.lastCollectedAt) / seconds)) }
   }
 
   getBuildingStoredAmount(instanceId: string, currentTime = this.nowSeconds()): number {
@@ -234,6 +250,7 @@ export class GameManagerBuildingOps {
         cycleRemainingMs: view.cycleRemainingMs,
 
         cycleTotalMs: view.cycleTotalMs,
+        baseOutputPerSecond: view.baseOutputPerSecond,
       }
     })
   }

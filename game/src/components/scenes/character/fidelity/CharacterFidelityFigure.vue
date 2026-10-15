@@ -70,5 +70,5 @@ const figureScale = computed(() => {
    scale(1/extent.h) makes every profile's figure fill the zone height like
    mortal's full-height art. A width clamp would letterbox wide canvases
    (phap_tu's square cells) and shrink the figure below the zone. */
-.cf-figure__sprite { height: 100%; width: auto; transform: translateX(-14px) scale(var(--cf-figure-scale, 1)); transform-origin: 50% 100%; filter: drop-shadow(0 8px 9px #4a3c3040); }
+.cf-figure__sprite { height: 100%; width: auto; transform: translate(-14px, -18px) scale(var(--cf-figure-scale, 1)); transform-origin: 50% 100%; filter: drop-shadow(0 8px 9px #4a3c3040); }
 </style>

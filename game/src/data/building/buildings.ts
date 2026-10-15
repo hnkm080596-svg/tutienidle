@@ -3,6 +3,7 @@ import type { BuildingLevelDef } from '@/core/building/BuildingLevelEffect'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { REALM_TIERS, getRealmIdForTier } from '@/core/realm/RealmTierMap'
 import { buildProfessionMaterialId } from '@/core/profession/ProfessionMaterial'
+import { productionUpgradeStoneCost } from '@/core/economy/EconomyRealmPace'
 
 // gp123 6E (task C2): thang tuoi go/khoang theo tier - dung truc tuoi
 // thong nhat (decade..thuong_co) thay hau to pham hoang..tien cu.
@@ -25,11 +26,24 @@ function extendCosts(firstThree: Building['upgradeCost'], baseAmount: number): B
     const age = AGE_BY_TIER[tier]!
     const amount = Math.round(baseAmount * Math.pow(1.65, tier - 3))
     return [
-      { materialId: buildProfessionMaterialId('wood', realmId, age), amount },
-      { materialId: buildProfessionMaterialId('ore', realmId, age), amount: Math.max(1, Math.round(amount / 2)) },
+      { materialId: buildProfessionMaterialId('wood', age), amount },
+      { materialId: buildProfessionMaterialId('ore', age), amount: Math.max(1, Math.round(amount / 2)) },
     ]
   })
   return [...firstThree, ...future]
+}
+
+function craftingUpgradeCosts(costs: Building['upgradeCost'], addOre = false): Building['upgradeCost'] {
+  return costs.map((materials, index) => {
+    const realmId = REALM_TIERS[index]!
+    // Row zero is unused; row one is the first live upgrade quote.
+    const result = [...materials, { materialId: SPIRIT_STONE_MATERIAL_ID, amount: productionUpgradeStoneCost(Math.max(0, index - 1), realmId) }]
+    const wood = materials.find(cost => cost.materialId.includes('_wood_'))
+    if (addOre && wood && !materials.some(cost => cost.materialId.includes('_ore_'))) {
+      result.push({ materialId: wood.materialId.replace('_wood_', '_ore_'), amount: Math.ceil(wood.amount / 2) })
+    }
+    return result
+  })
 }
 
 // W5 (2026-08-27) - repurpose building levels:
@@ -96,8 +110,8 @@ export const buildings: Building[] = [
 
     upgradeCost: extendCosts([
       [],
-      [{ materialId: 'qi_refining_wood_decade', amount: 4 }],
-      [{ materialId: 'foundation_establishment_wood_decade', amount: 6 }],
+      [{ materialId: 'material_spirit_wood_decade', amount: 4 }],
+      [{ materialId: 'material_spirit_wood_decade', amount: 6 }],
     ], 4),
   },
 
@@ -122,14 +136,14 @@ export const buildings: Building[] = [
 
     // Ngay 1-2 (Equipment) - gan nhu mien phi, khong duoc chan nhip do
     // trang bi dau game.
-    upgradeCost: extendCosts([
-      [{ materialId: 'mortal_wood_decade', amount: 3 }],
+    upgradeCost: craftingUpgradeCosts(extendCosts([
+      [{ materialId: 'material_spirit_wood_decade', amount: 3 }],
       [
-        { materialId: 'qi_refining_wood_decade', amount: 6 },
-        { materialId: 'qi_refining_ore_decade', amount: 3 },
+        { materialId: 'material_spirit_wood_decade', amount: 6 },
+        { materialId: 'material_spirit_ore_decade', amount: 3 },
       ],
-      [{ materialId: 'foundation_establishment_wood_decade', amount: 4 }],
-    ], 5),
+      [{ materialId: 'material_spirit_wood_decade', amount: 4 }],
+    ], 5)),
 
     levels: equipmentHallLevels(),
   },
@@ -154,14 +168,14 @@ export const buildings: Building[] = [
 
     // Ngay 3-5 (Dan) - cao hon Khi Duong mot chut nhung van re hon nhieu
     // lan chi phi luyen dan.
-    upgradeCost: extendCosts([
+    upgradeCost: craftingUpgradeCosts(extendCosts([
       [
-        { materialId: 'mortal_wood_decade', amount: 5 },
-        { materialId: 'mortal_ore_decade', amount: 2 },
+        { materialId: 'material_spirit_wood_decade', amount: 5 },
+        { materialId: 'material_spirit_ore_decade', amount: 2 },
       ],
-      [{ materialId: 'qi_refining_wood_decade', amount: 5 }],
-      [{ materialId: 'foundation_establishment_wood_decade', amount: 9 }],
-    ], 7),
+      [{ materialId: 'material_spirit_wood_decade', amount: 5 }],
+      [{ materialId: 'material_spirit_wood_decade', amount: 9 }],
+    ], 7), true),
 
     levels: pillRoomLevels(),
   },
@@ -184,7 +198,7 @@ export const buildings: Building[] = [
 
     functionType: 'stage_select',
 
-    upgradeCost: [[{ materialId: 'mortal_wood_decade', amount: 3 }]],
+    upgradeCost: [[{ materialId: 'material_spirit_wood_decade', amount: 3 }]],
   },
 
   // Ky Bao Cac - DORMANT registry entry (2026-10-11 ruling: selling is
@@ -213,7 +227,7 @@ export const buildings: Building[] = [
 
     // Art-only landmark; commerce is retired by the current ruling.
 
-    upgradeCost: [[{ materialId: 'mortal_wood_decade', amount: 3 }]],
+    upgradeCost: [[{ materialId: 'material_spirit_wood_decade', amount: 3 }]],
   },
 
   // Art-only Chieu Hien Quan landmark.

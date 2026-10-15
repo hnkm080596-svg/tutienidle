@@ -72,7 +72,7 @@ function select(strategy: CombatAiStrategy) {
         :key="strategy"
         class="combat-ai-panel__option"
         :class="{ 'is-selected': current === strategy }"
-        :title="strategyHint(strategy)"
+        v-tooltip="{ title: strategyLabel(strategy), description: strategyHint(strategy) }"
       >
         <input
           type="radio"

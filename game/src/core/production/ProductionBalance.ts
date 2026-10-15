@@ -27,6 +27,13 @@ export const CYCLE_BASE_SECONDS_BY_REALM: Record<string, number> = {
 /** Speed multiplier theo level nguon (sec4.2) - index 0 = level 1. */
 export const SITE_SPEED_MULTIPLIERS: readonly number[] = [1.0, 1.15, 1.35, 1.6, 2.0, 2.5, 3.1, 3.8, 4.6]
 
+// Age-only resources retain the mortal acquisition pace at every realm.
+export const RESOURCE_CYCLE_BASE_SECONDS = 100
+
+export function productionBaseSeconds(kind: ProductionSiteKind, realmId: string): number {
+  return kind === 'grotto' ? CYCLE_BASE_SECONDS_BY_REALM[realmId] ?? 0 : RESOURCE_CYCLE_BASE_SECONDS
+}
+
 export function getSiteSpeedMultiplier(level: number): number {
   return SITE_SPEED_MULTIPLIERS[Math.min(Math.max(level, 1), SITE_SPEED_MULTIPLIERS.length) - 1] ?? 1
 }
@@ -177,7 +184,7 @@ const GROTTO_HERB_AMOUNT_RECORD: Readonly<Record<HerbAge, number>> = {
 const RATE_TABLE_REALM_IDS: readonly string[] = Object.keys(CYCLE_BASE_SECONDS_BY_REALM)
 
 function buildRateRow(kind: ProductionSiteKind, collectionRealmId: string): ProductionRateRow {
-  const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[collectionRealmId]
+  const baseSeconds = productionBaseSeconds(kind, collectionRealmId)
 
   if (!baseSeconds) {
     throw new Error(`ProductionBalance: CYCLE_BASE_SECONDS_BY_REALM thiếu realm ${collectionRealmId}`)
@@ -200,7 +207,7 @@ function buildRateRow(kind: ProductionSiteKind, collectionRealmId: string): Prod
     collectionRealmId,
     cycleSeconds: computeCycleSeconds(baseSeconds, 1),
     yieldMaterialIdPattern:
-      kind === 'forest' ? `${collectionRealmId}_wood_<age>` : `${collectionRealmId}_ore_<age>`,
+      kind === 'forest' ? 'material_spirit_wood_<age>' : 'material_spirit_ore_<age>',
     yieldAmountByAge: MATERIAL_AGE_AMOUNTS,
     ageRollWeights: MATERIAL_AGE_WEIGHTS,
     workerModel: 'manual_or_worker_slots',

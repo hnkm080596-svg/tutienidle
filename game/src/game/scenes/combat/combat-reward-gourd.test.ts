@@ -1,65 +1,28 @@
-// @vitest-environment jsdom
-//
-// Spec C sec3.1 - the reward gourd's source point comes from the same
-// bodyAnchorScreen() rule as everything else, not a player-only anchor plus
-// a hardcoded enemy fallback. Harness pattern matches
-// CombatScene.bodyAnchors.test.ts.
-import { describe, expect, it } from 'vitest'
-import { createTestScene } from './combatTestHarness'
-import { PLAYER_ID } from './combatConstants'
+import { expect, it, vi } from 'vitest'
+vi.mock('phaser', () => ({ default: { BlendModes: { ADD: 1 }, Math: { Between: () => 0, FloatBetween: (a: number, b: number) => (a+b)/2 } } }))
 import { CombatRewardGourd } from './combat-reward-gourd'
-import type { CombatScene } from '../CombatScene'
-
-function sceneWith(id: string, row: number) {
-  const scene = createTestScene('bare')
-
-  scene.sprites = new Map()
-  scene.renderMode = 'perspective' // isPerspective getter reads from renderMode.
-  scene.projection = {
-    rows: 10,
-    columns: 16,
-    gridToScreen: () => ({ x: 300, y: 500, scale: 1 }),
-    cellSizeAt: () => ({ width: 94.49, height: 41.4 }),
-    footprintPolygon: () => [],
+it('reward motes follow the live player and do not schedule a gourd pulse', () => {
+  let target = { x: 200, y: 300 }
+  const position = vi.fn()
+  const mote = {
+    setBlendMode() { return this }, setDepth() { return this }, setAlpha() { return this },
+    setPosition: position, setRotation() { return this }, setScale() { return this }, destroy() {},
   }
-
-  scene.sprites.set(id, {
-    kind: 'sprite',
-    rect: { x: 300, y: 500 },
-    row,
-    footY: 500,
-    columnFloat: 8,
-    personWidth: 40,
-    personHeight: 120,
-    boost: { value: 1 },
-  })
-
-  return scene
-}
-
-describe('CombatRewardGourd — reward source (Spec C §3.1)', () => {
-  it('player and enemy launch from the SAME rule, not two code paths', () => {
-    // The regression this pins: the gourd used the player's hand-authored
-    // `chest` for the player and a hardcoded "~40% of height" for everyone else,
-    // so a companion would have needed a third rule.
-    const scene = sceneWith(PLAYER_ID, 4)
-
-    scene.sprites.set('mortal_wild_boar_1', {
-      kind: 'sprite',
-      rect: { x: 300, y: 500 },
-      row: 4,
-      footY: 500,
-      columnFloat: 8,
-      personWidth: 40,
-      personHeight: 120,
-      boost: { value: 1 },
-    })
-
-    const gourd = new CombatRewardGourd(scene as unknown as CombatScene)
-
-    expect(gourd.resolveRewardSourcePoint(PLAYER_ID)).toEqual(
-      gourd.resolveRewardSourcePoint('mortal_wild_boar_1'),
-    )
-    expect(gourd.resolveRewardSourcePoint(PLAYER_ID)).toEqual({ x: 300, y: 440 })
-  })
+  const flights: Array<{ targets: { progress: number }; onUpdate?: () => void }> = []
+  const delayedCall = vi.fn()
+  const scene = {
+    bodyAnchorScreen: () => target,
+    resolveRewardSourcePoint: () => ({ x: 10, y: 20 }),
+    add: { ellipse: () => mote }, tweens: { add: (config: typeof flights[number]) => flights.push(config) },
+    time: { delayedCall },
+  }
+  const stream = new CombatRewardGourd(scene as never)
+  stream.onRewardParticle({ sourceId: 'enemy', kind: 'item', color: 0xffffff } as never)
+  expect(flights.length).toBeGreaterThan(0)
+  target = { x: 400, y: 500 }
+  const flight = flights[0]!
+  flight.targets.progress = 1
+  flight.onUpdate!()
+  expect(position).toHaveBeenLastCalledWith(400, 500)
+  expect(delayedCall).not.toHaveBeenCalled()
 })

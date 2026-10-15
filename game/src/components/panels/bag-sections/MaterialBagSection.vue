@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
-import BagChipSelect from './BagChipSelect.vue'
+import GameDropdownButton from '@/components/common/GameDropdownButton.vue'
 import type { BagSortOption } from './BagPaginationControls.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useUiStore, type MaterialSortMode } from '@/stores/ui'
@@ -357,12 +357,12 @@ watch(activeGroup, () => resetPage())
            the equipment bag verbatim (filter + sort + pager + count).
            searchQuery stays wired empty so the filter pipeline keeps
            its contract without a UI affordance. -->
-      <BagChipSelect
+      <GameDropdownButton
         v-model="activeGroup"
         :options="GROUP_CHIPS"
         :label="t('panels.bag.filterAria')"
       />
-      <BagChipSelect
+      <GameDropdownButton
         :model-value="ui.bagSorts[props.sortKey].mode"
         :options="SORT_CHIP_OPTIONS"
         :label="t('panels.bag.sort.button')"
@@ -421,6 +421,7 @@ watch(activeGroup, () => resetPage())
         :rarity-rank="cell?.rarityRank"
         :rarity-rank-scale="cell?.rarityRankScale"
         :name-segments="cell?.nameSegments"
+        :state="cell?.state"
         :style="cell?.accentVar ? { '--material-accent': cell.accentVar } : undefined"
         @click="cell && handleCellClick(cell.key)"
       />

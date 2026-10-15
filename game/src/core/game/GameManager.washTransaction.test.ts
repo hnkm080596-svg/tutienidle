@@ -58,7 +58,7 @@ describe('GameManager wash transaction', () => {
 
     const essence = manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID)
     const spiritStone = manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID)
-    const oreId = 'qi_refining_ore_century'
+    const oreId = 'material_spirit_ore_century'
     const ore = manager.materialRegistry.get(oreId)
     manager.materialBag.add(essence, 9)
     manager.materialBag.add(manager.materialRegistry.get(BUI_GO_ID), 9)

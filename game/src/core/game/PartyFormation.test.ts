@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
-import { HERO_LANE_INDEX, HERO_COLUMN } from '../battle/BattleLane'
+import { localCellToAbsolute } from './FormationPlacement'
 
 describe('DEFAULT_PARTY_FORMATION', () => {
-  it('is exactly one slot: the player at the current fixed hero position', () => {
+  it('places the player at the center standing slot, matching formation placement', () => {
+    const center = localCellToAbsolute({ row: 1, column: 1 })
     expect(DEFAULT_PARTY_FORMATION).toEqual([
-      { combatantId: 'player', row: HERO_LANE_INDEX, column: HERO_COLUMN },
+      { combatantId: 'player', row: center.row, column: center.column },
     ])
+    expect(center).toEqual({ row: 5, column: 2 })
   })
 })

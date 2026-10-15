@@ -12,7 +12,7 @@ export type SkillVfxGraphics = Pick<Phaser.GameObjects.Graphics,
 // 'sheet' (manifest frame-window, direct sprites) cue primitives.
 export type SkillVfxSprite = Pick<Phaser.GameObjects.Image,
   'setTexture' | 'setFrame' | 'setPosition' | 'setDepth' | 'setScale' | 'setAlpha' | 'setVisible' | 'setDisplaySize' |
-  'setOrigin' | 'destroy' | 'width' | 'height' | 'active'>
+  'setOrigin' | 'clearTint' | 'setTint' | 'setTintMode' | 'destroy' | 'width' | 'height' | 'active'>
 export interface SkillVfxSurface {
   graphics(): SkillVfxGraphics
   anchor(fact: ActorAnchorFact): Point | undefined
@@ -150,11 +150,13 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
         this.surface.cameraImpulse?.(cue.durationMs, cue.intensity ?? 0.005)
       return quietHandle
     }
-    const successful = group?.outcomes.filter(outcome =>
-      outcome.kind === 'hit' ? outcome.landed :
+    // A miss still has a visual contact point. Gameplay and camera feedback
+    // continue to consume landed, while the authored skill effect remains.
+    const visualOutcomes = group?.outcomes.filter(outcome =>
+      outcome.kind === 'hit' ? true :
       outcome.kind === 'heal' ? outcome.healed > 0 :
       outcome.kind === 'status' ? outcome.applied === true || outcome.removed === true : false) ?? []
-    const hitTargets = successful.flatMap(outcome => 'target' in outcome && outcome.target ? [outcome.target] : [])
+    const hitTargets = visualOutcomes.flatMap(outcome => 'target' in outcome && outcome.target ? [outcome.target] : [])
     const targets = cast?.declaredTargets ?? hitTargets
     const returning = cue.primitive === 'trajectory' && cue.recall
     const returnTargets = group?.outcomes.flatMap(outcome => outcome.kind === 'hit' ? [outcome.target] : []) ?? []
@@ -250,11 +252,14 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
         break
       }
       if (!lease) break
+      lease.value.clearTint()
+      // Phaser 4 FILL mode (1) replaces RGB while retaining authored alpha.
+      if (spec.tintFill !== undefined) lease.value.setTint(spec.tintFill).setTintMode(1)
       lease.value.setFrame('frame_0')
         .setPosition(point.x, point.y)
         .setDepth(this.surface.uprightDepth(fact))
         .setScale(spec.scale ?? 1)
-        .setAlpha(1)
+        .setAlpha(spec.alpha ?? 1)
         .setVisible(true)
       entries.push({ lease })
     }
@@ -382,7 +387,34 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     const hold = cue.primitive === 'stroke' ? Math.min(25, cue.durationMs / 2) : 0
     const t = Math.max(0, Math.min(1, (elapsed - hold) / Math.max(1, cue.durationMs - hold)))
     const fade = 1 - t
-    if (cue.primitive === 'stroke') {
+    if (cue.shape === 'flame') {
+      const energy = cue.primitive === 'aura' ? t : fade
+      const radius = 9 + energy * 42
+      const tongues = this.reducedMotion ? 3 : Math.min(6, this.budget.sparks)
+      for (let i = 0; i < tongues; i++) {
+        const angle = i * Math.PI * 2 / tongues + t * 2
+        const x = point.x + Math.cos(angle) * radius * .65
+        const y = point.y + Math.sin(angle) * radius * .3
+        const height = radius * (1.7 + Math.sin(i * 2 + t * 12) * .35)
+        for (const layer of [{ width: .38, color, alpha: .12 }, { width: .22, color, alpha: .6 }, { width: .08, color: 0xc5f4ff, alpha: .85 }]) {
+          g.fillStyle(layer.color, layer.alpha * energy)
+          for (let segment = 0; segment < 5; segment++) {
+            const p = segment / 5
+            const next = (segment + 1) / 5
+            const ax = x + Math.sin(i + t * 9 + p * 4) * radius * .2 * p
+            const bx = x + Math.sin(i + t * 9 + next * 4) * radius * .2 * next
+            const aw = radius * layer.width * (1 - p)
+            const bw = radius * layer.width * (1 - next)
+            const ay = y - height * p
+            const by = y - height * next
+            g.fillTriangle(ax - aw, ay, ax + aw, ay, bx - bw, by)
+            g.fillTriangle(ax + aw, ay, bx + bw, by, bx - bw, by)
+          }
+        }
+      }
+      g.lineStyle(2, color, energy * .8)
+      g.strokeEllipse(point.x, point.y, radius * 1.8, radius * .65)
+    } else if (cue.primitive === 'stroke') {
       const angle = Math.atan2(point.y - origin.y, point.x - origin.x) - 0.22
       const dx = Math.cos(angle) * (32 + t * 20)
       const dy = Math.sin(angle) * (32 + t * 20)
@@ -391,10 +423,17 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
       g.lineStyle(2.5 * fade, 0xffffff, fade)
       g.lineBetween(point.x - dx, point.y - dy, point.x + dx * 1.5, point.y + dy * 1.5)
     } else if (cue.primitive === 'burst') {
+      if (cue.shape === 'explosion') {
+        const scale = cue.scale ?? 1
+        g.lineStyle(12 * fade, color, .6 * fade)
+        g.strokeEllipse(point.x, point.y, (12 + Math.sqrt(t) * 160) * scale, (12 + Math.sqrt(t) * 130) * scale)
+        g.lineStyle(4 * fade, color, fade)
+        g.strokeEllipse(point.x, point.y, (8 + t * 130) * scale, (8 + t * 110) * scale)
+      }
       const count = Math.min(cue.count ?? 12, this.budget.sparks)
       for (let i = 0; i < count; i++) {
         const angle = i * 2.399963229728653
-        const distance = 5 + (12 + i % 5 * 4) * t
+        const distance = (5 + (12 + i % 5 * 4) * t) * (cue.scale ?? 1)
         const x = point.x + Math.cos(angle) * distance
         const y = point.y + Math.sin(angle) * distance * 0.75
         g.lineStyle(i % 3 === 0 ? 2 : 1, i % 2 ? color : 0xffffff, fade)

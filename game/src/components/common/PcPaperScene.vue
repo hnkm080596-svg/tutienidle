@@ -1,16 +1,25 @@
 <script setup lang="ts">
 import '@/assets/pc-paper-scene.css'
+import GamePanel from './GamePanel.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { pcPaperControlStyles } from '@/presentation/assets/PcPaperControls'
 
-defineProps<{ title: string; subtitle?: string; navigation?: boolean }>()
+defineProps<{ title: string; subtitle?: string; navigation?: boolean; rail?: boolean }>()
 const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
 const titleCloud = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png')
 const controls = pcPaperControlStyles()
 </script>
 
 <template>
-  <div class="pc-paper-scene" :class="{ 'pc-paper-scene--navigation': navigation }" :style="{ backgroundImage: `url('${paper}')`, ...controls }">
+  <div class="pc-paper-scene" :class="{ 'pc-paper-scene--navigation': navigation, 'rail-panel-scene': rail }" :style="{ backgroundImage: rail ? 'none' : `url('${paper}')`, backgroundColor: rail ? 'transparent' : undefined, ...controls }">
+    <GamePanel v-if="rail" :title="title">
+      <div class="game-panel__stack">
+        <div class="game-panel__toolbar"><div class="game-panel__tabs"><slot name="tabs" /></div><slot name="actions" /></div>
+        <main class="game-panel__workspace"><slot /></main>
+        <footer v-if="$slots.footer"><slot name="footer" /></footer>
+      </div>
+    </GamePanel>
+    <template v-else>
     <div class="pc-paper-scene__frame" aria-hidden="true" />
     <aside v-if="navigation" class="pc-paper-scene__navigation"><slot name="navigation" /></aside>
     <header class="pc-paper-scene__header">
@@ -21,5 +30,6 @@ const controls = pcPaperControlStyles()
     <div class="pc-paper-scene__tabs"><slot name="tabs" /></div>
     <main class="pc-paper-scene__workspace"><slot /></main>
     <footer class="pc-paper-scene__footer"><slot name="footer" /></footer>
+    </template>
   </div>
 </template>

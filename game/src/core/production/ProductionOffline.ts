@@ -6,7 +6,7 @@ import type {
   ProductionSiteState,
 } from './ProductionTypes'
 import {
-  CYCLE_BASE_SECONDS_BY_REALM,
+  productionBaseSeconds,
   PRODUCTION_OFFLINE_CAP_SECONDS,
   computeCycleSeconds,
 } from './ProductionBalance'
@@ -87,7 +87,7 @@ function settleProductionCyclesOffline(
 
     const definition = deps.getSiteDefinition(state.siteId)
 
-    const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]
+    const baseSeconds = definition ? productionBaseSeconds(definition.kind, currentRealmId) : 0
 
     const cycleMs =
       definition && baseSeconds ? computeCycleSeconds(baseSeconds, state.level) * 1000 : 0

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_PLAYER_STANDING_POSITION } from './BattlefieldRegions'
 import {
   GRID_ROW_COUNT,
   GRID_COLUMN_COUNT,
@@ -9,9 +10,9 @@ import {
 } from './BattleLane'
 
 describe('BattleLane — grid 10×16 (Combat Grid Rework)', () => {
-  it('hero gate: cột cổng 1, hàng khởi đầu avatar giữa sân (4/10)', () => {
-    expect(HERO_COLUMN).toBe(1)
-    expect(HERO_LANE_INDEX).toBe(4)
+  it('presentation aliases share the center standing position with gameplay', () => {
+    expect(HERO_COLUMN).toBe(DEFAULT_PLAYER_STANDING_POSITION.column)
+    expect(HERO_LANE_INDEX).toBe(DEFAULT_PLAYER_STANDING_POSITION.row)
     expect(HERO_LANE_INDEX).toBeLessThan(GRID_ROW_COUNT)
   })
 

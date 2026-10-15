@@ -41,7 +41,7 @@ const TEMPLATE: Equipment = {
   grade: 1,
   maxEnhanceLevel: 10,
   mainStats: [{ stat: 'might', min: 10, max: 20 }],
-  enhanceCost: [{ materialId: 'qi_refining_ore_century', amount: 1 }],
+  enhanceCost: [{ materialId: 'material_spirit_ore_century', amount: 1 }],
 }
 
 const BUI_GO_MATERIAL = materials.find((material) => material.id === BUI_GO_ID)!

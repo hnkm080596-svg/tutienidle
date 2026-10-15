@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import GamePanel from '@/components/common/GamePanel.vue'
+import GameActionButton from '@/components/common/GameActionButton.vue'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
@@ -7,7 +9,6 @@ import SkillConstellationPanel from '@/components/panels/skill-constellation/Ski
 import SkillPaperTree from './SkillPaperTree.vue'
 import SkillPaperDetails from './SkillPaperDetails.vue'
 import { ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
-import { useMasterAccess } from '@/services/master/masterAccess'
 import type { SkillConstellationLayout } from '@/data/progression/SkillConstellationLayouts'
 import type { SkillUiNode, SkillUiEdge, SkillUiElement } from './skillUi'
 const props = withDefaults(
@@ -45,7 +46,6 @@ const emit = defineEmits<{ back: []; select: [id: string]; element: [id: string]
 const { t } = useI18n()
 // Minh ruling (2026-10-07): respec is a dev tool, not a shipped
 // feature - the button only exists for master accounts.
-const { isMaster } = useMasterAccess()
 const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
 const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 
@@ -55,9 +55,10 @@ const rootRef = ref<HTMLElement | null>(null)
 useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 <template>
-  <section ref="rootRef" class="skill-paper-scene" :aria-label="t('skill.title')" @click.self="emit('back')">
-    <div class="skill-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
-    <header class="skill-head"><div class="skill-head__title"><h1>{{ t('skill.title') }}</h1><img class="skill-divider" :src="titleDivider" alt=""></div><p>{{ identity }}</p></header>
+  <section ref="rootRef" class="rail-panel-scene skill-paper-scene" :aria-label="t('skill.title')" @click.self="emit('back')">
+    <GamePanel :title="t('skill.title')">
+    
+    
     <SkillConstellationPanel
       v-if="constellation"
       :layout="constellation"
@@ -71,16 +72,32 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
     <SkillPaperTree v-else :nodes="nodes" :edges="edges" :selected="selected?.id ?? ''" :size="graphSize" :fit="graphFit" :accent="constellationAccent" @select="emit('select', $event)" @activate="emit('upgrade', $event)" @extent="emit('extent', $event)" />
     <SkillPaperDetails :node="selected" :notice="notice" @upgrade="emit('upgrade', $event)" />
     <footer class="skill-foot">
-      <span class="skill-insight">{{ insightLabel }}</span>
-      <button v-if="isMaster" type="button" class="skill-respec" :disabled="respecDisabled" @click="emit('respec')">{{ t('panels.nodeTree.respec.button') }}</button>
+      <span class="skill-insight-chip" v-tooltip="{title:insightLabel,description:t('skill.insightTooltip')}" :style="{ '--insight-chip-frame': `url('${resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png')}')` }">
+        <img :src="resolveAssetUrl('/assets/currency/skill_insight.png')" alt="">
+        <strong>{{ insightLabel }}</strong>
+      </span>
+      <GameActionButton :disabled="respecDisabled" @click="emit('respec')">{{ t('panels.nodeTree.respec.resetPoints') }}</GameActionButton>
     </footer>
     <p v-if="preview" class="skill-preview-label">{{ t('skill.preview') }}</p>
+    </GamePanel>
   </section>
 </template>
 <style scoped>
-.skill-paper-scene { position:absolute; inset:0; pointer-events:auto; font-family:var(--font-display,Georgia,serif); color:#3c2f1e; line-height:1.3; }.skill-paper-scene :deep(*) { box-sizing:border-box; }.skill-sheet { position:absolute; left:345px; top:101px; width:1065px; height:608px; background-color:#f2e4c8; background-size:cover; background-position:center; border:3px double #b28a43; }
+.skill-paper-scene { position:absolute; inset:0;  font-family:var(--font-display,Georgia,serif); color:#3c2f1e; line-height:1.3; }.skill-paper-scene :deep(*) { box-sizing:border-box; }.skill-sheet { position:absolute; left:345px; top:101px; width:1065px; height:608px; background-color:#f2e4c8; background-size:cover; background-position:center; border:3px double #b28a43; }
 .skill-head { position:absolute; left:372px; top:123px; width:1011px; height:61px; border-bottom:0; display:flex; align-items:flex-start; justify-content:flex-start; padding-left:54px; background:linear-gradient(#b28a43,#b28a43) left bottom/64px 1px no-repeat, linear-gradient(#b28a43,#b28a43) right bottom/calc(100% - 448px) 1px no-repeat; } .skill-head__title{display:flex;flex-direction:column;align-items:flex-start}.skill-divider{width:388px;margin-top:0;object-fit:contain;opacity:.9;position:relative;top:-39px;left:8px;pointer-events:none}:is(#app, body) .skill-head h1 { margin:0; font-size:56px; }
 .skill-head p { position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:15px; color:#8a713c; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .skill-foot { position:absolute; left:375px; top:655px; width:600px; display:flex; align-items:center; gap:18px; }.skill-insight { font-size:15px; color:#5d4c2e; }.skill-respec { background:none; border:1px solid #a5834a; border-radius:5px; padding:4px 12px; color:#71572c; font:13px var(--font-display,Georgia,serif); cursor:pointer; }.skill-respec:hover:not(:disabled) { background:#e6d5a8; }.skill-respec:disabled { opacity:.45; cursor:default; }
 .skill-preview-label { position:absolute; left:560px; top:719px; margin:0; color:#7f6a42; font-size:10px; }
+
+/* Layout instances are relative to the owning panel content. */
+.skill-paper-scene :deep(.game-panel__content :is(.skill-sheet,.skill-head)) { display: none; }
+.skill-paper-scene :deep(.game-panel__content :is(.skill-paper-tree,.constellation-panel)) { left: 0; top: 12px; width: 59%; height: calc(100% - 54px); }
+.skill-paper-scene :deep(.game-panel__content .skill-detail-card) { left: auto; right: 0; top: 12px; width: 40%; height: calc(100% - 12px); }
+.skill-paper-scene :deep(.game-panel__content .skill-foot) { left: 0; top: auto; bottom: 0; width: 59%; }
+.skill-insight-chip { position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; width: max-content; height: 32px; padding: 0 10px; color: #f3dfb5; font: 700 14px/1 var(--pc-font-body, Georgia, serif); white-space: nowrap; }
+.skill-insight-chip img { width: 20px; height: 20px; object-fit: contain; }
+.skill-insight-chip strong { font: inherit; font-variant-numeric: tabular-nums; }
+.skill-insight-chip::before { content: ''; position: absolute; inset: 1px; z-index: -1; background: rgba(9,14,11,.88); clip-path: polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px); }
+.skill-insight-chip::after { content: ''; position: absolute; inset: 0; z-index: -1; border: 8px solid transparent; border-image: var(--insight-chip-frame) 21.4% 3.22% / 8px stretch; pointer-events: none; }
+.skill-paper-scene :deep(.game-panel__content .skill-foot) { justify-content: space-between; }
 </style>

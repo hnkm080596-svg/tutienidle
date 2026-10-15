@@ -18,7 +18,7 @@ import { useI18n } from 'vue-i18n'
 import SlotView from '@/components/common/SlotView.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
 import type { Skill } from '@/core/skill/Skill'
-import type { SlotPresentationState } from '@/components/common/SlotTypes'
+import type { SlotPresentationState, SlotVariant } from '@/components/common/SlotTypes'
 import type { TooltipContent } from '@/composables/useTooltip'
 
 const props = withDefaults(defineProps<{
@@ -33,6 +33,8 @@ const props = withDefaults(defineProps<{
   // Three-path design (2026-09-25) -- icon path tu iconKey manifest;
   // undefined/loi tai = SlotView monogram fallback.
   displayIcon?: string
+  variant?: SlotVariant
+  circleFrameSrc?: string
 
   // Thoi gian con lai/tong cua "vong phu" dang hien -- cooldown that
   // (policy cooldown/cast_time) hoac cadence Attack Speed (policy
@@ -57,6 +59,9 @@ const props = withDefaults(defineProps<{
 
   isUnreleased?: boolean
   isLocked?: boolean
+  hasSkill?: boolean
+  autoActive?: boolean
+  showCaption?: boolean
 
   // Slice 7 -- true = slot bam duoc LUC NAY (player paused turn + ready).
   isTappable?: boolean
@@ -71,6 +76,7 @@ const props = withDefaults(defineProps<{
   isUnreleased: false,
   isLocked: false,
   isTappable: false,
+  showCaption: true,
 })
 
 const emit = defineEmits<{ click: [] }>()
@@ -90,7 +96,7 @@ const slotState = computed<SlotPresentationState>(() => {
     return { availability: 'locked' }
   }
 
-  return { availability: 'available' }
+  return { availability: 'available', interaction: props.isCasting ? 'selected' : 'idle' }
 })
 
 const maskPercent = computed(() => {
@@ -134,6 +140,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
       'is-out-of-range': isOutOfRange,
       'is-unreleased': isUnreleased,
       'is-tappable': isTappable,
+      'is-auto-active': autoActive && !isLocked,
     }"
     :role="isTappable ? 'button' : undefined"
     :tabindex="isTappable ? 0 : undefined"
@@ -142,13 +149,25 @@ const tooltip = computed<TooltipContent | undefined>(() => {
     @keydown.space.prevent="onClick"
   >
     <SlotView
-      :item="skill ?? null"
+      static
+      :static-tooltip="!!tooltip"
+      :variant="variant ?? 'item'"
+      :circle-frame-src="circleFrameSrc"
+      :item="skill ?? (hasSkill ? { name: label } : null)"
       :icon="displayIcon"
       :label="label"
-      show-label
+      :show-label="variant !== 'circle'"
       :tooltip="tooltip"
       :state="slotState"
     />
+
+    <span v-if="variant === 'circle' && showCaption" class="combat-skill-slot__caption">{{ label }}</span>
+    <svg v-if="autoActive && !isLocked && variant === 'circle'" class="combat-skill-slot__orbit" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M2 50A48 48 0 0 1 50 2" fill="none" stroke="#cfe7ed" stroke-width=".5" opacity=".2" />
+      <path d="M50 2A48 48 0 0 1 84 16" fill="none" stroke="#dceef4" stroke-width="1" opacity=".6" />
+      <path d="M84 16A48 48 0 0 1 98 50" fill="none" stroke="#f3fbff" stroke-width="1.7" stroke-linecap="round" />
+      <circle cx="98" cy="50" r="1.3" fill="#fff" />
+    </svg>
 
     <div v-if="showMask" class="combat-skill-slot__mask" :style="{ height: `${maskPercent}%` }" />
 
@@ -182,6 +201,10 @@ const tooltip = computed<TooltipContent | undefined>(() => {
 .combat-skill-slot.is-tappable {
   cursor: pointer;
 }
+
+.combat-skill-slot__orbit { position: absolute; inset: 1px; width: calc(100% - 2px); aspect-ratio: 1; height: auto; bottom: auto; pointer-events: none; animation: combat-skill-orbit 2.4s linear infinite; }
+@keyframes combat-skill-orbit { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .combat-skill-slot__orbit { animation: none; } }
 
 .combat-skill-slot.is-tappable:hover {
   outline: 2px solid var(--jade);
@@ -273,4 +296,8 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   color: var(--crimson);
   font-weight: 700;
 }
+
+.combat-skill-slot:has(.combat-skill-slot__caption) { width: 88px; height: 88px; }
+.combat-skill-slot__caption { position: absolute; top: 91px; left: -12px; width: 112px; height: 23px; display: grid; place-items: center; color: #332719; font: 700 14px/1.1 var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 4; pointer-events: none; }
+.combat-skill-slot > :deep(.slot-view--circle) { display: block; width: 100%; height: 100%; aspect-ratio: 1; }
 </style>

@@ -23,7 +23,7 @@ const TEMPLATE: Equipment = {
   grade: 1,
   maxEnhanceLevel: 10,
   mainStats: [{ stat: 'might', min: 10, max: 20 }],
-  enhanceCost: [{ materialId: 'qi_refining_ore_century', amount: 1 }],
+  enhanceCost: [{ materialId: 'material_spirit_ore_century', amount: 1 }],
 }
 
 function setup() {
@@ -39,7 +39,7 @@ function setup() {
   for (const affix of affixes) {
     affixRegistry.register(affix)
   }
-  materialBag.add(materials.find((m) => m.id === 'qi_refining_ore_century')!, 100)
+  materialBag.add(materials.find((m) => m.id === 'material_spirit_ore_century')!, 100)
   materialBag.add(SPIRIT_STONE_MATERIAL, 1_000)
   materialBag.add(materials.find((m) => m.id === LUYEN_KHI_TINH_HOA_ID)!, 0)
 

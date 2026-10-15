@@ -4,8 +4,10 @@ import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
-import GameButton from '@/components/common/GameButton.vue'
+import GameCardTitle from '@/components/common/GameCardTitle.vue'
+import CombatControlButton from '@/components/scenes/combat/CombatControlButton.vue'
+import { getCombatPlaybackSpeed, setCombatPlaybackSpeed } from '@/presentation/combat/CombatPlaybackSpeed'
+
 
 // Combat UI Redesign muc 5 -- ten Dia Gioi/Man + tien do quai. UI audit
 // 2026-09-28: the muc-23 "no retreat" call predates the exit-confirm
@@ -25,6 +27,11 @@ const { t } = useI18n()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
 const ui = useUiStore()
+const playbackSpeed = ref(getCombatPlaybackSpeed())
+function togglePlaybackSpeed(): void {
+  playbackSpeed.value = playbackSpeed.value === 1 ? 2 : 1
+  setCombatPlaybackSpeed(playbackSpeed.value)
+}
 
 const { battle, isBattleFighting } = useTurnCombatManual()
 
@@ -135,11 +142,8 @@ onUnmounted(() => {
     <!-- Centered ornate plaque (mock): section-plaque chrome, zone over
          stage name. `__plaque` class kept on the frame wrapper. -->
     <div class="combat-top-bar__plaque">
-      <InkNineSlice chrome-id="section-plaque" layer="surface" />
-      <span class="combat-top-bar__plaque-text">
-        <span v-if="zoneName" class="combat-top-bar__zone">{{ zoneName }}</span>
-        <span class="combat-top-bar__title">{{ stage?.name ?? zoneName }}</span>
-      </span>
+      <GameCardTitle class="combat-top-bar__region-title" :label="zoneName" />
+      <span class="combat-top-bar__stage-label">{{ stage?.name ?? zoneName }}</span>
     </div>
 
     <div class="combat-top-bar__side">
@@ -148,39 +152,40 @@ onUnmounted(() => {
       </span>
       <span v-else-if="progress" class="combat-top-bar__progress">{{ progress.spawned }} / {{ progress.total }} {{ t('combat.overlay.topBar.enemiesSuffix') }}</span>
 
-      <label class="combat-top-bar__auto turn-combat-skill-bar__mode-toggle" :class="{ 'is-on': isManualMode }">
+      <div class="combat-top-bar__auto turn-combat-skill-bar__mode-toggle" :class="{ 'is-on': isManualMode }">
         <input
           type="checkbox"
-          class="combat-top-bar__auto-input"
+          class="combat-top-bar__auto-input" tabindex="-1" aria-hidden="true"
           :checked="isManualMode"
           @change="setManualMode(($event.target as HTMLInputElement).checked)"
         />
-        <span class="combat-top-bar__control">{{ t(isManualMode ? 'combat.overlay.topBar.manualMode' : 'combat.overlay.topBar.autoMode') }}</span>
-      </label>
+        <CombatControlButton class="combat-top-bar__mode" :class="{ 'is-auto-mode': !isManualMode }" @click="setManualMode(!isManualMode)"><svg v-if="!isManualMode" class="combat-auto-glow" viewBox="0 0 108 49" aria-hidden="true"><path d="M14 8H94L102 15V35L94 42H14L6 35V15Z" fill="none" stroke="#bfe8da" stroke-width="1" stroke-dasharray="35 250" /></svg>{{ t(isManualMode ? 'combat.overlay.topBar.manualMode' : 'combat.overlay.topBar.autoMode') }}</CombatControlButton>
+      </div>
 
-      <GameButton
-        variant="secondary"
-        shape="circle"
+      <CombatControlButton class="combat-top-bar__speed" :selected="playbackSpeed === 2" :aria-pressed="playbackSpeed === 2" :aria-label="t('combat.playbackSpeed', { speed: playbackSpeed })" @click="togglePlaybackSpeed">×{{ playbackSpeed }}</CombatControlButton>
+      <CombatControlButton
+
+
         class="combat-top-bar__pause"
         :aria-label="t(userPaused ? 'combat.overlay.topBar.resume' : 'combat.overlay.topBar.pause')"
         :aria-pressed="userPaused"
+        :selected="userPaused"
         @click="togglePause"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" class="combat-top-bar__pause-icon">
           <path v-if="userPaused" d="M8 5 19 12 8 19Z" />
           <path v-else d="M7 5h3v14H7zM14 5h3v14h-3z" />
         </svg>
-      </GameButton>
+      </CombatControlButton>
 
-      <button
+      <CombatControlButton
         v-if="canExit"
-        type="button"
         class="combat-top-bar__exit"
         :aria-label="t('combat.overlay.exitConfirm.exit')"
         @click="requestExit"
       >
         {{ t('combat.overlay.exitConfirm.exit') }}
-      </button>
+      </CombatControlButton>
     </div>
   </div>
 </template>
@@ -199,11 +204,9 @@ onUnmounted(() => {
   align-items: center;
   justify-content: flex-end;
   padding: 0 20px;
-  background: color-mix(in srgb, var(--ink-950) 70%, transparent);
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid color-mix(in srgb, var(--frame-outer) 55%, transparent);
+  background: transparent;
   font-family: var(--font-body);
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 /* Centered stage plaque (ui-combat reskin): section-plaque chrome, a
@@ -222,7 +225,7 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-.combat-top-bar__plaque > :not(.ink-nine-slice) {
+.combat-top-bar__plaque > .combat-top-bar__plaque-text {
   position: relative;
   z-index: 2;
 }
@@ -271,6 +274,9 @@ onUnmounted(() => {
 }
 
 .combat-top-bar__progress {
+  position: absolute;
+  right: 24px;
+  top: 62px;
   font-size: var(--text-sm);
   color: #e7d8ae;
 }
@@ -283,9 +289,8 @@ onUnmounted(() => {
 
 /* The utility cluster from the mock: flat gold-hairline buttons on a
    dark ink fill, serif display font. Shared by the auto toggle, pause
-   button (GameButton circle) and exit button. */
-.combat-top-bar__control,
-.combat-top-bar__exit {
+   button (CombatControlButton circle) and exit button. */
+.combat-top-bar__control {
   min-height: 32px;
   padding: 4px 12px;
   border: 1px solid #b69b58;
@@ -299,8 +304,7 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.combat-top-bar__control:hover,
-.combat-top-bar__exit:hover {
+.combat-top-bar__control:hover {
   color: #ffe8a4;
   border-color: #e4c673;
 }
@@ -350,4 +354,21 @@ onUnmounted(() => {
 .combat-top-bar__pause[aria-pressed='true'] {
   color: #ffe8a4;
 }
+.combat-top-bar__side { pointer-events: auto; }
+.combat-top-bar__plaque.game-card { padding: 0; }
+.combat-top-bar__mode.game-tab-button { height: 38px; min-width: 110px; }
+.combat-top-bar__exit.game-action-button { height: 38px; min-width: 100px; border: 0; background: transparent; padding: 0 12px; }
+.combat-top-bar__pause.game-action-button { height: 38px; width: 48px; padding: 0; }
+.combat-top-bar__plaque.combat-art-surface { left: 14px; top: 3px; transform: none; width: 390px; min-width: 0; height: 86px; padding: 0; }
+.combat-top-bar__zone { font-size: 23px; }
+.combat-top-bar__title { font-size: 16px; font-weight: 400; }
+.combat-top-bar__side { position: absolute; right: 18px; top: 14px; gap: 6px; }
+.combat-top-bar__mode.combat-control-button,.combat-top-bar__exit.combat-control-button { width: 110px; height: 50px; padding: 8px 12px; background-color: transparent; border: 0; }
+.combat-top-bar__pause.combat-control-button { width: 54px; height: 50px; }
+.combat-top-bar__progress,.combat-top-bar__trial { max-width: 145px; font-size: 13px; }
+.combat-top-bar__pending .combat-control-button { width: 64px; height: 50px; }
+.combat-top-bar__plaque { left: 14px; top: 12px; transform: none; width: 300px; height: 74px; min-width: 0; max-height: none; text-align: center; }
+.combat-top-bar__region-title.game-card-title { width: 300px; height: 44px; font-size: 23px; }
+.combat-top-bar__stage-label { display: block; margin-top: 4px; color: #e5d4af; font-size: 16px; }
+.combat-auto-glow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 0 2px #9ccfbd); } .combat-auto-glow path { animation: combat-auto-flow 3s linear infinite; } @keyframes combat-auto-flow { to { stroke-dashoffset: -285; } } @media (prefers-reduced-motion: reduce) { .combat-auto-glow path { animation: none; } }
 </style>

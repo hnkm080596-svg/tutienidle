@@ -185,7 +185,7 @@ describe('ProductionSystem - autonomous site cycles', () => {
 
     const cycle = system.getState('thanh_van_lam')!.productionCycles![0]!
     expect(cycle.collectionRealmId).toBe('qi_refining')
-    expect(cycle.completesAtMs - cycle.startedAtMs).toBe(300 * 1000)
+    expect(cycle.completesAtMs - cycle.startedAtMs).toBe(100 * 1000)
   })
 
   it('a due worker lane grants ONCE; the next tick refills the freed lane (idempotent, no double pay)', () => {
@@ -406,7 +406,7 @@ describe('Reward rolls — phân bố (sanity thống kê)', () => {
     for (let seed = 0; seed < 1000; seed++) {
       const cycle = {
         cycleId: `t${seed}`,
-        siteId: 'thanh_van_lam',
+        siteId: 'thanh_van_dong_thien',
         collectionRealmId: 'foundation_establishment',
         siteLevelAtStart: 1,
         rewardTableVersion: 1,
@@ -417,7 +417,7 @@ describe('Reward rolls — phân bố (sanity thống kê)', () => {
 
       for (const reward of system.rollRewards(cycle)) {
         // Go gio roll theo tuoi (6E C2) - dem MOI bien the Truc Co.
-        if (reward.materialId.startsWith('foundation_establishment_wood_')) {
+        if (reward.materialId.includes('_foundation_establishment_')) {
           highTierPicks += 1
         }
       }
@@ -752,5 +752,31 @@ describe('ProductionSystem - hidden grotto channels (m-f-body-hidden sec.4)', ()
     system.tick(1, bag, registry, 'mortal')
 
     expect(bagAmount(bag, CHANNEL_MATERIAL)).toBe(0)
+  })
+})
+
+
+describe('age-only production resources', () => {
+  it('uses identical deadlines, rewards and rates regardless of collection realm', () => {
+    for (const siteId of ['thanh_van_lam', 'thanh_van_quang']) {
+      const reference = createSystem().rollRewards({ cycleId: 'reference', siteId, collectionRealmId: 'mortal', siteLevelAtStart: 1, rewardTableVersion: 1, rollSeed: 314159, startedAtMs: 1_000, completesAtMs: 101_000 })
+      for (const realmId of ['mortal', 'qi_refining', 'foundation_establishment']) {
+        const { bag, registry } = createBag()
+        const system = createSystem()
+        system.setAutoRestart(siteId, true)
+        system.tick(1_000, bag, registry, realmId, () => .25)
+        const cycle = system.getState(siteId)!.productionCycles![0]!
+        expect(cycle.completesAtMs - cycle.startedAtMs).toBe(100_000)
+        expect(system.rollRewards({ ...cycle, rollSeed: 314159 })).toEqual(reference)
+        expect(system.getSiteView(siteId, 1_000)!.baseOutputPerSecond).toEqual({ min: .01, max: .03 })
+        const offline = createSystem()
+        const offlineBag = new MaterialBag()
+        offline.setAutoRestart(siteId, true)
+        expect(offline.settleOffline(offlineBag, registry, realmId, 101_000, { offlineSinceMs: 1_000, rng: () => .25 })).toBe(1)
+        system.tick(101_000, bag, registry, realmId, () => .25)
+        expect(offlineBag.getAll()).toEqual(bag.getAll())
+        expect(bag.getAll().every(stack => stack.material.id.startsWith('material_spirit_'))).toBe(true)
+      }
+    }
   })
 })

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import GameCard from "@/components/common/GameCard.vue"
+import GameTabButton from '@/components/common/GameTabButton.vue'
 // Scene 12 (Trang Bi / Khi Duong) production adapter -- mounts the real
 // equipment surfaces inside the approved fidelity composition:
 //   doll slot      -> EquipmentPaperdollStage (canonical socket select)
@@ -43,8 +45,6 @@ import DissolveTab from '@/components/panels/equipment-hall/DissolveTab.vue'
 const cardArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-tab-brush-v1.png')
 const dividerBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png')
-const secondaryButtonArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png')
-const primaryButtonArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-primary-v1.png')
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -179,22 +179,21 @@ const summaryRows = computed(() => {
       <!-- Scene-level tab strip per the Codex preview: under the
            heading, above the doll column (left region). -->
       <template #tabs>
-        <nav class="equipment-tabs" :aria-label="t('equipment.title')" :style="{ '--equipment-tab-brush': `url('${tabBrush}')`, '--equipment-btn-secondary': `url('${secondaryButtonArt}')`, '--equipment-btn-primary': `url('${primaryButtonArt}')` }">
-          <button
+        <nav class="equipment-tabs" :aria-label="t('equipment.title')">
+          <GameTabButton
             v-for="mode in workspaceModes"
             :key="mode.id"
-            :aria-pressed="activeWorkspace === mode.id"
+            :selected="activeWorkspace === mode.id"
             :disabled="mode.locked"
             @click="selectWorkspace(mode.id)"
           >
             <span class="nav-label">{{ mode.label }}</span>
-            <img v-if="activeWorkspace === mode.id" :src="dividerBrush" alt="" />
-          </button>
+          </GameTabButton>
         </nav>
       </template>
 
       <template #workspace>
-        <section
+        <GameCard as="section"
           class="equipment-workspace"
           :style="{ '--equipment-card-art': `url('${cardArt}')`, '--equipment-tab-brush': `url('${tabBrush}')`, '--equipment-divider': `url('${dividerBrush}')` }"
           :aria-label="t('equipment.title')"
@@ -212,7 +211,7 @@ const summaryRows = computed(() => {
             <RefineTab v-else-if="activeWorkspace === 'refine'" />
             <DissolveTab v-else-if="activeWorkspace === 'dissolve'" />
           </div>
-        </section>
+        </GameCard>
       </template>
 
     </EquipmentFidelityScene>
@@ -242,16 +241,9 @@ const summaryRows = computed(() => {
   top: 215px;
   width: 642px;
   height: 476px;
-  padding: 14px 16px;
   /* Nine-slice like the preview's EquipmentArtCard: corners preserved,
      edges stretch, center fills - replaces the background stretch that
      distorted the card corners (owner ruling: backdrop giong preview). */
-  border: 15px solid transparent;
-  border-image: var(--equipment-card-art) 160 / 15px stretch;
-  clip-path: inset(5.1px 2.1px 5.7px 2.2px round 6px);
-  background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;
-  
-  color: #f3e4c4;
   display: flex;
   flex-direction: column;
 }
@@ -269,64 +261,7 @@ const summaryRows = computed(() => {
   align-items: center;
   gap: 12px;
 }
-.equipment-tabs button {
-  position: relative;
-  isolation: isolate;
-  flex: 1;
-  min-height: 33px;
-  padding: 3px 12px 5px;
-  border: 0;
-  color: #f4e4c0;
-  background: transparent;
-  font: 700 19px var(--pc-font-body, var(--font-display, Georgia, serif));
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-/* Auth "Bat Dau Hanh Trinh" secondary-button art on every tab: the dark
-   parchment pill mounts as a nine-slice ::before so the label sits on
-   it; the active tab keeps the divider brush under it. */
-.equipment-tabs button::before {
-  content: '';
-  position: absolute;
-  inset: 0 -2px;
-  z-index: -1;
-  border: 9px solid transparent;
-  border-image: var(--equipment-btn-secondary) var(--pc-button-slice) stretch;
-  pointer-events: none;
-}
-.equipment-tabs button > img {
-  position: absolute;
-  left: 0;
-  bottom: -3px;
-  width: 100%;
-  height: 12px;
-  object-fit: contain;
-  pointer-events: none;
-}
-.equipment-tabs button[aria-pressed='true'] {
-  color: #2f2415;
-  text-shadow: 0 1px #fff7;
-}
-.equipment-tabs button[aria-pressed='true']::before {
-  border-image-source: var(--equipment-btn-primary);
-}
-.equipment-tabs button:disabled {
-  cursor: default;
-  opacity: 0.42;
-}
-.equipment-tabs button:not(:disabled):hover {
-  color: #fff3d6;
-}
-.equipment-tabs button:not(:disabled):hover::before {
-  filter: brightness(1.1);
-}
-.equipment-tabs button[aria-pressed='true']:not(:disabled):hover {
-  color: #1d1408;
-}
-.equipment-tabs button[aria-pressed='true']:not(:disabled):hover::before {
-  filter: brightness(1.06);
-}
+.equipment-tabs > .game-tab-button { flex: 1; min-width: 0; }
 .equipment-workspace__divider {
   position: relative;
   height: 21px;

@@ -2,9 +2,10 @@
 // Scene 16/17 audio section (ref's Am Thanh - CORRECTED to the real
 // store: on/off + master + per-channel volumes + reduced shake; ref's
 // spatial-audio/combat-ducking toggles are INVALID).
-import { computed } from 'vue'
+import { reducedMotionSetting, setReducedMotionSetting } from '@/presentation/motionPreference'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Chip from '@/components/common/primitives/Chip.vue'
+import GameTabButton from '@/components/common/GameTabButton.vue'
 import { useAudioStore } from '@/stores/audio'
 import { hkChromeUrl } from '@/ui/huyenKimChrome'
 import SettingsSectionFrame from './SettingsSectionFrame.vue'
@@ -16,6 +17,8 @@ const AUDIO_CHANNELS = [
   { field: 'uiVolume', channel: 'ui', labelKey: 'uiVolume' },
 ] as const
 
+const reducedMotion = ref(reducedMotionSetting())
+function toggleMotion() { reducedMotion.value = !reducedMotion.value; setReducedMotionSetting(reducedMotion.value) }
 const audio = useAudioStore()
 const { t } = useI18n()
 
@@ -84,15 +87,18 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
     </div>
 
     <div class="settings-panel__audio-row">
-      <Chip
+      <GameTabButton
         class="settings-panel__audio-toggle"
-        :active="audio.reducedShake"
+        :selected="audio.reducedShake"
         :aria-pressed="audio.reducedShake"
         data-testid="settings-reduced-shake"
         @click="audio.setReducedShake(!audio.reducedShake)"
       >
         {{ t('panels.settings.audio.reducedShake') }}
-      </Chip>
+      </GameTabButton>
+    </div>
+    <div class="settings-panel__audio-row">
+      <GameTabButton class="settings-panel__audio-toggle" :selected="reducedMotion" :aria-pressed="reducedMotion" data-testid="settings-reduced-motion" @click="toggleMotion">{{ t('panels.settings.audio.reducedMotion') }}</GameTabButton>
     </div>
   </SettingsSectionFrame>
 </template>

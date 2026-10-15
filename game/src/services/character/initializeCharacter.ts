@@ -73,8 +73,8 @@ export function initializeCharacter(
   // Starter pack covers the 3 base buildings (Linh Tuyen/Khi Duong/Dan
   // Phong) - ids follow the unified age axis (gp123 6E C2).
   for (const [materialId, amount] of [
-    ['mortal_wood_decade', 15],
-    ['mortal_ore_decade', 6],
+    ['material_spirit_wood_decade', 15],
+    ['material_spirit_ore_decade', 6],
   ] as const) {
     if (gameManager.materialRegistry.has(materialId)) {
       gameManager.materialBag.add(gameManager.materialRegistry.get(materialId), amount)

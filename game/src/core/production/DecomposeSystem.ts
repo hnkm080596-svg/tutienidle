@@ -1,6 +1,7 @@
 // Instant ore-to-essence exchange. Legacy worker settings remain only in
 // the save shape so existing saves can be read without reviving that system.
 import { BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID, LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
+import { parseProfessionResourceId } from '../profession/ProfessionMaterial'
 import type { Material } from '../material/Material'
 import type { MaterialStack } from '../material/MaterialStack'
 import { HERB_AGES } from './ProductionTypes'
@@ -59,6 +60,10 @@ export interface DecomposePreviewEntry {
   maxAmount: number
 }
 
+export type DecomposeBatchResult =
+  | { ok: true }
+  | { ok: false; reason: 'scope_hidden' | 'insufficient_amount' | 'output_capacity' | 'inventory_changed' }
+
 export interface DecomposableStack {
   family: DecomposeFamily
   grade: ProfessionGrade
@@ -75,7 +80,7 @@ export const DECOMPOSE_OUTPUT_BY_FAMILY: Readonly<Record<DecomposeFamily, string
 export function classifyDecomposableMaterial(material: Material): DecomposableStack | null {
   const profession = material.profession
   if (profession?.resourceKind === 'herb') {
-    const grade = PROFESSION_GRADE_BY_REALM[profession.realmId]
+    const grade = PROFESSION_GRADE_BY_REALM[profession.realmId ?? '']
     const age = profession.age
     if (!grade || !age || !HERB_AGES.includes(age)) return null
     return { family: 'herb', grade, age, outputMaterialId: DECOMPOSE_OUTPUT_BY_FAMILY.herb }
@@ -101,7 +106,10 @@ export class DecomposeSystem {
   listDecomposableIds(): string[] {
     if (isScopeHidden('equipmentOreDecompose')) return []
     return this.bag.getAll()
-      .filter((stack) => stack.amount > 0 && classifyDecomposableMaterial(stack.material) !== null)
+      .filter((stack) => {
+        const match = classifyDecomposableMaterial(stack.material)
+        return match !== null && stackOutputAmount(match.grade, match.age, stack.amount) >= 1
+      })
       .map((stack) => stack.material.id)
   }
 
@@ -122,7 +130,11 @@ export class DecomposeSystem {
   }
 
   decompose(ids: readonly string[]): boolean {
-    if (isScopeHidden('equipmentOreDecompose')) return false
+    return this.decomposeWithResult(ids).ok
+  }
+
+  decomposeWithResult(ids: readonly string[]): DecomposeBatchResult {
+    if (isScopeHidden('equipmentOreDecompose')) return { ok: false, reason: 'scope_hidden' }
     const stacks = this.resolveDecomposableStacks(ids)
     const outputs: DecomposeOutputEntry[] = []
     for (const stack of stacks) {
@@ -132,14 +144,14 @@ export class DecomposeSystem {
       if (amount < 1) continue
       mergeOutputRow(outputs, { materialId: match.outputMaterialId, amount })
     }
-    if (outputs.length === 0) return false
+    if (outputs.length === 0) return { ok: false, reason: 'insufficient_amount' }
 
     // When no runtime adapter owns delivery, preflight the whole command
     // against the bag so a capacity failure cannot consume any input.
     if (!this.deliverOutput) {
       for (const output of outputs) {
         const material = materials.find((entry) => entry.id === output.materialId)
-        if (!material || this.bag.canAcceptAmount(material, output.amount) < output.amount) return false
+        if (!material || this.bag.canAcceptAmount(material, output.amount) < output.amount) return { ok: false, reason: 'output_capacity' }
       }
     }
 
@@ -149,16 +161,16 @@ export class DecomposeSystem {
       if (!match || stackOutputAmount(match.grade, match.age, stack.amount) < 1) continue
       if (!this.bag.remove(stack.material.id, stack.amount)) {
         for (const entry of removed) this.bag.add(stacks.find((candidate) => candidate.material.id === entry.materialId)!.material, entry.amount)
-        return false
+        return { ok: false, reason: 'inventory_changed' }
       }
       removed.push({ materialId: stack.material.id, amount: stack.amount })
     }
 
     for (const output of outputs) {
-      if (!this.deliver(output)) return false
+      if (!this.deliver(output)) return { ok: false, reason: 'output_capacity' }
       this.onEssenceProduced?.(output.materialId, output.amount)
     }
-    return removed.length > 0
+    return { ok: true }
   }
 
   private deliver(entry: DecomposeOutputEntry): boolean {
@@ -256,35 +268,15 @@ export class DecomposeSystem {
   }
 }
 
-// Inverse of buildProfessionMaterialId('ore', realm, age).
-const ORE_ID_PATTERN = new RegExp(`^(.+)_ore_(${HERB_AGES.join('|')})$`)
-const WOOD_ID_PATTERN = new RegExp(`^(.+)_wood_(${HERB_AGES.join('|')})$`)
-
-/** `<realmId>_ore_<age>` -> grade and age for authored ore material ids. */
-export function parseOre(oreId: string): { grade: ProfessionGrade; age: HerbAge } | null {
-  const match = ORE_ID_PATTERN.exec(oreId)
-  if (!match) return null
-
-  const grade = PROFESSION_GRADE_BY_REALM[match[1]!]
-  if (!grade) return null
-
-  return { grade, age: match[2] as HerbAge }
+/** Only newly authored age-only resource identities are decomposable. */
+export function parseOre(id: string): { grade: ProfessionGrade; age: HerbAge } | null {
+  const age = parseProfessionResourceId('ore', id)
+  return age ? { grade: 'cuu_pham', age } : null
 }
 
-function parseAgedResourceId(
-  pattern: RegExp,
-  materialId: string,
-): { grade: ProfessionGrade; age: HerbAge } | null {
-  const match = pattern.exec(materialId)
-  if (!match) return null
-  const grade = PROFESSION_GRADE_BY_REALM[match[1]!]
-  if (!grade) return null
-  return { grade, age: match[2] as HerbAge }
-}
-
-/** `<realmId>_wood_<age>` -> { grade, age } | null - sibling grammar cua parseOre. */
-export function parseWood(woodId: string): { grade: ProfessionGrade; age: HerbAge } | null {
-  return parseAgedResourceId(WOOD_ID_PATTERN, woodId)
+export function parseWood(id: string): { grade: ProfessionGrade; age: HerbAge } | null {
+  const age = parseProfessionResourceId('wood', id)
+  return age ? { grade: 'cuu_pham', age } : null
 }
 
 /** base = 1 + gradeIndex x 0.5; ageFactor = 2^ageIndex (spec-khoa, tuning sau playtest). */

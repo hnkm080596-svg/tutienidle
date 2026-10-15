@@ -52,7 +52,7 @@ const HERB: Material = {
 }
 
 const WOOD: Material = {
-  id: 'mortal_wood_decade',
+  id: 'material_spirit_wood_decade',
   name: 'Mộc Test',
   category: 'wood',
   sourceType: 'exploration',

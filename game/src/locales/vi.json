@@ -212,6 +212,7 @@
         "refund": "gồm {n} Cảm Ngộ đã tính trong tổng hoàn"
       },
       "respec": {
+        "resetPoints": "Đặt Lại Điểm",
         "button": "Đặt Lại",
         "title": "Đặt Lại Cây Kỹ Năng",
         "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node và core về 0. Miễn phí trong thời gian Beta.{clawback}",
@@ -486,7 +487,7 @@
         "perfectFarm": "Chỉ lặp lại các màn đã đạt Hoàn Mỹ — nửa thời gian, không hoạt ảnh."
       },
       "actions": {
-        "editBuild": "Chỉnh Build",
+        "editBuild": "Công Pháp",
         "start": "Bắt Đầu"
       },
       "archetypes": {
@@ -635,6 +636,26 @@
       "pageNext": "Trang sau"
     },
     "production": {
+      "sourceNames": {
+        "mine": "Linh Khoáng",
+        "forest": "Phúc Địa",
+        "grotto": "Động Thiên"
+      },
+      "resources": {
+        "vein": "Linh Thạch",
+        "mine": "Linh Khoáng",
+        "forest": "Linh Mộc",
+        "grotto": "Thảo Dược"
+      },
+      "descriptions": {
+        "vein": "Địa mạch tụ linh, ngưng khí thành thạch.",
+        "mine": "Linh khoáng ẩn sâu, hun đúc khí phôi.",
+        "forest": "Phúc địa dưỡng mộc, linh khí nuôi rừng.",
+        "grotto": "Động thiên tụ khí, linh thảo sinh trưởng."
+      },
+      "stoneRate": "{amount} Linh Thạch/s",
+      "resourceRate": "{amount} {resource}/s",
+      "cycleDuration": "Chu kỳ: {seconds} giây",
       "summary": "Khai Vật Đường khai thác nguyên liệu mọi cảnh giới — phân nhân công cho nguồn, nhận thẳng vào Túi.",
       "kinds": {
         "forest": "Lâm",
@@ -659,6 +680,7 @@
       "linMach": {
         "title": "Linh Mạch",
         "rateSuffix": "/phút",
+        "cycleYield": "+{amount} Linh Thạch / {seconds} giây",
         "collect": "Thu hoạch"
       },
       "remaining": "{time}",
@@ -846,6 +868,7 @@
         "musicVolume": "Nhạc nền",
         "sfxVolume": "Hiệu ứng",
         "uiVolume": "Giao diện",
+        "reducedMotion": "Giảm chuyển động",
         "reducedShake": "Giảm rung màn hình"
       },
       "language": {
@@ -957,12 +980,14 @@
       "preview": "Nhận {amount} Luyện Khí Tinh Hoa.",
       "success": "Đã nhận {amount} Luyện Khí Tinh Hoa.",
       "empty": "Không có linh khoáng để tinh luyện.",
+      "belowMinimum": "Nguyên liệu chưa đủ tạo 1 tinh hoa được giữ lại. Thu thập thêm để phân giải.",
       "hint": {
         "scope_hidden": "Tính năng này hiện không khả dụng.",
         "invalid_amount": "Hãy chọn số lượng nguyên dương.",
         "invalid_ore": "Hãy chọn linh khoáng hợp lệ.",
         "insufficient_ore": "Không đủ linh khoáng đã chọn.",
-        "insufficient_amount": "Hãy chọn thêm khoáng để tạo ít nhất một tinh hoa.",
+        "insufficient_amount": "Hãy chọn thêm nguyên liệu để tạo ít nhất một tinh hoa.",
+        "inventory_changed": "Nguyên liệu đã thay đổi. Hãy chọn lại để phân giải.",
         "output_capacity": "Hãy chừa chỗ trong túi trước khi tinh luyện."
       }
     },
@@ -1267,7 +1292,32 @@
         "mp": "MP",
         "ward": "Khiên",
         "effects": "Hiệu ứng"
+      },
+      "healthHud": {
+        "caption": "Chí vững đạo tâm, vượt qua tâm ma…",
+        "showLog": "Mở nhật ký chiến đấu",
+        "hideLog": "Ẩn nhật ký chiến đấu"
+      },
+      "pending": {
+        "speed": "Tốc độ ×2",
+        "item": "Vật Phẩm",
+        "hint": "Chưa mở chức năng này."
       }
+    },
+    "partyCard": {
+      "stats": "Chỉ Số Hiện Tại",
+      "might": "Sát Thương",
+      "defense": "Phòng Ngự",
+      "speed": "Tốc Độ",
+      "empty": "Vị Trí Trống",
+      "resource": "Thế"
+    },
+    "playbackSpeed": "Tốc độ trình diễn chiến đấu ×{speed}",
+    "initiative": {
+      "title": "Nhịp Chiến",
+      "current": "Tốc Độ · Tiến Độ Lượt",
+      "ready": "Sẵn Sàng",
+      "actorValue": "Tốc độ {speed} · {gauge}%"
     }
   },
   "onboarding": {
@@ -1536,7 +1586,8 @@
       "timeLeft": "Thời gian còn lại",
       "realmCardTitle": "Độ Kiếp {name}",
       "progressLabel": "Tiến độ",
-      "resolve": "Giữ vững đạo tâm — vượt qua tâm ma"
+      "resolve": "Giữ vững đạo tâm — vượt qua tâm ma",
+      "sceneTitle": "Thiên Kiếp"
     }
   },
   "actionFailure": {
@@ -1641,7 +1692,7 @@
       "invalid_clock": "Đồng hồ hệ thống chưa ổn định — thử lại sau một lúc"
     },
     "outcomeNone": "Lần này không nhận được đan nào.",
-    "queueTitle": "Hàng Chờ Luyện Đan",
+    "queueTitle": "Hàng Chờ",
     "brewing": "Đang luyện",
     "queueEmpty": "Chưa có lò nào đang luyện.",
     "placeIngredients": "Đặt nguyên liệu vào đan lô",
@@ -2055,6 +2106,9 @@
     "body": "Hung Giao Sung đã ngã xuống — đạo hữu đã chinh phục toàn bộ nội dung beta: Phàm Nhân, Luyện Khí, Trúc Cơ. Cảm ơn đã đồng hành.",
     "continue": "Tiếp Tục Tu Luyện"
   },
+  "inventoryTooltip": {
+    "purpose": "Công Dụng"
+  },
   "architecture": {
     "title": "Kiến Trúc Tông Môn",
     "subtitle": "Công trình, linh mạch và tài nguyên của tông môn",
@@ -2164,7 +2218,7 @@
     "settings": "Cài Đặt"
   },
   "character": {
-    "mainStats": "Thuộc Tính Chính",
+    "mainStats": "Ngũ Căn",
     "points": "({count} điểm)",
     "max": "MAX",
     "allocate": "Cộng điểm",
@@ -2230,6 +2284,9 @@
     "advanceNotice": "Tâm pháp đã lên {grade}."
   },
   "skill": {
+    "treeCardTitle": "Mạch Công Pháp",
+    "insightTooltip": "Dùng Cảm Ngộ để học và nâng cấp công pháp khi đáp ứng điều kiện.",
+    "detailCardTitle": "Chi Tiết Công Pháp",
     "title": "Công Pháp",
     "navigation": "Chức năng",
     "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
@@ -2320,7 +2377,7 @@
     "subtitle": "Linh khí hộ thân · Tiên lộ đồng hành",
     "navigation": "Chức năng",
     "previewStamp": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
-    "summary": "Thuộc Tính Trang Bị",
+    "summary": "Chỉ Số Trang Bị",
     "bag": "Túi Trang Bị",
     "sort": "Sắp Xếp",
     "filter": "Lọc",

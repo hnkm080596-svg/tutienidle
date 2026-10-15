@@ -12,7 +12,6 @@ import {
   LUYEN_KHI_TINH_HOA_ID,
 } from '@/core/equipment/TinhHoaMaterial'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
-import { REALMS } from '@/data/realms/realm'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import type { HerbAge } from '@/core/production/ProductionTypes'
 import { ARTIFACT_UNLOCK_REALM_ID } from '@/core/artifact/ArtifactDomain'
@@ -199,54 +198,22 @@ const HERB_AGE_YEARS: Record<string, number> = {
   thuong_co: 100000,
 }
 
-/** Nhan realm (Pham Nhan..Do Kiep) - ten material ghep nhan tuoi + realm. */
-const REALM_LABEL_BY_ID: Readonly<Record<string, string>> = Object.fromEntries(
-  REALMS.map((realm) => [realm.id, realm.name]),
-)
-
 function buildProfessionMaterials(): Material[] {
-  const list: Material[] = []
-
-  // gp123 6E (task C2): truc tuoi thong nhat 5 bac cho thao/go/khoang -
-  // id `<realm>_wood_<age>` / `<realm>_ore_<age>`, plain wood XOA han.
-  // Ten hien thi = "<Tuoi> Linh Moc/Khoang <Realm>" (du info khi tim kiem).
-  const ages = ['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'] as const
-
-  // ---- Lam: go 9 realm x 5 tuoi ----
-  // Cac tier Kim Dan+ la data placeholder de building level 4-9 co cost
-  // hop le trong registry.
-  for (const realmId of REALM_TIERS) {
-    for (const age of ages) {
-      list.push({
-        id: buildProfessionMaterialId('wood', realmId, age),
-        name: `${MATERIAL_AGE_LABELS[age]} Linh Mộc ${REALM_LABEL_BY_ID[realmId] ?? realmId}`,
-        category: 'wood',
-        element: 'wood',
-        sourceType: 'exploration',
-        years: HERB_AGE_YEARS[age],
-        description: 'Linh mộc phân phẩm dùng cho xây dựng động phủ.',
-        profession: { resourceKind: 'wood', realmId, age },
-      })
-    }
-  }
-
-  // ---- Quang: khoang 9 realm x 5 tuoi ----
-  for (const realmId of REALM_TIERS) {
-    for (const age of ages) {
-      list.push({
-        id: buildProfessionMaterialId('ore', realmId, age),
-        name: `${MATERIAL_AGE_LABELS[age]} Linh Khoáng ${REALM_LABEL_BY_ID[realmId] ?? realmId}`,
-        category: 'ore',
-        element: 'metal',
-        sourceType: 'exploration',
-        years: HERB_AGE_YEARS[age],
-        description: 'Linh khoáng phân phẩm dùng cho luyện khí và xây dựng.',
-        profession: { resourceKind: 'ore', realmId, age },
-      })
-    }
-  }
-
-  return list
+  return (['wood', 'ore'] as const).flatMap(resourceKind =>
+    (['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'] as const).map(age => ({
+      id: buildProfessionMaterialId(resourceKind, age),
+      name: `${MATERIAL_AGE_LABELS[age]} ${resourceKind === 'wood' ? 'Linh Mộc' : 'Linh Khoáng'}`,
+      category: resourceKind,
+      icon: resourceKind === 'wood' ? '/assets/materials/linh_moc.png' : '/assets/materials/linh_khoang.png',
+      element: resourceKind === 'wood' ? 'wood' as const : 'metal' as const,
+      sourceType: 'exploration' as const,
+      years: HERB_AGE_YEARS[age],
+      description: resourceKind === 'wood'
+        ? 'Linh mộc tích tụ linh khí theo niên đại, dùng xây dựng và hóa luyện.'
+        : 'Linh khoáng tích tụ linh khí theo niên đại, dùng xây dựng và luyện khí.',
+      profession: { resourceKind, age },
+    })),
+  )
 }
 
 function buildReworkPillHerbs(): Material[] {

@@ -227,15 +227,15 @@ describe('canAdvanceTechniqueGrade', () => {
 describe('getTechniqueGradeUpgradeCost', () => {
   it('charges 100 x targetGrade in current-tier spirit stones', () => {
     expect(getTechniqueGradeUpgradeCost(2, 'foundation_establishment')).toEqual({
-      materialId: 'spirit_stone_ha_pham',
+      materialId: 'material_spirit_stone',
       amount: 200,
     })
     expect(getTechniqueGradeUpgradeCost(3, 'foundation_establishment')).toEqual({
-      materialId: 'spirit_stone_ha_pham',
+      materialId: 'material_spirit_stone',
       amount: 300,
     })
     expect(getTechniqueGradeUpgradeCost(4, 'golden_core')).toEqual({
-      materialId: 'spirit_stone_ha_pham',
+      materialId: 'material_spirit_stone',
       amount: 400,
     })
   })

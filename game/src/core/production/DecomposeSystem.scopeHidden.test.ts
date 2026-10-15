@@ -20,7 +20,7 @@ function buildSystem(): {
   delivered: Array<{ materialId: string; amount: number }>
 } {
   const bag = new MaterialBag()
-  for (const id of ['mortal_ore_decade', 'mortal_wood_decade', 'tu_linh_thao_mortal_decade']) {
+  for (const id of ['material_spirit_ore_decade', 'material_spirit_wood_decade', 'tu_linh_thao_mortal_decade']) {
     const material = materials.find((entry) => entry.id === id)
     if (!material) throw new Error(`materials fixture thiếu ${id}`)
     bag.add(material, 10)
@@ -35,14 +35,14 @@ function buildSystem(): {
 describe('DecomposeSystem — scope hidden fails closed (3 nhánh)', () => {
   it('list/preview/decompose đều rỗng; bag không bị trừ; không delivery', () => {
     const { system, bag, delivered } = buildSystem()
-    const ids = ['mortal_ore_decade', 'mortal_wood_decade', 'tu_linh_thao_mortal_decade']
+    const ids = ['material_spirit_ore_decade', 'material_spirit_wood_decade', 'tu_linh_thao_mortal_decade']
 
     expect(system.listDecomposableIds()).toEqual([])
     expect(system.previewDecompose(ids)).toEqual([])
     expect(system.decompose(ids)).toBe(false)
 
-    expect(bag.getAmount('mortal_ore_decade')).toBe(10)
-    expect(bag.getAmount('mortal_wood_decade')).toBe(10)
+    expect(bag.getAmount('material_spirit_ore_decade')).toBe(10)
+    expect(bag.getAmount('material_spirit_wood_decade')).toBe(10)
     expect(bag.getAmount('tu_linh_thao_mortal_decade')).toBe(10)
     expect(delivered).toEqual([])
   })

@@ -210,11 +210,12 @@ describe('ThanhVanBackdrop — neo horizonY (Workstream H, unit foot alignment)'
 
     attachThanhVanBackdrop(scene as never, variant, 800, 600, horizonY)
 
-    const scale = 800 / THANH_VAN_CANVAS.w
 
     for (const image of images) {
-      const designHorizonScreenY = image.y + THANH_VAN_CANVAS.h * 0.5 * scale
+      const designHorizonScreenY = image.y + image.displayHeight * 0.5
       expect(designHorizonScreenY).toBeCloseTo(horizonY)
+      expect(image.y + image.displayHeight).toBeGreaterThanOrEqual(600)
+      expect(image.y).toBeLessThanOrEqual(0)
     }
   })
 
@@ -227,11 +228,11 @@ describe('ThanhVanBackdrop — neo horizonY (Workstream H, unit foot alignment)'
 
     handle.redraw(1920, 1080, nextHorizonY)
 
-    const scale = 1920 / THANH_VAN_CANVAS.w
 
     for (const image of images) {
-      const designHorizonScreenY = image.y + THANH_VAN_CANVAS.h * 0.5 * scale
+      const designHorizonScreenY = image.y + image.displayHeight * 0.5
       expect(designHorizonScreenY).toBeCloseTo(nextHorizonY)
+      expect(image.y + image.displayHeight).toBeGreaterThanOrEqual(1080)
     }
   })
 })

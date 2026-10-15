@@ -3,7 +3,7 @@
 // guest upgrade card + ordered logout. Account/session state stays in
 // the panel (the abandon + unsynced dialogs own it); this is the view.
 import { useI18n } from 'vue-i18n'
-import GameButton from '@/components/common/GameButton.vue'
+import GameActionButton from '@/components/common/GameActionButton.vue'
 import GuestUpgradeCard from '@/components/onboarding/GuestUpgradeCard.vue'
 import SettingsSectionFrame from './SettingsSectionFrame.vue'
 
@@ -35,23 +35,23 @@ const { t } = useI18n()
     />
 
     <div class="settings-panel__actions">
-      <GameButton
+      <GameActionButton
         v-if="accountIsGuest && !showAccountUpgrade"
-        variant="secondary"
+
         data-testid="settings-upgrade-button"
         @click="showAccountUpgrade = true"
       >
         {{ t('panels.settings.actions.upgrade') }}
-      </GameButton>
+      </GameActionButton>
 
-      <GameButton
-        variant="danger"
+      <GameActionButton
+
         :disabled="logoutBusy"
         data-testid="settings-logout-button"
         @click="emit('logout')"
       >
         {{ t('panels.settings.actions.logout') }}
-      </GameButton>
+      </GameActionButton>
     </div>
   </SettingsSectionFrame>
 </template>
@@ -68,7 +68,7 @@ const { t } = useI18n()
   align-items: flex-start;
   gap: 10px;
 }
-.settings-panel__actions > .game-button {
+.settings-panel__actions > .game-action-button {
   width: 100%;
 }
 </style>

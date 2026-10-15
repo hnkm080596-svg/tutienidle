@@ -131,7 +131,7 @@ describe('Enemy drops — mọi material rơi đều có sink (economy T6)', () 
   it('quặng + tinh hoa rơi thật sự được phủ bởi sink', () => {
     const sinks = collectSinkMaterialIds()
 
-    expect(sinks.has('qi_refining_ore_decade')).toBe(true)
+    expect(sinks.has('material_spirit_ore_decade')).toBe(true)
     expect(sinks.has(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(true)
   })
 })

@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
-import BagChipSelect from './BagChipSelect.vue'
+import GameDropdownButton from '@/components/common/GameDropdownButton.vue'
 import type { BagSortOption } from './BagPaginationControls.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBagPagination } from '@/composables/useBagPagination'
@@ -581,12 +581,12 @@ const activeTimedEffects = computed(() => {
     <div class="bag-section__toolbar">
       <!-- Owner ruling 2026-10-11: no search field - toolbar matches
            the equipment bag verbatim (filter + sort + pager + count). -->
-      <BagChipSelect
+      <GameDropdownButton
         v-model="activeGroup"
         :options="GROUP_CHIPS"
         :label="t('panels.bag.filterAriaPill')"
       />
-      <BagChipSelect
+      <GameDropdownButton
         :model-value="ui.bagSorts.pill.mode"
         :options="SORT_CHIP_OPTIONS"
         :label="t('panels.bag.sort.button')"

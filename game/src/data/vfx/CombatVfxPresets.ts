@@ -23,6 +23,7 @@ export interface CombatVfxPreset {
   areaScale: number
   durationMs: number
   signature?: readonly VfxStroke[]
+  impactStyle?: 'sparks'
   screenShake?: { durationMs: number; intensity: number }
 }
 
@@ -32,7 +33,7 @@ export const COMBAT_VFX_PRESETS = {
   claw: { id: 'claw', color: 0xffb0a0, space: 'upright', areaScale: 1, durationMs: 230 },
   // Monster attack VFX sweep (2026-10-04) -- bite/jaw snap for melee
   // beasts; pale steel-blue reads as fangs against warm claw red.
-  bite: { id: 'bite', color: 0xcfe4ff, space: 'upright', areaScale: 1, durationMs: 230, signature: ['crescent', 'scar'] },
+  bite: { id: 'bite', color: 0xcfe4ff, space: 'upright', areaScale: 1, durationMs: 230, impactStyle: 'sparks', signature: ['crescent', 'scar'] },
   arcane_impact: {
     id: 'arcane_impact',
     color: 0x9cecff,
@@ -115,9 +116,9 @@ export const COMBAT_VFX_PRESETS = {
   // and bosses already reference them via attackPresetId/specialAttacks.
   // durationMs covers each sheet's full frame window so the injected
   // cue does not trim the clip.
-  bite_multi: { id: 'bite_multi', color: 0xcfe4ff, space: 'upright', areaScale: 1, durationMs: 570, signature: ['crescent', 'scar'] },
-  ram: { id: 'ram', color: 0xe8b878, space: 'upright', areaScale: 1, durationMs: 400 },
-  ram_multi: { id: 'ram_multi', color: 0xe8b878, space: 'upright', areaScale: 1, durationMs: 570 },
+  bite_multi: { id: 'bite_multi', color: 0xcfe4ff, space: 'upright', areaScale: 1, durationMs: 570, impactStyle: 'sparks', signature: ['crescent', 'scar'] },
+  ram: { id: 'ram', color: 0xe8b878, space: 'upright', areaScale: 1, durationMs: 400, impactStyle: 'sparks' },
+  ram_multi: { id: 'ram_multi', color: 0xe8b878, space: 'upright', areaScale: 1, durationMs: 570, impactStyle: 'sparks' },
   stomp: {
     id: 'stomp',
     color: 0xd49a55,

@@ -7,21 +7,27 @@ const cue = { primitive: 'trajectory' as const, anchor: 'target' as const, shape
 const recipe = { id: 'test', version: 1 as const, color: 0xffffff, castMs: 370, impactMs: 80, recoveryMs: 170, cast: [], impact: [], recovery: [] }
 function fixture(quality: 'standard' | 'low' = 'standard', reducedMotion = false) {
   const draws: string[] = []
+  const ellipses: { width: number; height: number }[] = []
   let destroyed = 0
   let spritesDestroyed = 0
-  const sprites: { key: string; frames: string[] }[] = []
+  const sprites: { key: string; frames: string[]; tint?: number; tintMode?: number; alpha?: number }[] = []
   const graphics = () => {
     const obj: Record<string, unknown> = {}
     for (const key of ['clear', 'setVisible', 'setDepth', 'lineStyle', 'lineBetween', 'fillStyle',
       'fillTriangle', 'strokeCircle', 'strokeEllipse']) obj[key] = () => { if (key !== 'clear') draws.push(key); return obj }
     obj.destroy = () => { destroyed++ }
+    obj.strokeEllipse = (_x: number, _y: number, width: number, height: number) => { draws.push('strokeEllipse'); ellipses.push({ width, height }); return obj }
     return obj as unknown as SkillVfxGraphics
   }
   const sprite = (key: string) => {
-    const record = { key, frames: [] as string[] }
+    const record: typeof sprites[number] = { key, frames: [] as string[] }
     const obj: Record<string, unknown> = {}
-    for (const k of ['setTexture', 'setPosition', 'setDepth', 'setScale', 'setAlpha', 'setVisible']) obj[k] = () => obj
+    for (const k of ['setTexture', 'setPosition', 'setDepth', 'setScale', 'setAlpha', 'setVisible', 'clearTint', 'setTint', 'setTintMode']) obj[k] = () => obj
     obj.setFrame = (frame: string) => { record.frames.push(frame); return obj }
+    obj.clearTint = () => { record.tint = undefined; record.tintMode = 0; return obj }
+    obj.setTint = (value: number) => { record.tint = value; return obj }
+    obj.setTintMode = (value: number) => { record.tintMode = value; return obj }
+    obj.setAlpha = (value: number) => { record.alpha = value; return obj }
     obj.destroy = () => { spritesDestroyed++ }
     sprites.push(record)
     return obj as unknown as SkillVfxSprite
@@ -36,10 +42,39 @@ function fixture(quality: 'standard' | 'low' = 'standard', reducedMotion = false
     phase: 'cast', cast: { ref: { sessionId: 1, requestId: '1', token: '1' }, rootSkillId: 'test',
       resolvedSkillId: 'test', presetId: 'metal_slash', source, declaredTargets: [target],
       candidateInstanceCount: 100, disposition: 'action', slotRole: 'basic' } }
-  return { driver, context, draws, surface, destroyed: () => destroyed,
+  return { driver, context, draws, ellipses, surface, destroyed: () => destroyed,
     sprites, spritesDestroyed: () => spritesDestroyed }
 }
 describe('pooled Phaser skill driver', () => {
+  it('scales both explosion rings by the authored 30 percent without moving their anchors', () => {
+    const normal = fixture()
+    const enlarged = fixture()
+    const explosion: SkillCue = { primitive: 'burst', anchor: 'source', shape: 'explosion', offsetMs: 0, durationMs: 550, count: 24 }
+    const first = normal.driver.open(explosion, normal.context)
+    const second = enlarged.driver.open({ ...explosion, scale: 1.3 }, enlarged.context)
+    first.sample(100)
+    second.sample(100)
+    expect(enlarged.ellipses).toHaveLength(2)
+    for (let index = 0; index < 2; index++) {
+      expect(enlarged.ellipses[index]!.width).toBeCloseTo(normal.ellipses[index]!.width * 1.3)
+      expect(enlarged.ellipses[index]!.height).toBeCloseTo(normal.ellipses[index]!.height * 1.3)
+    }
+    first.finish()
+    second.finish()
+  })
+  it('plays white charge frames with source alpha and resets tint on pooled reuse', () => {
+    const f = fixture()
+    const charge: SkillCue = { primitive: 'atlas', anchor: 'targets', shape: 'flame', offsetMs: 0, durationMs: 1000,
+      atlas: { key: 'hoa-cau-charge', frames: 51, scale: 1.75, tintFill: 0xffffff, alpha: 0.8 } }
+    const handle = f.driver.open(charge, f.context)
+    handle.sample(650)
+    expect(f.sprites[0]).toMatchObject({ tint: 0xffffff, tintMode: 1, alpha: 0.8 })
+    expect(f.sprites[0]!.frames.at(-1)).toBe('frame_33')
+    handle.finish()
+    const plain = f.driver.open({ ...charge, atlas: { key: 'hoa-cau-charge', frames: 51 } }, f.context)
+    expect(f.sprites[0]).toMatchObject({ tint: undefined, tintMode: 0, alpha: 1 })
+    plain.finish()
+  })
   it.each(['standard', 'low'] as const)('bounds and releases ten thousand cue lifecycles at %s quality', quality => {
     const f = fixture(quality)
     const random = vi.spyOn(Math, 'random').mockImplementation(() => { throw new Error('global RNG touched') })
@@ -56,7 +91,7 @@ describe('pooled Phaser skill driver', () => {
       expect(f.destroyed()).toBe(1)
     } finally { random.mockRestore() }
   })
-  it('does not fabricate impact for missed, skipped or absent hits', () => {
+  it('keeps the skill impact on a miss without landed-hit camera feedback', () => {
     const f = fixture()
     const context: SkillCueContext = { ...f.context, phase: 'resolved', cast: undefined,
       group: { groupId: 'g', role: 'primary', resolvedSkillId: 'test', presetId: 'metal_slash',
@@ -64,9 +99,11 @@ describe('pooled Phaser skill driver', () => {
         outcomes: [{ kind: 'hit', outcomeId: 'miss', target, landed: false, crit: false, hpDamage: 0, killed: false, hitOrdinal: 0 }] } }
     const handle = f.driver.open({ ...cue, primitive: 'stroke', shape: 'slash' }, context)
     handle.sample(20)
-    expect(f.driver.stats.active).toBe(0)
+    expect(f.driver.stats.active).toBe(1)
+    expect(f.draws).toContain('lineBetween')
     expect(f.surface.cameraImpulse).not.toHaveBeenCalled()
     handle.finish()
+    expect(f.driver.stats.active).toBe(0)
   })
   it('fires the actor impulse once for the source fact without leasing graphics', () => {
     const f = fixture()
@@ -283,16 +320,17 @@ describe('pooled Phaser skill driver', () => {
       expect(f.draws).toHaveLength(0)
       expect(f.driver.stats.active).toBe(0)
     })
-    it('does not fabricate detonation imagery for missed or skipped outcomes', () => {
+    it('keeps authored detonation imagery on a miss and releases it normally', () => {
       const f = fixture()
       const base = landedContext(f)
       const missed = { ...base, group: { ...base.group!,
         outcomes: [{ kind: 'hit' as const, outcomeId: 'm', target, landed: false, crit: false, hpDamage: 0, killed: false, hitOrdinal: 0 }] } }
       const handle = f.driver.open(atlasCue, missed)
       handle.sample(100)
-      expect(f.sprites).toHaveLength(0)
-      expect(f.driver.spriteStats.active).toBe(0)
+      expect(f.sprites).toHaveLength(1)
+      expect(f.driver.spriteStats.active).toBe(1)
       handle.finish()
+      expect(f.driver.spriteStats.active).toBe(0)
     })
     it('warns and drops the cue when the surface cannot create sprites', () => {
       const f = fixture()
@@ -327,7 +365,7 @@ describe('pooled Phaser skill driver', () => {
     const positionSprite = (key: string) => {
       const record = { key, frames: [] as string[], x: NaN, y: NaN, active: true, width: 100, height: 100 }
       const obj: Record<string, unknown> = {}
-      for (const k of ['setTexture', 'setDepth', 'setScale', 'setAlpha',
+      for (const k of ['setTexture', 'setDepth', 'setScale', 'setAlpha', 'clearTint', 'setTint', 'setTintMode',
         'setVisible', 'setOrigin', 'setDisplaySize']) obj[k] = () => obj
       obj.setFrame = (frame: string) => { record.frames.push(frame); return obj }
       obj.setPosition = (x: number, y: number) => { record.x = x; record.y = y; return obj }

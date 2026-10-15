@@ -11,6 +11,7 @@
 // fallbackSpriteTextureKey() - combat that LUON tra undefined, xem
 // CombatScene.fallbackSpriteTextureKey().
 import { describe, expect, it, vi } from 'vitest'
+vi.mock('phaser', () => ({ default: { Math: { Vector2: class { constructor(public x: number, public y: number) {} }, Clamp: (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v)) } } }))
 import { CombatGridView } from './combat-grid-view'
 import { BOSS_AURA_COLOR, BOSS_DISPLAY_SCALE_MULTIPLIER, ELITE_AURA_COLOR, ENEMY_DISPLAY_SCALE_MULTIPLIER, PLAYER_ID } from './combatConstants'
 import { MONSTER_ART } from '@/game/support/MonsterArt'
@@ -586,4 +587,30 @@ describe('CombatGridView — tier aura (tinh anh violet / boss gold)', () => {
 
     expect(elite.aura).toBeUndefined()
   })
+})
+
+it('keeps player HP in the card and suppresses the sprite name on snapshot rename', () => {
+  const { gridView, scene } = createFakeScene({ isPerspective: true })
+  const sprite = gridView.getOrCreateSprite(PLAYER_ID, 0x4a90d9, 'Player', 4, { currentHp: 50, maxHp: 100, isBoss: false })
+  expect(sprite.healthBarBelowFeet).toBe(true)
+  expect(sprite.hideLabel).toBe(true)
+  expect(sprite.healthBar).toBeUndefined()
+  const text = vi.spyOn(sprite.label, 'setText')
+  gridView.refitEntityLabel(sprite, 'Renamed')
+  expect(text).toHaveBeenLastCalledWith('')
+  scene.projection = {
+    gridToScreen: () => ({ x: 200, y: 300, scale: 1 }),
+    cellSizeAt: () => ({ width: 80, height: 40 }),
+  } as never
+  gridView.positionSprite(sprite, 0, PLAYER_ID)
+  expect(sprite.healthBar).toBeUndefined()
+})
+
+it('anchors enemy HP below the feet using the same offset as player HP', () => {
+  const { gridView, scene } = createFakeScene({ isPerspective: true })
+  const sprite = gridView.getOrCreateSprite('mortal_wild_boar', 0xd94a4a, 'Enemy', 4, { currentHp: 75, maxHp: 100, isBoss: false })
+  scene.projection = { gridToScreen: () => ({ x: 200, y: 300, scale: 1 }), cellSizeAt: () => ({ width: 80, height: 40 }) } as never
+  gridView.positionSprite(sprite, 0, 'mortal_wild_boar')
+  expect(sprite.healthBar?.background.setPosition).toHaveBeenLastCalledWith(200, 310)
+  expect(sprite.label.setPosition).toHaveBeenLastCalledWith(200, 322)
 })

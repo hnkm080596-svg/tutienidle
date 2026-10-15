@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import GameCard from "@/components/common/GameCard.vue"
+import CharacterCardTitle from './CharacterCardTitle.vue'
 // Portrait column (G3 mock): name + realm/path line, the dao-path idle
 // figure, and the Suc Manh card docked at the bottom. R12: the card's
 // hover tooltip breaks combat power down per formula term.
@@ -27,22 +29,22 @@ const couplet = computed(() => {
 </script>
 <template>
   <section class="character-portrait">
-    <h2>{{ model.name }}</h2>
+    <h2 class="character-portrait__name">{{ model.name }}</h2>
     <p class="character-portrait__line">{{ model.realm }}<template v-if="model.path"> · {{ model.path }}</template></p>
     <CharacterFidelityFigure />
     <template v-if="couplet">
       <span class="character-couplet character-couplet--left"><em v-for="word in couplet.left" :key="word">{{ word }}</em></span>
       <span class="character-couplet character-couplet--right"><em v-for="word in couplet.right" :key="word">{{ word }}</em></span>
     </template>
-    <div class="character-card character-power" v-tooltip="powerTooltip">
-      <h3>{{ t('character.power') }}</h3>
+    <GameCard as="div" class="character-card character-power" v-tooltip="powerTooltip">
+      <template #title><CharacterCardTitle :label="t('character.power')" /></template>
       <b>{{ model.combatPower }}</b>
-    </div>
+    </GameCard>
   </section>
 </template>
 <style scoped>
 .character-portrait { position: relative; text-align: center; min-height: 0; color: #302519; }
-.character-portrait h2 { font-size: 24px; margin: 0; font-weight: 650; }
+.character-portrait__name { font-size: 24px; margin: 0; font-weight: 650; }
 .character-portrait__line { font-size: 14px; margin: 6px; white-space: nowrap; }
 /* Couplet columns (Minh ruling): Vietnamese words stacked one per line
    flanking the figure like a verse couplet. Columns start right under
@@ -52,7 +54,7 @@ const couplet = computed(() => {
 .character-couplet em { font-style: normal; font: 700 13px/1.3 var(--pc-font-title, serif); letter-spacing: .12em; color: #8a6420; text-shadow: 0 0 3px rgba(240,214,150,.45), 0 1px 1px #000; white-space: nowrap; }
 .character-couplet--right { right: 4%; }
 .character-couplet--left { left: 4%; }
-.character-portrait .character-power { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 16px; }
+.character-portrait .character-power { position: absolute; bottom: 0; left: 0; right: 0; height: var(--character-footer-card-height, 96px); }
 .character-power h3 { margin: 0; font-size: 16px; font-weight: 500; }
 .character-power b { font-size: 29px; color: #dfbc71; font-variant-numeric: tabular-nums; }
 </style>

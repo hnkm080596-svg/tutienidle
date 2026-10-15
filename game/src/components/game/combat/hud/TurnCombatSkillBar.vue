@@ -24,14 +24,17 @@ import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresen
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
 import type { TooltipContent } from '@/composables/useTooltip'
 import { useAudioStore } from '@/stores/audio'
-import { hkChromeUrl } from '@/ui/huyenKimChrome'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { projectSkillStatRows } from '@/presentation/combat/SkillStatProjection'
 
 const { t } = useI18n()
 
 // Scene 13 spec: role orbs ride inside the skill-orb-frame chrome ring.
 // The auto/manual toggle moved to CombatTopBar in the ui-combat reskin
 // (2026-10-04) - the dock now carries orbs + the awaiting hint only.
-const skillOrbFrameUrl = hkChromeUrl('skill-orb-frame')
+const skillOrbFrameUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/combat/skill-active-v1.png')
+const inactiveOrbFrameUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/combat/skill-inactive-v1.png')
+const cardOrbFrameUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/combat/battle-card/ring-v1.png')
 
 function roleLabel(role: TurnSkillSlotRole): string {
   return t(`combat.overlay.skillBar.roles.${role}`)
@@ -41,13 +44,19 @@ function roleLabel(role: TurnSkillSlotRole): string {
 // displayLabel prop (skillName -> fallback emptyLabel). Bar chi truyen
 // metadata; tooltip qua tooltipFor() ben duoi.
 function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefined {
-  if (!entry.skillName || !entry.skillDescription) {
-    return undefined
+  const template = gameManager.catalogOps.getSkillTemplate(entry.skillId)
+  const name = template?.name ?? entry.skillName
+  if (!name) return undefined
+  const level = gameManager.progressionOps.getSkillLevel(entry.skillId, player.$state)
+  const cap = gameManager.progressionOps.getSkillCoreMaxLevel(entry.skillId)
+  return { kind: 'technique', name, imagePath: entry.skillIcon,
+    levelLabel: `${t('skill.level')}: ${level} / ${cap}`,
+    description: template?.description ?? entry.skillDescription,
+    sections: [{ label: t('skill.stats'), rows: projectSkillStatRows(template, key => t(key)) }],
   }
-
-  return { title: entry.skillName, description: entry.skillDescription }
 }
 
+const props = defineProps<{ card?: boolean }>()
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
@@ -126,7 +135,7 @@ const visibleSlots = computed(() =>
     .map((entry, index) => ({ role: entry.role, index, state: entry.state }))
     .filter(
       (slot) =>
-        slot.state !== 'scope-hidden' && !(slot.role === 'basic' && showOrbPicker.value),
+        (props.card || slot.state !== 'scope-hidden') && !(slot.role === 'basic' && showOrbPicker.value),
     ),
 )
 
@@ -165,7 +174,7 @@ function onDynamicBasicClick(defId: string): void {
 </script>
 
 <template>
-  <div v-if="visible" class="turn-combat-skill-bar">
+  <div v-if="visible" class="turn-combat-skill-bar" :class="{ 'turn-combat-skill-bar--card': card }">
     <div class="turn-combat-skill-bar__slots">
       <!-- Kiem Tu Reimagined - the sword_pathway orb picker OWNS the basic slot:
            provider.manualOptions() are the only legal manual picks. The
@@ -177,11 +186,14 @@ function onDynamicBasicClick(defId: string): void {
           type="button"
           class="turn-combat-skill-bar__slot-button turn-combat-skill-bar__slot-button--orb"
           :class="{ 'is-tappable': isAwaitingChoice }"
-          :disabled="!isAwaitingChoice"
+          :disabled="!card && !isAwaitingChoice"
+          :aria-disabled="!isAwaitingChoice"
           :aria-label="t('combat.overlay.skillBar.use', { name: orbLabel(orb) })"
-          @click="onDynamicBasicClick(orb.id)"
+          @click="isAwaitingChoice && onDynamicBasicClick(orb.id)"
         >
-          <CombatSkillSlot
+          <CombatSkillSlot :show-caption="!card"
+            variant="circle"
+            :circle-frame-src="card ? cardOrbFrameUrl : undefined"
             :empty-label="orbLabel(orb)"
             :display-label="orbLabel(orb)"
             :remaining="0"
@@ -191,7 +203,7 @@ function onDynamicBasicClick(defId: string): void {
             :is-insufficient-resource="false"
             :tooltip-override="orbTooltip(orb)"
           />
-          <img v-if="skillOrbFrameUrl" class="turn-combat-skill-bar__orb-frame" :src="skillOrbFrameUrl" alt="" aria-hidden="true" />
+          <img v-if="skillOrbFrameUrl && !card" class="turn-combat-skill-bar__orb-frame" :src="skillOrbFrameUrl" alt="" aria-hidden="true" />
         </button>
       </template>
 
@@ -199,23 +211,29 @@ function onDynamicBasicClick(defId: string): void {
         <button
           type="button"
           class="turn-combat-skill-bar__slot-button"
-          :class="{ 'is-tappable': isTappable(entryAt(slot.index)) }"
-          :disabled="!isTappable(entryAt(slot.index))"
+          :class="{ 'is-tappable': slot.state !== 'scope-hidden' && isTappable(entryAt(slot.index)) }"
+          :disabled="!card && (slot.state === 'scope-hidden' || !isTappable(entryAt(slot.index)))"
+          :aria-disabled="slot.state === 'scope-hidden' || !isTappable(entryAt(slot.index))"
           :aria-label="t('combat.overlay.skillBar.use', { name: roleLabel(slot.role) })"
-          @click="tapSlot(slot.role)"
+          @click="slot.state !== 'scope-hidden' && isTappable(entryAt(slot.index)) && tapSlot(slot.role)"
         >
-          <CombatSkillSlot
+          <CombatSkillSlot :show-caption="!card"
+            variant="circle"
+            :circle-frame-src="card ? cardOrbFrameUrl : undefined"
+            :is-locked="slot.state === 'scope-hidden' || entryAt(slot.index).state === 'locked' || entryAt(slot.index).state === 'empty'"
+            :has-skill="!!entryAt(slot.index).skillId"
+            :auto-active="slot.role === 'basic' && !!entryAt(slot.index).skillId && entryAt(slot.index).state !== 'locked' && entryAt(slot.index).state !== 'empty'"
             :empty-label="roleLabel(slot.role)"
-            :display-label="entryAt(slot.index).skillName"
-            :display-icon="entryAt(slot.index).skillIcon"
+            :display-label="card ? roleLabel(slot.role) : entryAt(slot.index).skillName"
+            :display-icon="slot.state === 'scope-hidden' ? undefined : entryAt(slot.index).skillIcon"
             :remaining="entryAt(slot.index).cooldownRemaining"
             :total="entryAt(slot.index).cooldownTotal"
             :is-masked="entryAt(slot.index).state === 'cooldown'"
             :resource-cost="entryAt(slot.index).resourceCost"
             :is-insufficient-resource="entryAt(slot.index).state === 'blocked_resource'"
-            :tooltip-override="tooltipFor(entryAt(slot.index))"
+            :tooltip-override="slot.state === 'scope-hidden' ? undefined : tooltipFor(entryAt(slot.index))"
           />
-          <img v-if="skillOrbFrameUrl" class="turn-combat-skill-bar__orb-frame" :src="skillOrbFrameUrl" alt="" aria-hidden="true" />
+          <img v-if="!card" class="turn-combat-skill-bar__orb-frame" :src="entryAt(slot.index).state === 'ready' ? skillOrbFrameUrl : inactiveOrbFrameUrl" alt="" aria-hidden="true" />
         </button>
       </template>
 
@@ -283,6 +301,7 @@ function onDynamicBasicClick(defId: string): void {
   cursor: not-allowed;
   opacity: 0.55;
 }
+.turn-combat-skill-bar--card .turn-combat-skill-bar__slot-button:disabled { opacity: 1; cursor: default; }
 
 .turn-combat-skill-bar__slot-button.is-tappable {
   outline: 2px solid var(--jade, #4caf50);
@@ -337,4 +356,15 @@ function onDynamicBasicClick(defId: string): void {
   color: var(--jade, #4caf50);
   text-align: center;
 }
+.turn-combat-skill-bar { --combat-skill-slot-size: 88px; gap: 6px; }
+.turn-combat-skill-bar__slots { gap: 42px; }
+.turn-combat-skill-bar__orb-frame { inset: -5% -7% auto; width: 114%; height: 100%; filter: saturate(.48) brightness(.8); }
+.turn-combat-skill-bar__slot-button.is-tappable { outline: none; }
+.turn-combat-skill-bar__slot-button:hover:enabled { filter: drop-shadow(0 0 6px #e4bc69); }
+.turn-combat-skill-bar--card .turn-combat-skill-bar__slot-button:hover:enabled { filter: none; }
+.turn-combat-skill-bar--card { width: 100%; min-width: 0; align-items: stretch; }
+.turn-combat-skill-bar--card .turn-combat-skill-bar__slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 8%; padding-bottom: 28px; }
+.turn-combat-skill-bar--card .turn-combat-skill-bar__slot-button { width: 100%; min-width: 0; aspect-ratio: 1; }
+.turn-combat-skill-bar--card :deep(.combat-skill-slot) { width: 100%; height: 100%; }
+.turn-combat-skill-bar--card :deep(.combat-skill-slot__caption) { top: calc(100% + 4px); left: 0; width: 100%; height: 22px; font-size: clamp(10px, 4cqw, 14px); color: #eadab8; }
 </style>

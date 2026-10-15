@@ -54,6 +54,8 @@ export interface ArtExtent {
 }
 
 export interface AtlasClip {
+  /** Clip-local pose marker where a fitted charge may begin. */
+  chargeStartFrameIndex?: number
   /** Phaser animation key, unique per entity+name. */
   key: string
 

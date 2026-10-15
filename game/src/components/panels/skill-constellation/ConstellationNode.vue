@@ -37,6 +37,7 @@ const ringArt = computed(() => (props.node.frameKind === 'passive' ? passiveRing
 
 <template>
   <button
+    v-tooltip="{title:node.name,description:[node.level,node.description,node.costLabel,...node.conditions,node.actionHint].filter(Boolean).join('\n')}"
     :class="[
       'constellation-node',
       node.state,

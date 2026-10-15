@@ -13,6 +13,7 @@ import { spawnEnemySpawnVfx } from '@/game/support/EnemySpawnVfx'
 import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
 import type { BodyAnchorId } from '@/presentation/geometry/combatBodyAnchors'
 import { readHoThe } from '@/presentation/bridges/hoTheBridge'
+import { setInitiativeSummoned } from '@/presentation/combat/CombatInitiativeReady'
 import {
   DEPTH_OVERLAY_UI,
   DEPTH_UPRIGHT_VFX,
@@ -433,6 +434,7 @@ export class CombatVfxSpawner {
         for (const entry of alphaTargets) {
           entry.target.setAlpha(entry.final)
         }
+        for (const [id, live] of this.scene.sprites) if (live === sprite) setInitiativeSummoned(id, true)
       },
     })
   }

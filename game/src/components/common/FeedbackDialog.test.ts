@@ -55,7 +55,7 @@ async function flushSubmit() {
 }
 
 async function clickSubmit() {
-  const button = document.body.querySelector<HTMLButtonElement>('.feedback-dialog__actions .game-button--primary')
+  const button = document.body.querySelector<HTMLButtonElement>('[data-testid="feedback-submit"]')
   if (!button) throw new Error('missing submit button')
   button.click()
   await flushSubmit()
@@ -82,7 +82,7 @@ describe('FeedbackDialog', () => {
     mountDialog()
     await nextTick()
     const submit = document.body.querySelector<HTMLButtonElement>(
-      '.feedback-dialog__actions .game-button--primary',
+      '[data-testid="feedback-submit"]',
     )!
     expect(submit.disabled).toBe(true)
     await fillForm()

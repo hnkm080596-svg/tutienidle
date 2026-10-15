@@ -1,0 +1,48 @@
+/* Layout only: component art, fill and interaction remain component-owned. */
+:root {
+  --game-ui-width: min(100vw, calc(100vh * 16 / 9));
+  --game-ui-height: min(100vh, calc(100vw * 9 / 16));
+  --game-ui-left: calc((100vw - var(--game-ui-width)) / 2);
+  --game-ui-top: calc((100vh - var(--game-ui-height)) / 2);
+}
+.game-root {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: var(--game-ui-width); height: var(--game-ui-height);
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+}
+/* Body portals retain screen coordinates and the existing overlay layer order. */
+body > :is(.decompose-fx-layer, .breakthrough-fx-layer, .body-pour-layer) {
+  clip-path: inset(var(--game-ui-top) var(--game-ui-left));
+}
+body > :is(.confirm-modal.confirm-modal, .abandon-modal.abandon-modal, .lore-modal.lore-modal, .overlay-panel.overlay-panel) {
+  inset: var(--game-ui-top) var(--game-ui-left);
+  box-sizing: border-box;
+}
+body :is(.confirm-modal__panel.confirm-modal__panel, .abandon-modal__panel.abandon-modal__panel, .lore-modal__panel.lore-modal__panel, .overlay-panel__card.overlay-panel__card) {
+  max-width: calc(var(--game-ui-width) - 24px);
+  max-height: calc(var(--game-ui-height) - 24px);
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+body > .feedback-log.feedback-log {
+  right: calc(var(--game-ui-left) + 12px);
+  bottom: calc(var(--game-ui-top) + 12px);
+  max-width: calc(var(--game-ui-width) - 24px);
+  max-height: calc(var(--game-ui-height) - 24px);
+  overflow-y: auto;
+}
+
+#app .update-banner.update-banner {
+  top: calc(var(--game-ui-top) + 8px);
+  max-width: calc(var(--game-ui-width) - 24px);
+  box-sizing: border-box;
+}
+
+html[data-reduced-motion="true"] *, html[data-reduced-motion="true"] *::before, html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}

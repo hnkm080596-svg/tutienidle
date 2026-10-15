@@ -32,4 +32,6 @@ export interface ProductionSiteRow {
   progress: number
 
   remainingLabel: string
+  cycleSeconds: number
+  baseOutputPerSecond?: { min: number; max: number }
 }

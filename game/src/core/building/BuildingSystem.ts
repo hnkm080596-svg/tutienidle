@@ -6,7 +6,7 @@ import type { MaterialBag } from '../material/MaterialBag'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { CraftModifiers } from './BuildingLevelEffect'
 import { getRealmIdForTier, getRealmTier } from '../realm/RealmTierMap'
-import { PRODUCTION_OFFLINE_CAP_SECONDS } from '../production/ProductionBalance'
+import { PRODUCTION_OFFLINE_CAP_SECONDS, RESOURCE_CYCLE_BASE_SECONDS, computeCycleSeconds } from '../production/ProductionBalance'
 
 const DEFAULT_CRAFT_MODIFIERS: CraftModifiers = {
   timeReductionPercent: 0,
@@ -411,6 +411,30 @@ export class BuildingSystem {
    * cong don tiep phan do. Phan thoi gian vuot suc chua van coi nhu mat
    * (dung "Production Paused khi day").
    */
+  getCycleSeconds(instance: BuildingInstance, realmId: string): number {
+    return computeCycleSeconds(RESOURCE_CYCLE_BASE_SECONDS, instance.level)
+  }
+
+  claimCycles(instanceId: string, registry: BuildingRegistry, manager: BuildingManager, currentTime: number, realmId: string): { amount: number; materialId?: string } {
+    const instance = manager.get(instanceId)
+    if (!instance) return { amount: 0 }
+    const template = registry.get(instance.buildingId)
+    if (!template.producesMaterialId) return { amount: 0 }
+    const accrualRealm = resolveAccrualRealmId(instance, realmId)
+    const duration = this.getCycleSeconds(instance, realmId)
+    const elapsed = currentTime - instance.lastCollectedAt
+    const count = Math.floor(elapsed / duration)
+    if (!Number.isFinite(count) || count < 1) return { amount: 0 }
+    const workedSeconds = Math.min(count * duration, PRODUCTION_OFFLINE_CAP_SECONDS)
+    const remainder = Number.isFinite(instance.cycleRemainder) ? Math.max(0, Math.min(instance.cycleRemainder!, 1)) : 0
+    const total = workedSeconds * this.getEffectiveRate(template, instance.level, accrualRealm) + remainder
+    const amount = Math.floor(total)
+    instance.cycleRemainder = total - amount
+    instance.lastCollectedAt += count * duration
+    instance.accrualRealmId = realmId
+    return { amount, materialId: this.resolveProducesMaterialId(template, accrualRealm) }
+  }
+
   claim(
     instanceId: string,
     registry: BuildingRegistry,

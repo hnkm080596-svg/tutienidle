@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { CombatScene } from '../CombatScene'
 import { CombatEntityVisualLifecycle } from './combat-entity-visual-lifecycle'
 import type { EntitySprite } from './combatTypes'
+import { isInitiativeSummoned, resetInitiativeSummons, setInitiativeSummoned } from '@/presentation/combat/CombatInitiativeReady'
 
 function makeLifecycle() {
   const scene = {
@@ -26,6 +27,22 @@ function fakeSprite(): EntitySprite {
 }
 
 describe('CombatEntityVisualLifecycle', () => {
+  it('holds an initiative avatar through summon and fade-in instead of revealing at telegraph completion', () => {
+    resetInitiativeSummons()
+    const { scene, lifecycle } = makeLifecycle()
+    const sprite = fakeSprite()
+    lifecycle.markPending(['ally'])
+    expect(isInitiativeSummoned('ally')).toBe(false)
+    scene.sprites.set('ally', sprite)
+    lifecycle.revealPending(['ally'])
+    expect(isInitiativeSummoned('ally')).toBe(true)
+    lifecycle.markMaterializing('enemy')
+    lifecycle.consumeMaterializing('enemy', sprite)
+    expect(isInitiativeSummoned('enemy')).toBe(false)
+    setInitiativeSummoned('enemy', true)
+    expect(isInitiativeSummoned('enemy')).toBe(true)
+    lifecycle.clear()
+  })
   it('applyGating hides a pending id and shows a non-pending id', () => {
     const { scene, lifecycle } = makeLifecycle()
 

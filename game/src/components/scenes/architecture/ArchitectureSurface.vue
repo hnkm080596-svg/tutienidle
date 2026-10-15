@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ArchitectureFidelityScene from './ArchitectureFidelityScene.vue'
-import { getArchitectureBuildingModels, getArchitectureProductionModels, getArchitectureResourceModels } from '@/core/game/ArchitectureReadModel'
+import { getArchitectureBuildingModels, getArchitectureProductionModels } from '@/core/game/ArchitectureReadModel'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
@@ -12,7 +12,6 @@ const player = usePlayerStore()
 const ui = useUiStore()
 const { stateVersion, bumpState } = useStateVersion()
 const { t } = useI18n()
-const selectedBuildingId = computed(() => ui.architectureFocusBuildingId)
 const notice = shallowRef('')
 
 const buildings = computed(() => {
@@ -22,10 +21,6 @@ const buildings = computed(() => {
 const productionSites = computed(() => {
   stateVersion.value
   return getArchitectureProductionModels(gameManager, player.$state)
-})
-const resources = computed(() => {
-  stateVersion.value
-  return getArchitectureResourceModels(gameManager)
 })
 
 function buildingFailureMessage(instanceId: string): string {
@@ -87,12 +82,8 @@ function close() {
   <ArchitectureFidelityScene
     :buildings="buildings"
     :production-sites="productionSites"
-    :resources="resources"
-    :selected-building-id="selectedBuildingId"
     :notice="notice"
     @back="close"
-    @details="ui.architectureFocusBuildingId = $event"
-    @close-details="ui.architectureFocusBuildingId = null"
     @upgrade-building="upgradeBuilding"
     @upgrade-site="upgradeSite"
   />

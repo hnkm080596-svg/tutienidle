@@ -58,11 +58,11 @@ describe('clamp applied at every production entry point (T3-17)', () => {
   it('online production uses the clamped realm tier for its one site cycle', () => {
     const { bag, registry } = createBag()
     const system = createSystem()
-    system.setAutoRestart('thanh_van_lam', true)
+    system.setAutoRestart('thanh_van_dong_thien', true)
 
     system.tick(1_000, bag, registry, 'golden_core')
 
-    const state = system.getState('thanh_van_lam')!
+    const state = system.getState('thanh_van_dong_thien')!
     expect(state.productionCycles).toHaveLength(1)
     for (const cycle of state.productionCycles!) {
       expect(cycle.collectionRealmId).toBe('foundation_establishment')
@@ -74,7 +74,7 @@ describe('clamp applied at every production entry point (T3-17)', () => {
     const { bag, registry } = createBag()
     const system = createSystem()
     system.restoreStates([
-      { siteId: 'thanh_van_lam', level: 1, autoRestart: true, productionCycles: [] },
+      { siteId: 'thanh_van_dong_thien', level: 1, autoRestart: true, productionCycles: [] },
     ])
 
     const settled = system.settleOffline(bag, registry, 'golden_core', 1_000_000 + 3_600_000, {
@@ -91,7 +91,7 @@ describe('clamp applied at every production entry point (T3-17)', () => {
     for (let seed = 0; seed < 1000; seed++) {
       const cycle = {
         cycleId: `t${seed}`,
-        siteId: 'thanh_van_lam',
+        siteId: 'thanh_van_dong_thien',
         collectionRealmId: 'foundation_establishment',
         siteLevelAtStart: 1,
         rewardTableVersion: 1,
@@ -100,7 +100,7 @@ describe('clamp applied at every production entry point (T3-17)', () => {
         completesAtMs: 1,
       }
       for (const reward of system.rollRewards(cycle)) {
-        if (reward.materialId.startsWith('foundation_establishment_wood_')) {
+        if (reward.materialId.includes('_foundation_establishment_')) {
           highTierPicks += 1
         }
       }
@@ -110,7 +110,7 @@ describe('clamp applied at every production entry point (T3-17)', () => {
 
   it('rollRewards never mints materials more than one realm tier above the collector (F-MAT-REALM ceiling)', () => {
     const system = createSystem()
-    const sites = ['thanh_van_lam', 'thanh_van_quang', 'thanh_van_dong_thien']
+    const sites = ['thanh_van_dong_thien', 'thanh_van_quang', 'thanh_van_dong_thien']
 
     for (const siteId of sites) {
       for (let seed = 0; seed < 1000; seed++) {
@@ -137,7 +137,7 @@ describe('clamp applied at every production entry point (T3-17)', () => {
     for (let seed = 0; seed < 1000; seed++) {
       const cycle = {
         cycleId: `t${seed}`,
-        siteId: 'thanh_van_lam',
+        siteId: 'thanh_van_dong_thien',
         collectionRealmId: 'mortal',
         siteLevelAtStart: 1,
         rewardTableVersion: 1,
@@ -146,7 +146,7 @@ describe('clamp applied at every production entry point (T3-17)', () => {
         completesAtMs: 1,
       }
       for (const reward of system.rollRewards(cycle)) {
-        if (reward.materialId.startsWith('qi_refining_wood_')) {
+        if (reward.materialId.includes('_qi_refining_')) {
           qiTierPicks += 1
         }
       }

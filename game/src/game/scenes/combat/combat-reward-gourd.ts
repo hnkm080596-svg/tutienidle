@@ -136,25 +136,16 @@ export class CombatRewardGourd {
     })
   }
 
-  /** Diem hut LIVE - luon la mieng ho lo, khong bao gio la Player (sec7.2). */
-  gourMouthPoint(): { x: number; y: number } {
-    return resolveGourdMouth(this.scene.gourdPlacement)
+  /** Reward particles follow the live player body anchor on each frame. */
+  gourMouthPoint(): { x: number; y: number } | undefined {
+    return this.scene.bodyAnchorScreen('player', 'centre') ?? this.resolveRewardSourcePoint('player')
   }
 
-  /**
-   * Reward stream (plan sec7) - Bezier hut ve MIENG HO LO:
-   * - Diem phat: chest anchor cua sprite nguon -> screen cache -> o grid
-   *   cuoi cung (sprite da bi don van co nguon hop ly).
-   * - Diem hut LIVE tu gourd mouth moi onUpdate: Player teleport giua
-   *   tween KHONG anh huong quy dao; resize re-resolve dich moi.
-   * - Tang toc nua sau (quad-in), co scale + xoay nho khi toi mieng.
-   * - Pulse ho lo DUNG MOT nhip moi reward event (moc dai dien), khong
-   *   pulse theo tung mote (sec6.3).
-   */
+  /** Presentation-only stream: source fallback, live player target and deterministic cleanup. */
   onRewardParticle(event: BattleRewardParticleEvent) {
     const start = this.scene.resolveRewardSourcePoint(event.sourceId)
 
-    if (!start) {
+    if (!start || !this.gourMouthPoint()) {
       return
     }
 
@@ -181,7 +172,7 @@ export class CombatRewardGourd {
           1,
         )
         .setBlendMode(Phaser.BlendModes.ADD)
-        // Duoi lop gourd (DEPTH_OVERLAY_UI - 4) de hat "chui vao" mieng.
+        // Draw reward motes above the battlefield.
         .setDepth(DEPTH_OVERLAY_UI - 6)
         .setAlpha(0)
 
@@ -197,6 +188,7 @@ export class CombatRewardGourd {
         onUpdate: () => {
           // Dich + control giai LIVE - teleport/resize-safe (sec7.2).
           const end = this.gourMouthPoint()
+          if (!end) return
           const control = controlFor(end)
           const p = easeRewardProgress(state.progress)
           const inverse = 1 - p
@@ -234,10 +226,7 @@ export class CombatRewardGourd {
       })
     }
 
-    // Pulse dai dien cho CA stream - mot nhip/event, khong theo mote.
-    const totalFlightMs = baseDuration + (particleCount - 1) * 18 + 40
 
-    this.scene.time.delayedCall(totalFlightMs, () => this.pulseGourd())
   }
 
   /**

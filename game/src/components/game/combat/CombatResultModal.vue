@@ -47,5 +47,19 @@ const outcome = computed(() => {
   justify-content: center;
   background: var(--scrim);
   pointer-events: auto;
+  box-sizing: border-box;
+  padding: 24px;
+}
+</style>
+
+<style>
+#app .combat-result-modal > :is(.victory-scene.victory-scene, .combat-defeat-panel.combat-defeat-panel) {
+  width: 1000px;
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  flex-shrink: 1;
 }
 </style>

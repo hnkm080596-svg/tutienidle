@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GameCard from '@/components/common/GameCard.vue'
 // Han-character constellation panel (skill-constellation-glyph-plan.md)
 // - a drop-in replacement for the radial tree surface when the selected
 // element has an authored glyph layout. Renders the backdrop, the
@@ -98,16 +99,48 @@ let activePointer: number | null = null
 // re-selects; cleared by the next pointerdown.
 let dragMoved = false
 const exported = ref(false)
+const pan = ref({ x: 0, y: 0 })
+const zoom = ref(1)
+let panDrag: { px: number; py: number; x: number; y: number; scale: number; width: number; height: number } | null = null
+const graphTransform = computed(() => ({ transform: `translate(${pan.value.x}px, ${pan.value.y}px) scale(${zoom.value})` }))
+function clampPan(x: number, y: number, width: number, height: number) {
+  const bx = Math.max(0, width * (1 + zoom.value) / 2 - 32)
+  const by = Math.max(0, height * (1 + zoom.value) / 2 - 32)
+  return { x: Math.max(-bx, Math.min(bx, x)), y: Math.max(-by, Math.min(by, y)) }
+}
+function onWheel(event: WheelEvent) {
+  if (activePointer !== null) return
+  const host = event.currentTarget as HTMLElement
+  const rect = host.getBoundingClientRect()
+  if (rect.width <= 0 || host.offsetWidth <= 0) return
+  const scale = rect.width / host.offsetWidth
+  const x = (event.clientX - rect.left - rect.width / 2) / scale
+  const y = (event.clientY - rect.top - rect.height / 2) / scale
+  const previous = zoom.value
+  zoom.value = Math.max(.4, Math.min(3, previous * Math.exp(-event.deltaY * .0015)))
+  const ratio = zoom.value / previous
+  pan.value = clampPan(x - (x - pan.value.x) * ratio, y - (y - pan.value.y) * ratio, host.offsetWidth, host.offsetHeight)
+}
+function resetView() { pan.value = { x: 0, y: 0 }; zoom.value = 1 }
 
 function onPointerDown(event: PointerEvent) {
-  if (!designOn.value || activePointer !== null) return
+  if (event.button !== 0 || activePointer !== null) return
   const host = (event.target as HTMLElement).closest('[data-node-id]') as HTMLElement | null
   const id = host?.dataset.nodeId
-  if (id === undefined) return
-  const node = props.nodes.find((n) => n.id === id)
-  if (node === undefined) return
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
   if (rect.width === 0 || rect.height === 0) return
+  const viewport = event.currentTarget as HTMLElement
+  if (!designOn.value || id === undefined) {
+    if (viewport.offsetWidth <= 0) return
+    activePointer = event.pointerId
+    dragMoved = false
+    if (id !== undefined) emit('select', id)
+    panDrag = { px: event.clientX, py: event.clientY, x: pan.value.x, y: pan.value.y, scale: rect.width / viewport.offsetWidth, width: viewport.offsetWidth, height: viewport.offsetHeight }
+    viewport.setPointerCapture?.(event.pointerId)
+    return
+  }
+  const node = props.nodes.find((n) => n.id === id)
+  if (node === undefined) return
   const p = posOf(node)
   activePointer = event.pointerId
   dragMoved = false
@@ -117,12 +150,20 @@ function onPointerDown(event: PointerEvent) {
     py: event.clientY,
     x: p.x,
     y: p.y,
-    sx: rect.width / viewBox.value.w,
-    sy: rect.height / viewBox.value.h,
+    sx: rect.width * zoom.value / viewBox.value.w,
+    sy: rect.height * zoom.value / viewBox.value.h,
   }
   ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
 }
 function onPointerMove(event: PointerEvent) {
+  if (panDrag !== null && event.pointerId === activePointer) {
+    const dx = event.clientX - panDrag.px
+    const dy = event.clientY - panDrag.py
+    if (!dragMoved && Math.abs(dx) + Math.abs(dy) <= 4) return
+    dragMoved = true
+    pan.value = clampPan(panDrag.x + dx / panDrag.scale, panDrag.y + dy / panDrag.scale, panDrag.width, panDrag.height)
+    return
+  }
   if (nodeDrag === null || event.pointerId !== activePointer) return
   const dx = event.clientX - nodeDrag.px
   const dy = event.clientY - nodeDrag.py
@@ -141,6 +182,7 @@ function onPointerUp(event: PointerEvent) {
   activePointer = null
   if (nodeDrag !== null && dragMoved) persistSkillDesignOverrides()
   nodeDrag = null
+  panDrag = null
   const host = event.currentTarget as HTMLElement
   if (host.hasPointerCapture?.(event.pointerId)) host.releasePointerCapture?.(event.pointerId)
 }
@@ -166,17 +208,16 @@ function exportLayout() {
 </script>
 
 <template>
-  <div class="constellation-panel" :style="panelStyle">
+  <GameCard as="div" class="constellation-panel" :style="panelStyle" :title="t('skill.treeCardTitle')">
+    <template #viewport>
+    <div class="constellation-viewport" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerup="onPointerUp" @pointercancel="onPointerUp" @wheel.prevent="onWheel" @dblclick="resetView">
     <ConstellationBackdrop :glyph="layout.glyph" />
     <div
       class="constellation-graph"
+      :style="graphTransform"
       :class="{ design: designOn }"
       role="group"
       :aria-label="t('skill.constellation.canvas', { glyph: layout.glyph })"
-      @pointerdown="onPointerDown"
-      @pointermove="onPointerMove"
-      @pointerup="onPointerUp"
-      @pointercancel="onPointerUp"
     >
       <svg
         class="constellation-svg"
@@ -206,6 +247,8 @@ function exportLayout() {
         v-if="designOn"
         type="button"
         class="design-export"
+        @pointerdown.stop
+        @dblclick.stop
         @click="exportLayout"
       >
         {{ exported ? t('devPanel.exported') : t('devPanel.exportLayout') }}
@@ -219,7 +262,9 @@ function exportLayout() {
         t('skill.constellation.legendPrereq')
       }}</span>
     </p>
-  </div>
+    </div>
+    </template>
+  </GameCard>
 </template>
 
 <style scoped>
@@ -235,7 +280,10 @@ function exportLayout() {
 .constellation-graph {
   position: absolute;
   inset: 0;
+  transform-origin: center;
 }
+.constellation-viewport { position: relative; width: 100%; height: 100%; overflow: clip; touch-action: none; user-select: none; cursor: grab; }
+.constellation-viewport:active { cursor: grabbing; }
 .constellation-svg {
   position: absolute;
   inset: 0;

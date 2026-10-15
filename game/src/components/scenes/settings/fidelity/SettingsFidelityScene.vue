@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GamePanel from '@/components/common/GamePanel.vue'
 // Scene 17 (Cai Dat / settings) paper surface: the approved fidelity
 // composition - seal nav | settings workspace - now owning the shared
 // paper chrome (nine-slice sheet + nav rail + title) exactly like the
@@ -31,10 +32,11 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 
 <template>
-  <section ref="rootRef" class="settings-scene" :aria-label="t('layout.functionOverlay.titles.settings')" @click.self="emit('back')">
-    <div class="settings-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <h1 class="settings-title">{{ t('layout.functionOverlay.titles.settings') }}</h1>
-    <img class="settings-divider" :src="titleDivider" alt="">
+  <section ref="rootRef" class="rail-panel-scene settings-scene" :aria-label="t('layout.functionOverlay.titles.settings')" @click.self="emit('back')">
+    <GamePanel :title="t('layout.functionOverlay.titles.settings')">
+
+
+
 
     <div class="settings-content">
       <slot name="workspace"><div class="settings-layout"><nav :aria-label="t('settingsPreview.title')"><button v-for="id in ['all','audio','display','storage','support']" :key="id" :class="{active:active===id}" @click="emit('select',id)">{{t(`settingsPreview.group.${id}`)}}</button></nav><div class="settings-workspace"><SettingsFidelitySection v-for="group in groups" :key="group.id" :title="group.label" :controls="group.controls" @update="(id,value)=>emit('update',id,value)"/><section v-if="active==='all'||active==='storage'" class="settings-actions"><h2>{{t('settingsPreview.storage')}}</h2><p>{{t('settingsPreview.storageHint')}}</p><div><button v-for="id in ['save','export','import']" :key="id" @click="emit('action',id)">{{t(`settingsPreview.${id}`)}}</button></div></section><section v-if="active==='support'" class="settings-actions"><h2>{{t('settingsPreview.support')}}</h2><p>{{t('settingsPreview.supportHint')}}</p><button @click="emit('action','feedback')">{{t('settingsPreview.feedback')}}</button><p>{{t('settingsPreview.build')}} · {{t('settingsPreview.buildValue')}}</p></section></div></div></slot>
@@ -42,11 +44,12 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
     <p v-if="preview" class="settings-preview">{{ t('preview') }}</p>
     <p class="settings-notice" role="status">{{ notice }}</p>
+    </GamePanel>
   </section>
 </template>
 
 <style scoped>
-.settings-scene{position:absolute;inset:0;pointer-events:auto;color:#4b3924;font-family:var(--font-display,Georgia,serif)}
+.settings-scene{position:absolute;inset:0;color:#4b3924;font-family:var(--font-display,Georgia,serif)}
 .settings-scene :deep(*){box-sizing:border-box}
 .settings-paper{position:absolute;left:94px;top:123px;width:1334px;height:633px;border:0 solid transparent;border-image-slice:300 fill;border-image-width:83px;filter:drop-shadow(0 12px 15px #0009)}
 .settings-title{position:absolute;left:235px;top:165px;margin:0;font-size:32px;font-weight:700;color:#35250f;text-shadow:0 1px #fff7} .settings-divider{position:absolute;left:237px;top:179px;width:230px;object-fit:contain;opacity:.9}
@@ -66,4 +69,9 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .settings-scene button:focus-visible { outline:2px solid #517858; outline-offset:3px; }
 .settings-preview{position:absolute;left:235px;top:713px;margin:0;font-size:10px;line-height:15px;color:#7d6a45}
 .settings-notice{position:absolute;left:700px;top:710px;width:675px;height:28px;margin:0;text-align:right;font-size:12px;color:#62512d}
+
+/* Layout instances are relative to the owning panel content. */
+.settings-scene :deep(.game-panel__content :is(.settings-paper,.settings-title,.settings-divider)) { display: none; }
+.settings-scene :deep(.game-panel__content .settings-content) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; }
+.settings-scene :deep(.game-panel__content .settings-notice) { left: 0; right: 0; top: auto; bottom: 0; width: 100%; }
 </style>

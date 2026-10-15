@@ -17,7 +17,7 @@ import type {
   TerritoryDefinition,
 } from './ProductionTypes'
 import {
-  CYCLE_BASE_SECONDS_BY_REALM,
+  productionBaseSeconds,
   GROTTO_HERB_AMOUNT,
   HERB_AGE_WEIGHTS,
   MATERIAL_AGE_AMOUNTS,
@@ -121,7 +121,7 @@ export class ProductionSystem {
     let state = this.states.get(siteId)
 
     if (!state) {
-      state = { siteId, level: 1, autoRestart: false, productionCycles: [] }
+      state = { siteId, level: 1, autoRestart: true, productionCycles: [] }
 
       this.states.set(siteId, state)
     }
@@ -162,7 +162,7 @@ export class ProductionSystem {
       this.states.set(state.siteId, {
         siteId: state.siteId,
         level: state.level,
-        autoRestart: state.autoRestart,
+        autoRestart: true,
         productionCycles: (state.productionCycles ?? state.workerCycles ?? []).flatMap((cycle) => {
           // r33-COR-F1/AUT-2: ordering parity with restoreJobs and the
           // validator's ordering pin - an INVERTED pair
@@ -397,7 +397,7 @@ export class ProductionSystem {
 
       const definition = this.getSiteDefinition(state.siteId)
 
-      const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[collectionRealmId]
+      const baseSeconds = definition ? productionBaseSeconds(definition.kind, collectionRealmId) : 0
 
       const cycleMs =
         definition && baseSeconds ? computeCycleSeconds(baseSeconds, state.level) * 1000 : 0
@@ -592,6 +592,16 @@ export class ProductionSystem {
       return []
     }
 
+    if (definition.kind === 'forest' || definition.kind === 'mine') {
+      const pool = definition.kind === 'forest' ? this.deps.forestRewards : this.deps.mineRewards
+      const ageIndex = rollWeightedIndex(HERB_AGES.map(age => MATERIAL_AGE_WEIGHTS[age]), random)
+      const age = ageIndex >= 0 ? HERB_AGES[ageIndex] : undefined
+      if (age === undefined) return []
+      const entry = pool.find(reward => reward.age === age)
+      if (!entry) return []
+      return [{ materialId: entry.materialId, amount: entry.amount > 0 ? entry.amount : MATERIAL_AGE_AMOUNTS[age], detail: age }]
+    }
+
     const collectionRealmId = resolveTerritoryTier(
       this.deps.territory,
       cycle.collectionRealmId,
@@ -633,72 +643,6 @@ export class ProductionSystem {
 
     if (!tierRealmId) {
       return []
-    }
-
-    if (definition.kind === 'forest') {
-      const pool = this.deps.forestRewards.filter((reward) => reward.realmId === tierRealmId)
-
-      if (pool.length === 0) {
-        return []
-      }
-
-      const ageIndex = rollWeightedIndex(
-        HERB_AGES.map((age) => MATERIAL_AGE_WEIGHTS[age]),
-        random,
-      )
-
-      // r13-AUT-3: all-zero pool returns -1 - no eligible entry pays.
-      const age = ageIndex >= 0 ? HERB_AGES[ageIndex] : undefined
-      if (age === undefined) {
-        return []
-      }
-
-      const entry = pool.find((reward) => reward.age === age)
-
-      if (!entry) {
-        return []
-      }
-
-      return [
-        {
-          materialId: entry.materialId,
-          amount: entry.amount > 0 ? entry.amount : MATERIAL_AGE_AMOUNTS[age],
-          detail: age,
-        },
-      ]
-    }
-
-    if (definition.kind === 'mine') {
-      const pool = this.deps.mineRewards.filter((reward) => reward.realmId === tierRealmId)
-
-      if (pool.length === 0) {
-        return []
-      }
-
-      const ageIndex = rollWeightedIndex(
-        HERB_AGES.map((age) => MATERIAL_AGE_WEIGHTS[age]),
-        random,
-      )
-
-      // r13-AUT-3: all-zero pool returns -1 - no eligible entry pays.
-      const age = ageIndex >= 0 ? HERB_AGES[ageIndex] : undefined
-      if (age === undefined) {
-        return []
-      }
-
-      const entry = pool.find((reward) => reward.age === age)
-
-      if (!entry) {
-        return []
-      }
-
-      return [
-        {
-          materialId: entry.materialId,
-          amount: MATERIAL_AGE_AMOUNTS[age],
-          detail: age,
-        },
-      ]
     }
 
     // Grotto: tier -> thao trong pool tier -> nien dai (sec6.1 hai buoc roll).
@@ -764,6 +708,7 @@ export class ProductionSystem {
         cycleRemainingMs?: number
 
         cycleTotalMs?: number
+        baseOutputPerSecond?: { min: number; max: number }
       }
     | undefined {
     const definition = this.getSiteDefinition(siteId)
@@ -790,6 +735,7 @@ export class ProductionSystem {
         state.level < definition.maxLevel ? getSiteSpeedMultiplier(state.level + 1) : undefined,
       cycleRemainingMs: undefined as number | undefined,
       cycleTotalMs: undefined as number | undefined,
+      baseOutputPerSecond: undefined as { min: number; max: number } | undefined,
     }
 
     const lanes = state.productionCycles ?? []
@@ -805,6 +751,29 @@ export class ProductionSystem {
     if (earliest) {
       view.cycleTotalMs = Math.max(1, earliest.completesAtMs - earliest.startedAtMs)
       view.cycleRemainingMs = Math.max(0, earliest.completesAtMs - nowMs)
+      const profile = getTierWeightProfile(earliest.collectionRealmId, this.deps.territory.realmIds)
+      const reached = getRealmIndex(earliest.collectionRealmId)
+      const realms = this.deps.territory.realmIds.filter((realm, index) =>
+        (profile[index] ?? 0) > 0 && getRealmIndex(realm) <= reached,
+      )
+      const amounts: number[] = []
+      if (definition.kind === 'grotto') {
+        for (const realm of realms) {
+          const hasHerbs = this.deps.grottoHerbs.some(herb => herb.realmId === realm && betaRecipeFamilyOfId(herb.pillRecipeId) !== null)
+          amounts.push(hasHerbs ? GROTTO_HERB_AMOUNT : 0)
+        }
+      } else {
+        const pool = definition.kind === 'forest' ? this.deps.forestRewards : this.deps.mineRewards
+        for (const age of HERB_AGES) {
+          if (MATERIAL_AGE_WEIGHTS[age] <= 0) continue
+          const entry = pool.find(reward => reward.age === age)
+          amounts.push(entry ? (entry.amount > 0 ? entry.amount : MATERIAL_AGE_AMOUNTS[age]) : 0)
+        }
+      }
+      if (amounts.length > 0) {
+        const seconds = view.cycleTotalMs / 1000
+        view.baseOutputPerSecond = { min: Math.min(...amounts) / seconds, max: Math.max(...amounts) / seconds }
+      }
     }
 
     return view

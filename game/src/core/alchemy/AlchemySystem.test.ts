@@ -583,14 +583,14 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
     system.restoreJobs([active!, forged])
     const beforeRefund = {
       herb: bag.getAmount('herb_decade'),
-      wood: bag.getAmount('mortal_wood_decade'),
+      wood: bag.getAmount('material_spirit_wood_decade'),
     }
     const refund = vi.fn(() => true)
 
     expect(system.cancelJob(waiting!.jobId, refund)).toBe(false)
     expect(refund).not.toHaveBeenCalled()
     expect(bag.getAmount('herb_decade')).toBe(beforeRefund.herb)
-    expect(bag.getAmount('mortal_wood_decade')).toBe(beforeRefund.wood)
+    expect(bag.getAmount('material_spirit_wood_decade')).toBe(beforeRefund.wood)
     expect(system.getJobs()).toHaveLength(2)
   })
 })
@@ -650,7 +650,7 @@ describe('AlchemySystem — cancel job (lò đã khởi động, không hoàn tr
 
   it('refunds every reserved input when cancelling a waiting job and the active job', () => {
     const { recipe, bag, registry, system } = buildContext({ herbOnHand: 3, woodOnHand: 3 * WOOD_AMOUNT, tinhHoaOnHand: 3 })
-    const spiritStoneId = 'spirit_stone_ha_pham'
+    const spiritStoneId = 'material_spirit_stone'
     const specialId = 'special_core'
     registry.register(material(spiritStoneId))
     registry.register(material(specialId))
@@ -922,7 +922,7 @@ describe('GameManagerAlchemyOps — FIFO queue read model', () => {
       spiritStoneCost: 3,
       specialIngredients: [{ materialId: 'special_core', amount: 2 }],
     }
-    const spiritStoneId = 'spirit_stone_ha_pham'
+    const spiritStoneId = 'material_spirit_stone'
     for (const id of ['herb_decade', BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID, 'special_core', spiritStoneId]) {
       materialRegistry.register(material(id))
     }
@@ -1088,7 +1088,7 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
   })
 
   it('startAlchemyJob (ops) — talent hoa_hau_thong_than trừ x2 Linh Thạch + x2 gỗ', () => {
-    const spiritStoneId = 'spirit_stone_ha_pham'
+    const spiritStoneId = 'material_spirit_stone'
     const materialBag = new MaterialBag()
     const materialRegistry = new MaterialRegistry()
     const buildingRegistry = new BuildingRegistry()
@@ -1136,7 +1136,7 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
   })
 
   it('startAlchemyJob (ops) — không talent → chi phí gốc nguyên vẹn', () => {
-    const spiritStoneId = 'spirit_stone_ha_pham'
+    const spiritStoneId = 'material_spirit_stone'
     const materialBag = new MaterialBag()
     const materialRegistry = new MaterialRegistry()
     const buildingRegistry = new BuildingRegistry()
@@ -1465,7 +1465,7 @@ describe('AlchemySystem — queue order (batch tuần tự từng viên)', () =>
 // split voi duong charge).
 describe('GameManagerAlchemyOps — cancelAlchemyJob refund stone (QUEUE REWORK)', () => {
   it('cancel order giua chung — stone cua vien chua bat dau duoc hoan', () => {
-    const spiritStoneId = 'spirit_stone_ha_pham'
+    const spiritStoneId = 'material_spirit_stone'
     const materialBag = new MaterialBag()
     const materialRegistry = new MaterialRegistry()
     const buildingRegistry = new BuildingRegistry()
@@ -1554,14 +1554,14 @@ describe('AlchemySystem — enqueueJob merge-into-last-order', () => {
     registry.register(material('herb_decade'))
     registry.register(material('herb_century'))
     registry.register(material(BUI_GO_ID))
-    registry.register(material('mortal_wood_century'))
+    registry.register(material('material_spirit_wood_century'))
 
     registry.register(material(LUYEN_DAN_TINH_HOA_ID))
 
     bag.add(registry.get('herb_decade'), 20)
     bag.add(registry.get('herb_century'), 20)
     bag.add(registry.get(BUI_GO_ID), 60)
-    bag.add(registry.get('mortal_wood_century'), 60)
+    bag.add(registry.get('material_spirit_wood_century'), 60)
     bag.add(registry.get(LUYEN_DAN_TINH_HOA_ID), 60)
 
     const recipeWithVariants: AlchemyRecipe = {
