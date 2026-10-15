@@ -4,6 +4,7 @@ import { BuildingRegistry } from '../building/BuildingRegistry'
 import { BuildingManager } from '../building/BuildingManager'
 import { BuildingSystem } from '../building/BuildingSystem'
 import {
+  ALCHEMY_MAX_BATCH_QUANTITY,
   AlchemySystem,
   alchemySecondsFor,
   jobSuccessPercent,
@@ -21,6 +22,12 @@ import {
 } from '../betaScope'
 import type { PlayerData } from '../player/Player'
 import type { TimeAuthority } from '../idle/TimeAuthority'
+
+export interface AlchemyBrewQuote {
+  canBrew: boolean
+  blockReason: string | null
+  tailMergeable: boolean
+}
 
 /**
  * BETA SCOPE LOCK v2 sec.12 - one herb variant's craft sufficiency. Fuel
@@ -394,6 +401,80 @@ export class GameManagerAlchemyOps {
 
       durationSeconds: alchemySecondsFor(recipe, roomLevel),
     }
+  }
+
+  /**
+   * Domain-owned brew eligibility quote (tailMergeable, canBrew, blockReason).
+   * Mirrors the admission order of startAlchemyJob / enqueueJob so UI
+   * surfaces never re-implement slot, merge, or material checks.
+   */
+  quoteAlchemyBrew(
+    recipeId: string | null,
+    herbMaterialId: string | null,
+    player: PlayerData,
+  ): AlchemyBrewQuote {
+    const recipe = recipeId ? this.deps.alchemyRecipesById.get(recipeId) : undefined
+    if (!recipe) {
+      return { canBrew: false, blockReason: null, tailMergeable: false }
+    }
+
+    const roomInstance = this.deps.buildingManager.getByBuildingId('pill_room')
+    const roomLevel = roomInstance?.level ?? 0
+    const queueState = this.getAlchemyQueueState()
+    const orderedJobs = queueState.activeJob
+      ? [queueState.activeJob, ...queueState.waitingJobs]
+      : queueState.waitingJobs
+    const last = orderedJobs[orderedJobs.length - 1]
+    const tailMergeable =
+      last !== undefined &&
+      last.recipeId === recipe.id &&
+      last.herbMaterialId === herbMaterialId &&
+      last.roomLevelAtStart === roomLevel &&
+      (last.quantity ?? 1) < ALCHEMY_MAX_BATCH_QUANTITY
+
+    if (!roomInstance) {
+      return { canBrew: false, blockReason: 'room_not_built', tailMergeable }
+    }
+
+    const variantValid =
+      herbMaterialId !== null &&
+      recipe.herbVariants.some((variant) => variant.materialId === herbMaterialId) &&
+      this.deps.materialBag.getAmount(herbMaterialId) >= recipe.herbAmount
+    if (!variantValid) {
+      return { canBrew: false, blockReason: 'missing_herb', tailMergeable }
+    }
+
+    if (orderedJobs.length >= queueState.maxTotalJobs && !tailMergeable) {
+      return { canBrew: false, blockReason: 'job_slots_full', tailMergeable }
+    }
+
+    const costMultiplier =
+      getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.costMultiplier ?? 1
+    const costScale = Math.max(1, costMultiplier)
+    const fuelWoodAmount = Math.ceil(recipe.fuelWoodAmount * costScale)
+    const spiritStoneCost = Math.ceil(recipe.spiritStoneCost * costScale)
+
+    if (this.deps.materialBag.getAmount(BUI_GO_ID) < fuelWoodAmount) {
+      return { canBrew: false, blockReason: 'missing_bui_go', tailMergeable }
+    }
+
+    if (this.deps.materialBag.getAmount(LUYEN_DAN_TINH_HOA_ID) < recipe.luyenDanTinhHoaAmount) {
+      return { canBrew: false, blockReason: 'missing_tinh_hoa', tailMergeable }
+    }
+
+    if (this.deps.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID) < spiritStoneCost) {
+      return { canBrew: false, blockReason: 'missing_spirit_stone', tailMergeable }
+    }
+
+    if (
+      (recipe.specialIngredients ?? []).some(
+        (special) => this.deps.materialBag.getAmount(special.materialId) < special.amount,
+      )
+    ) {
+      return { canBrew: false, blockReason: 'missing_special_ingredient', tailMergeable }
+    }
+
+    return { canBrew: true, blockReason: null, tailMergeable }
   }
 
   /**

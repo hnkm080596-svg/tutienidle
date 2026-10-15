@@ -351,6 +351,10 @@ export const usePlayerStore = defineStore('player', {
       ]
     },
 
+    markTutorialSeen() {
+      this.hasSeenTutorial = true
+    },
+
     // Nhan gameManager tu App.vue thay vi tu giu instance trong
     // store - GameManager khong phai reactive state cua Vue (xem
     // ghi chu trong GameManager.ts/App.vue), store chi pass-through.

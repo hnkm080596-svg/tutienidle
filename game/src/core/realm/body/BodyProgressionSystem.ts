@@ -243,6 +243,16 @@ export function collectBodyBaseStatDeltas(
   return deltas
 }
 
+export function collectBodyChapterBaseStatDeltas(
+  player: PlayerData,
+  chapterId: BodyChapterId,
+): Partial<Record<StatType, number>> {
+  const chapter = getBodyChapterDefinition(chapterId)
+  return chapter.collectBaseStatDeltas !== undefined
+    ? chapter.collectBaseStatDeltas(player)
+    : {}
+}
+
 // Typed iteration seam for Partial<Record<StatType, number>> - the
 // single narrow so consumers never ad-hoc cast Object.entries.
 export function statDeltaEntries(

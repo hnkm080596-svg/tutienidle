@@ -18,6 +18,8 @@ export interface BodyGainView {
   stat: StatType | null
   label: string
   value: string
+  numericValue: number
+  percent?: boolean
 }
 
 export interface BodyCostView {

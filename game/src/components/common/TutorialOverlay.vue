@@ -30,7 +30,7 @@ const currentStep = computed(() => TUTORIAL_STEPS[currentIndex.value]!)
 const isLastStep = computed(() => currentIndex.value === TUTORIAL_STEPS.length - 1)
 
 function finish() {
-  player.hasSeenTutorial = true
+  player.markTutorialSeen()
 }
 
 function next() {

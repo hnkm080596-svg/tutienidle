@@ -11,8 +11,10 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import type { PlayerData } from '@/core/player/Player'
 import type { GameManager } from '@/core/game/GameManager'
 import {
+  collectBodyChapterBaseStatDeltas,
   getBodyChapterProgress,
   isBodyChapterUnlocked,
+  statDeltaEntries,
 } from '@/core/realm/body/BodyProgressionSystem'
 import type { BodyChapterId } from '@/core/realm/body/BodyChapter'
 import {
@@ -58,6 +60,7 @@ export interface BodyChapterModel {
   total: number
   units: BodyUnitView[]
   chips: BodyChipView[]
+  totalRows: readonly { label: string; value: string }[]
   /** Single gate line for a chapter whose every unit is out of reach
    *  (e.g. the meridian page below Luyen Khi) - real unlock condition,
    *  rendered in place of the hidden unit content. */
@@ -126,6 +129,7 @@ function buildRefinementUnits(
         stat,
         label: statLabel(stat),
         value: `+${tier.baseGains[stat] ?? 0}`,
+        numericValue: tier.baseGains[stat] ?? 0,
       })),
       costs: [{
         id: TINH_HOA_PHAM_THE_MATERIAL_ID,
@@ -224,6 +228,8 @@ function buildMeridianUnits(
         stat,
         label: statLabel(stat),
         value: `+${(meridian.percentAtFullTier * 100).toFixed(0)}%`,
+        numericValue: meridian.percentAtFullTier * 100,
+        percent: true,
       })),
       costs: [{
         id: THONG_MACH_DAN_MATERIAL_ID,
@@ -314,6 +320,7 @@ function buildZhouTianUnits(
             stat,
             label: statLabel(stat),
             value: `+${reward[stat] ?? 0}`,
+            numericValue: reward[stat] ?? 0,
           }))
       : [],
     costs: status === 'active'
@@ -330,6 +337,39 @@ function buildZhouTianUnits(
     canInvest: status === 'active' && owned >= need && need > 0,
     progress: { value: completed, max: capacity },
   }]
+}
+
+function buildChapterTotalRows(
+  player: PlayerData,
+  id: BodyChapterId,
+  units: readonly BodyUnitView[],
+): { label: string; value: string }[] {
+  // Big-tier total stats (owner ruling 2026-10-10): Ren The is ONE big
+  // tier - the card lists the chapter's accumulated grants, which the
+  // domain computes as done tiers at full baseGains + the in-progress
+  // tier scaled by progress/cap. Other chapters keep the done-unit sum.
+  if (id === 'body_refinement') {
+    const deltas = collectBodyChapterBaseStatDeltas(player, 'body_refinement')
+    return statDeltaEntries(deltas).map(([stat, value]) => ({
+      label: statLabel(stat),
+      value: `+${Number.parseFloat((value ?? 0).toFixed(2))}`,
+    }))
+  }
+
+  const sums = new Map<string, { value: number; percent: boolean }>()
+  for (const unit of units) {
+    if (unit.status !== 'done' && unit.status !== 'complete') continue
+    for (const gain of unit.gains) {
+      const entry = sums.get(gain.label) ?? { value: 0, percent: false }
+      entry.value += gain.numericValue
+      if (gain.percent === true) entry.percent = true
+      sums.set(gain.label, entry)
+    }
+  }
+  return [...sums.entries()].map(([label, entry]) => ({
+    label,
+    value: `+${Number.parseFloat(entry.value.toFixed(2))}${entry.percent ? '%' : ''}`,
+  }))
 }
 
 export const BODY_CHAPTER_ORDER: readonly BodyChapterId[] = [
@@ -416,6 +456,7 @@ export function useBodySceneModel() {
         total: progress.total,
         units,
         chips,
+        totalRows: buildChapterTotalRows(player.$state, id, units),
         lockHint: units.length === 0 ? chapterLockHint(id) : undefined,
       }
     })

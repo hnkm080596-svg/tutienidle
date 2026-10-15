@@ -17,8 +17,6 @@ import { BODY_CHAPTER_LABEL_KEYS } from './useBodySceneModel'
 import type { BodyChapterId } from '@/core/realm/body/BodyChapter'
 import type { BodyUnitView } from './bodySceneModel'
 import { getPhysiqueGrade } from '@/core/realm/body/BodyProgressionSystem'
-import { bodyRefinementChapter } from '@/core/realm/body/BodyRefinementChapter'
-import { statLabel } from '@/core/stats/StatLabels'
 import { betaHiddenRealmRecordFor } from '@/core/betaScopeSurface'
 import { getQuanTheMechanic } from '@/core/realm/hidden/QuanTheDiversion'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -141,32 +139,7 @@ const units = computed(() => activeModel.value.units.map(toUiUnit))
 // tier - the card lists the chapter's accumulated grants, which the
 // domain computes as done tiers at full baseGains + the in-progress
 // tier scaled by progress/cap. Other chapters keep the done-unit sum.
-const totalRows = computed(() => {
-  if (activeDomainChapter.value === 'body_refinement') {
-    stateVersion.value
-    const deltas = bodyRefinementChapter.collectBaseStatDeltas(player.$state)
-    return Object.entries(deltas).map(([stat, value]) => ({
-      label: statLabel(stat as never),
-      value: `+${Number.parseFloat((value ?? 0).toFixed(2))}`,
-    }))
-  }
-  const sums = new Map<string, { value: number; percent: boolean }>()
-  for (const unit of units.value) {
-    if (unit.state !== 'done') continue
-    for (const row of unit.rows) {
-      const match = /^\s*([+-]?\d+(?:\.\d+)?)\s*(%?)\s*$/.exec(row.value)
-      if (!match) continue
-      const entry = sums.get(row.label) ?? { value: 0, percent: false }
-      entry.value += Number.parseFloat(match[1]!)
-      if (match[2]) entry.percent = true
-      sums.set(row.label, entry)
-    }
-  }
-  return [...sums.entries()].map(([label, entry]) => ({
-    label,
-    value: `+${Number.parseFloat(entry.value.toFixed(2))}${entry.percent ? '%' : ''}`,
-  }))
-})
+const totalRows = computed(() => activeModel.value.totalRows)
 
 // Chu Thien lore milestones (Tieu 18 / Dai 36) ride the same rail as
 // chips but own no detail card.

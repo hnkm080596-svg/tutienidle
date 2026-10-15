@@ -13,7 +13,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
-import { ALCHEMY_MAX_BATCH_QUANTITY } from '@/core/alchemy/AlchemySystem'
+import { computeAlchemyJobProgress } from '@/core/alchemy/AlchemySystem'
 import { betaRecipeFamilyOfId } from '@/core/betaScope'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
@@ -238,15 +238,11 @@ const jobs = computed(() => {
   const ordered = queue.activeJob ? [queue.activeJob, ...queue.waitingJobs] : queue.waitingJobs
   return ordered.map((job): AlchemyJobDisplay => {
     const active = job.jobId === queue.activeJob?.jobId
-    const remainingMs = Math.max(0, job.completesAtMs - nowMs.value)
-    const totalMs = Math.max(1, job.completesAtMs - job.startedAtMs)
-    const quantity = Math.max(1, job.quantity ?? 1)
-    const unitsDone = Math.min(quantity, Math.max(0, job.unitsDone ?? 0))
-    const perUnitMs = totalMs / quantity
-    const currentUnitStart = job.startedAtMs + unitsDone * perUnitMs
-    const currentUnitFraction = unitsDone >= quantity
-      ? 1
-      : Math.min(1, Math.max(0, (nowMs.value - currentUnitStart) / perUnitMs))
+    const { remainingMs, unitsDone, quantity, progressPercent } = computeAlchemyJobProgress(
+      job,
+      nowMs.value,
+      active,
+    )
     return {
       id: job.jobId,
       recipeId: job.recipeId,
@@ -255,7 +251,7 @@ const jobs = computed(() => {
       name: gameManager.pillRegistry.has(job.pillId) ? gameManager.pillRegistry.get(job.pillId).name : job.pillId,
       icon: pillIconFor(job),
       state: active ? 'active' : 'waiting',
-      progress: active ? Math.min(100, ((unitsDone + currentUnitFraction) / quantity) * 100) : 0,
+      progress: progressPercent,
       remaining: active ? `${Math.ceil(remainingMs / 60000)}p` : t('alchemy.waitingJob'),
       unitsDone,
       quantity,
@@ -265,115 +261,17 @@ const jobs = computed(() => {
 
 const maxJobSlots = computed(() => queueState.value.maxTotalJobs)
 
-const pillRoomLevel = computed(() => {
+const brewQuote = computed(() => {
   stateVersion.value
-  return gameManager.buildingManager.getByBuildingId('pill_room')?.level ?? 0
-})
-
-const tailMergeable = computed(() => {
-  const last = jobs.value[jobs.value.length - 1]
-  return (
-    last !== undefined &&
-    last.recipeId === selectedRecipe.value?.id &&
-    last.herbMaterialId === selectedHerbId.value &&
-    last.roomLevelAtStart === pillRoomLevel.value &&
-    (last.quantity ?? 1) < ALCHEMY_MAX_BATCH_QUANTITY
+  return gameManager.alchemyOps.quoteAlchemyBrew(
+    selectedRecipe.value?.id ?? null,
+    selectedHerbId.value,
+    player.$state,
   )
 })
 
-// Same admission the domain checks first (GameManagerAlchemyOps fails
-// closed with 'room_not_built'): without a pill-room instance there is
-// no furnace, so the surface must block brew the same way.
-const pillRoomBuilt = computed(() => {
-  stateVersion.value
-
-  return Boolean(gameManager.buildingManager.getByBuildingId('pill_room'))
-})
-
-const canBrew = computed(() => {
-  stateVersion.value
-
-  if (!pillRoomBuilt.value) {
-    return false
-  }
-
-  if (!selectedRecipe.value || !selectedHerbId.value) {
-    return false
-  }
-
-  if (jobs.value.length >= queueState.value.maxTotalJobs && !tailMergeable.value) {
-    return false
-  }
-
-  const variant = variantRows.value.find((row) => row.materialId === selectedHerbId.value)
-
-  if (!variant?.enough) {
-    return false
-  }
-
-  if (fuelWoodRow.value && fuelWoodRow.value.owned < fuelWoodRow.value.amount) {
-    return false
-  }
-
-  if (tinhHoaRow.value && tinhHoaRow.value.owned < tinhHoaRow.value.amount) {
-    return false
-  }
-
-  if (spiritStoneRow.value.owned < spiritStoneRow.value.amount) {
-    return false
-  }
-
-  return true
-})
-
-// ui-audit economy M4: the brew button was disabled with NO on-screen
-// reason, so "why won't it brew" was invisible. The herb input is
-// reported first (it is the player's selection), then slot/fuel/stone
-// in canBrew order; every branch maps to an existing alchemy.reason.*
-// key so the line under the button names the exact missing input.
-const brewBlockReason = computed<string | null>(() => {
-  stateVersion.value
-
-  if (!selectedRecipe.value) {
-    return null
-  }
-
-  // Room gate first - matches the domain's own startAlchemyJob order
-  // (no instance -> room_not_built beats every material check).
-  if (!pillRoomBuilt.value) {
-    return 'room_not_built'
-  }
-
-  if (!selectedHerbId.value || !variantRows.value.find((row) => row.materialId === selectedHerbId.value)?.enough) {
-    return 'missing_herb'
-  }
-
-  if (jobs.value.length >= queueState.value.maxTotalJobs && !tailMergeable.value) {
-    return 'job_slots_full'
-  }
-
-  if (!selectedHerbId.value) {
-    return 'missing_herb'
-  }
-
-  if (fuelWoodRow.value && fuelWoodRow.value.owned < fuelWoodRow.value.amount) {
-    return 'missing_bui_go'
-  }
-
-  if (!variantRows.value.find((row) => row.materialId === selectedHerbId.value)?.enough) {
-    return 'missing_herb'
-  }
-
-  if (tinhHoaRow.value && tinhHoaRow.value.owned < tinhHoaRow.value.amount) {
-    return 'missing_tinh_hoa'
-  }
-
-  if (spiritStoneRow.value.owned < spiritStoneRow.value.amount) {
-    return 'missing_spirit_stone'
-  }
-
-  return null
-})
+const canBrew = computed(() => brewQuote.value.canBrew)
+const brewBlockReason = computed<string | null>(() => brewQuote.value.blockReason)
 
 // audit M4: pick the one string shape that matches the actual
 // guarantee so a 0% tail never promises "0% them N vien".

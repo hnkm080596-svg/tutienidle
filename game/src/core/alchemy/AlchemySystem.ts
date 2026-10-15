@@ -489,6 +489,30 @@ export function unitsStartedAt(
   return Math.min(quantity, Math.floor((nowMs - job.startedAtMs) / perUnitMs) + 1)
 }
 
+export function computeAlchemyJobProgress(
+  job: Pick<ActiveAlchemyJob, 'startedAtMs' | 'completesAtMs' | 'quantity' | 'unitsDone'>,
+  nowMs: number,
+  active: boolean,
+): { remainingMs: number; unitsDone: number; quantity: number; progressPercent: number } {
+  const remainingMs = Math.max(0, job.completesAtMs - nowMs)
+  const totalMs = Math.max(1, job.completesAtMs - job.startedAtMs)
+  const quantity = Math.max(1, job.quantity ?? 1)
+  const unitsDone = Math.min(quantity, Math.max(0, job.unitsDone ?? 0))
+  const perUnitMs = totalMs / quantity
+  const currentUnitStart = job.startedAtMs + unitsDone * perUnitMs
+  const currentUnitFraction =
+    unitsDone >= quantity
+      ? 1
+      : Math.min(1, Math.max(0, (nowMs - currentUnitStart) / perUnitMs))
+
+  return {
+    remainingMs,
+    unitsDone,
+    quantity,
+    progressPercent: active ? Math.min(100, ((unitsDone + currentUnitFraction) / quantity) * 100) : 0,
+  }
+}
+
 function parseAlchemyJobCounter(jobId: string): number {
   const match = /_(\d+)$/.exec(jobId)
   if (!match) return 0

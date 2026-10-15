@@ -29,6 +29,11 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { isBetaStatLabelVisible, isBetaTalentId, isBetaWay } from '@/core/betaScope'
 import type { Stats } from '@/core/stats/StatBlock'
+import {
+  COMBAT_POWER_TERMS,
+  computeCombatPower,
+  computeCombatPowerTermContribution,
+} from '@/core/player/CombatPower'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import CharacterFidelityScene from './fidelity/CharacterFidelityScene.vue'
 import type { CharacterUiModel, CharacterUiStat, CharacterUiStatSources } from './fidelity/characterUi'
@@ -106,23 +111,8 @@ const DETAIL_DEFENSE: readonly (keyof Stats)[] = [
   'protectChance',
 ]
 
-// Suc Manh formula (owner: this adapter) - the same terms feed both the
-// headline number and the R12 hover breakdown rows.
-const POWER_TERMS: readonly { stat: keyof Stats; weight: number }[] = [
-  { stat: 'might', weight: 2 },
-  { stat: 'defense', weight: 1.5 },
-  { stat: 'maxHp', weight: 0.1 },
-  { stat: 'maxMp', weight: 0.05 },
-  { stat: 'criticalRate', weight: 500 },
-  { stat: 'criticalDamage', weight: 300 },
-  { stat: 'speed', weight: 200 },
-]
-const combatPower = computed(() => {
-  const stats = player.finalStats
-  return Math.round(
-    POWER_TERMS.reduce((sum, term) => sum + stats[term.stat] * term.weight, 0),
-  )
-})
+// Suc Manh formula lives in @/core/player/CombatPower (Ruling D6).
+const combatPower = computed(() => computeCombatPower(player.finalStats))
 
 // Ly Hoa Chi Dao branding (Minh ruling 2026-10-04): a fire-committed
 // Phap Tu walks the Li-trigram dao, so the elemental dao name + verse
@@ -230,9 +220,9 @@ const model = computed<CharacterUiModel>(() => {
     path: pathName.value,
     pathVerse: pathVerse.value,
     combatPower: formatNumber(combatPower.value),
-    powerSources: POWER_TERMS.map((term) => ({
+    powerSources: COMBAT_POWER_TERMS.map((term) => ({
       label: BASE_STAT_LABELS.find((stat) => stat.key === term.stat)?.label ?? term.stat,
-      value: formatNumber(Math.round(resolved[term.stat] * term.weight)),
+      value: formatNumber(computeCombatPowerTermContribution(resolved, term)),
     })),
     stats,
     elements: ELEMENT_ORDER.map((element, index) => ({
