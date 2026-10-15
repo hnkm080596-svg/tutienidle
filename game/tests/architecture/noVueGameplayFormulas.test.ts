@@ -89,4 +89,22 @@ describe('No Vue Gameplay Formulas & Read-Model Bypass (Slice 3.4)', () => {
     },
     SCAN_TIMEOUT,
   )
+
+  it(
+    'CombatSceneOverlay.vue delegates ui-assets freeze latch and asset readiness to @/presentation/combat/CombatChromeAssetGate (V4b, Slice 3.5)',
+    () => {
+      const text = fileText('components/game/combat/CombatSceneOverlay.vue')
+      expect(text).toContain("from '@/presentation/combat/CombatChromeAssetGate'")
+      expect(text).toContain('mountCombatChromeRoot(')
+      expect(text).not.toContain('useGameManager')
+      expect(text).not.toContain('registerFreezeLatchTruth')
+      expect(text).not.toContain('freezeCombat')
+      expect(text).not.toContain('resumeCombat')
+      expect(text).not.toContain('getTurnBattle')
+
+      const appText = fileText('App.vue')
+      expect(appText).toContain('bindCombatChromeAssetGate(')
+    },
+    SCAN_TIMEOUT,
+  )
 })

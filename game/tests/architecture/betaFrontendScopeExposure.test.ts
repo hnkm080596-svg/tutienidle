@@ -101,8 +101,6 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
         'components/game/combat/hud/TurnCombatSkillBar.vue',
         // BattleCard projects companion slots; the human row uses the gated shared bar.
         'components/game/combat/hud/BattleCard.vue',
-        // CombatSceneOverlay enumerates icon URLs for decode, never manual actions.
-        'components/game/combat/CombatSceneOverlay.vue',
         'components/panels/CompanionPanel.vue',
         'composables/useTurnCombatManual.ts',
         // SkillSurface's design_ultimate_placeholder is the skill

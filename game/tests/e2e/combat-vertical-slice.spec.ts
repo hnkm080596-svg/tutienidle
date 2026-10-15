@@ -244,7 +244,7 @@ async function startStageOneBattle(page: import('@playwright/test').Page): Promi
   await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
   await teleportSlot.click()
 
-  const overlay = page.getByTestId('function-overlay-panel')
+  const overlay = page.locator('.exploration-scene').or(page.getByTestId('function-overlay-panel'))
   await expect(overlay).toBeVisible({ timeout: 10_000 })
 
   const startButton = page.getByTestId('stage-start-button')

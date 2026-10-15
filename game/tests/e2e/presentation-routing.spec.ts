@@ -26,7 +26,7 @@ test.describe('Presentation routing regression (Task 1 baseline)', () => {
     await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
     await teleportSlot.click()
 
-    const overlay = page.getByTestId('function-overlay-panel')
+    const overlay = page.locator('.exploration-scene').or(page.getByTestId('function-overlay-panel'))
     await expect(overlay).toBeVisible({ timeout: 10_000 })
 
     const startButton = page.getByTestId('stage-start-button')
@@ -49,5 +49,20 @@ test.describe('Presentation routing regression (Task 1 baseline)', () => {
         }),
       )
       .toBe(true)
+
+    await expect(page.locator('.combat-scene-overlay')).toBeVisible({ timeout: 15_000 })
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const game = (window as Window & {
+            __tutienPhaserGame?: { registry: { get(key: string): unknown } }
+          }).__tutienPhaserGame
+          const manager = game?.registry.get('gameManager') as
+            | { getFreezeReasons?(): readonly string[] }
+            | undefined
+          return manager?.getFreezeReasons?.().includes('ui-assets') ?? false
+        }),
+      )
+      .toBe(false)
   })
 })

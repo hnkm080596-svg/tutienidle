@@ -28,6 +28,7 @@ import { CompositeRenderer, createVueRouteAdapter } from './presentation/VueRout
 import { GamePresentationCoordinator } from './presentation/GamePresentationCoordinator'
 import { createGamePresentation } from './presentation/createGamePresentation'
 import { bindPresentationActive } from './presentation/bindPresentationActive'
+import { bindCombatChromeAssetGate } from './presentation/combat/CombatChromeAssetGate'
 import { bindCombatAudio } from './presentation/audio/combatAudioBinding'
 import { bindUiAudio } from './presentation/audio/uiAudioBinding'
 import { bindAmbientAudio } from './presentation/audio/ambientAudioDriver'
@@ -285,6 +286,7 @@ const routeAdapter = createVueRouteAdapter(coordinator, compositeRenderer)
 // combat session is attached. CombatScene must never assert this for
 // itself (self-report is the pattern the coordinator design rejected).
 const unbindPresentationActive = bindPresentationActive(coordinator, gameManager)
+const unbindCombatChromeAssets = bindCombatChromeAssetGate(coordinator, gameManager)
 
 // Audio: domain combat events -> SFX (observation only, A7). Bound at module
 // scope next to the other event-bus bindings; store handles enabled/volume.
@@ -1269,6 +1271,7 @@ onUnmounted(() => {
   presentation.dispose()
   routeAdapter.dispose()
   unbindPresentationActive()
+  unbindCombatChromeAssets()
   unbindCombatAudio()
   unbindUiAudio()
   unbindAmbientAudio()

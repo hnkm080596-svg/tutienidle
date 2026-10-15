@@ -26,44 +26,13 @@ import CombatPanel from '@/components/scenes/combat/CombatPanel.vue'
 import CombatControlButton from '@/components/scenes/combat/CombatControlButton.vue'
 import { publishTopBarHeight, resetCombatInsets } from '@/presentation/geometry/combatInsets'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
-import { useGameManager } from '@/composables/useGameState'
-import { skillIconPath } from '@/data/skill/SkillIconManifest'
-import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { mountCombatChromeRoot } from '@/presentation/combat/CombatChromeAssetGate'
 
 const { t } = useI18n()
 const rootRef = ref<HTMLElement | null>(null)
 const layoutVersion = ref(0)
 const logOpen = ref(false)
-const manager = useGameManager()
-let assetsPending = false
-let mounted = false
-let releaseAssetLatch: (() => void) | undefined
-async function prepareChrome(): Promise<void> {
-  await nextTick()
-  const root = rootRef.value
-  if (!root || !mounted) return
-  const urls = new Set<string>()
-  for (const node of [root, ...root.querySelectorAll<HTMLElement>('*')]) {
-    if (node instanceof HTMLImageElement && node.src) urls.add(node.src)
-    for (const pseudo of [null, '::before', '::after']) {
-      for (const match of getComputedStyle(node, pseudo).backgroundImage.matchAll(/url\(["']?([^"')]+)["']?\)/g)) urls.add(match[1]!)
-    }
-  }
-  for (const actor of manager.getTurnBattle()?.players ?? []) {
-    for (const skill of [actor.basic, actor.special?.skill, actor.ultimate?.skill]) {
-      const icon = skill && skillIconPath(turnSkillDisplayMetaOf(skill.id)?.iconKey)
-      if (icon) urls.add(resolveAssetUrl(icon))
-    }
-  }
-  await Promise.allSettled([...urls].map(url => {
-    const image = new Image()
-    image.src = url
-    return image.decode()
-  }))
-  await document.fonts.ready
-  if (mounted) { assetsPending = false; manager.resumeCombat('ui-assets') }
-}
+let unmountChromeRoot: (() => void) | undefined
 
 // Skill dock mounts only while the battle is fighting: its only content
 // (TurnCombatSkillBar) self-hides otherwise, and an empty dock would be a
@@ -119,11 +88,7 @@ function observeBars() {
 }
 
 onMounted(() => {
-  mounted = true
-  assetsPending = true
-  releaseAssetLatch = manager.registerFreezeLatchTruth('ui-assets', () => assetsPending)
-  manager.freezeCombat('ui-assets')
-  void prepareChrome()
+  unmountChromeRoot = mountCombatChromeRoot(rootRef.value)
   void nextTick(publishInsets)
 
   if (rootRef.value && typeof ResizeObserver !== 'undefined') {
@@ -137,10 +102,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  mounted = false
-  assetsPending = false
-  manager.resumeCombat('ui-assets')
-  releaseAssetLatch?.()
+  unmountChromeRoot?.()
+  unmountChromeRoot = undefined
   insetsObserver?.disconnect()
   insetsObserver = null
 })

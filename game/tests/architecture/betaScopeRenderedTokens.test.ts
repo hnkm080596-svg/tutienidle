@@ -158,11 +158,6 @@ const MOUNT_GATES: MountGate[] = [
 
 const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: string }> = [
   {
-    file: 'components/game/combat/CombatSceneOverlay.vue',
-    tokens: ['ultimate'],
-    reason: 'asset preparation reads participant icons only; it renders no skill roles or ultimate labels',
-  },
-  {
     file: 'components/game/combat/hud/BattleCard.vue',
     tokens: ['ultimate'],
     reason: 'human cards use the beta-filtered TurnCombatSkillBar; the other branch is companion-only and CombatBuild emits no companions while scope-hidden',
