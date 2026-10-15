@@ -14,8 +14,8 @@ const allowSelfSignup =
     <LoginLogoBlock />
     <nav class="login-opening__actions" :aria-label="t('onboarding.auth.eyebrow')">
       <PcPaperButton variant="secondary" data-testid="opening-login-button" :disabled="busy" @click="emit('authenticate', 'login')">{{ t('onboarding.auth.tabs.login') }}</PcPaperButton>
-      <PcPaperButton v-if="allowSelfSignup" variant="secondary" data-testid="opening-register-button" :disabled="busy" @click="emit('authenticate', 'register')">{{ t('onboarding.auth.createAccount') }}</PcPaperButton>
-      <PcPaperButton v-if="resumeAvailable || allowSelfSignup" variant="secondary" :data-testid="resumeAvailable ? 'auth-continue-button' : 'auth-guest-button'" :disabled="busy || !ready" :aria-busy="busy" @click="emit('play')">{{ resumeAvailable ? t('onboarding.auth.continueNoName') : t('onboarding.auth.guest.button') }}</PcPaperButton>
+      <PcPaperButton variant="secondary" data-testid="opening-register-button" :disabled="busy || !allowSelfSignup" @click="emit('authenticate', 'register')">{{ t('onboarding.auth.createAccount') }}</PcPaperButton>
+      <PcPaperButton variant="secondary" :data-testid="resumeAvailable ? 'auth-continue-button' : 'auth-guest-button'" :disabled="busy || !ready || (!resumeAvailable && !allowSelfSignup)" :aria-busy="busy" @click="emit('play')">{{ resumeAvailable ? t('onboarding.auth.continueNoName') : t('onboarding.auth.guest.button') }}</PcPaperButton>
       <PcPaperButton variant="secondary" data-testid="opening-settings-button" :disabled="busy" @click="emit('settings')">{{ t('paperNav.settings') }}</PcPaperButton>
       <PcPaperButton variant="secondary" data-testid="opening-exit-button" :disabled="busy" @click="emit('exit')">{{ t('onboarding.auth.exit.title') }}</PcPaperButton>
       <p v-if="error" class="login-opening__error" role="alert">{{ error }}</p>
@@ -53,6 +53,7 @@ const allowSelfSignup =
 #app .login-opening__actions .pc-paper-button--secondary:not(:disabled):is(:hover, :focus-visible)::before { border-image: none; background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png'); filter: none; }
 #app .login-opening__actions .pc-paper-button--secondary:not(:disabled):active::before { border-image: none; background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png'); filter: none; }
 .login-opening__actions .pc-paper-button:focus-visible { outline: 3px solid #836126; outline-offset: 5px; }
-.login-opening__actions .pc-paper-button:disabled { opacity: .6; cursor: wait; }
+.login-opening__actions .pc-paper-button:disabled { opacity: .55; cursor: not-allowed; }
+.login-opening__actions .pc-paper-button[aria-busy="true"]:disabled { cursor: wait; }
 .login-opening__error { color: #983a23; background: #f5ead6e6; padding: 10px; margin: 0; font-size: 17px; }
 </style>
