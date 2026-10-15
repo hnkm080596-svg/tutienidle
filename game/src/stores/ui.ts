@@ -1,3 +1,4 @@
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import {
   loadPersistedUiAutomationFlags,
@@ -10,7 +11,7 @@ import {
 
 // "Trang chuc nang" chiem 100% panel trai, chi 1 trang hien tai 1
 // thoi diem - 'inventory' con co them khoi Equipment co dinh 30%
-// phia tren (xem LeftPanel.vue). Panel phai KHONG con giu noi dung
+// phia tren. Panel phai KHONG con giu noi dung
 // chuc nang nao nen khong con RightPanelMode nua. 'building' - trang
 // rieng 100%, khong co khoi Equipment (khong lien quan trang bi).
 //
@@ -40,8 +41,16 @@ import {
 // Declared in `presentation/contracts/panelIds.ts` and re-exported here, so
 // that `src/game/` can name a panel without importing a Pinia store (V2/sec3.2).
 // Every existing `from '@/stores/ui'` import keeps working.
-export type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
-import type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
+export type {
+  HomeSurfaceId,
+  LeftPanelMode,
+  StandalonePanel,
+} from '@/presentation/contracts/panelIds'
+import type {
+  HomeSurfaceId,
+  LeftPanelMode,
+  StandalonePanel,
+} from '@/presentation/contracts/panelIds'
 
 // Phu/Tran legacy khai tu - bag chi con 3 tab. Owner ruling 2026-10-08:
 // 'decompose' joins Kho Vat (Phan Giai ore-decompose moved out of the
@@ -120,210 +129,304 @@ export interface BagSortStateMap {
   decompose: BagSortState<MaterialSortMode>
 }
 
-export const useUiStore = defineStore('ui', {
+const STANDALONE_PANELS: ReadonlySet<string> = new Set<Exclude<StandalonePanel, null>>([
+  'skill',
+  'realm',
+  'quan_khi',
+  'quest',
+  'artifact',
+  'tran_phap',
+  'companion',
+  'technique',
+  'body',
+])
+
+function isFunctionLeftPanelSurface(surface: HomeSurfaceId | null): surface is Exclude<LeftPanelMode, 'character' | 'inventory' | null> {
+  return (
+    surface !== null &&
+    !STANDALONE_PANELS.has(surface) &&
+    surface !== 'character' &&
+    surface !== 'inventory' &&
+    surface !== 'feedback'
+  )
+}
+
+export const useUiStore = defineStore('ui', () => {
   // Automation flags (battleRunMode) duoc HYDRATE tu localStorage qua
   // uiFlagsPersistence.ts - nguoi choi yeu cau "luu lai flag cua cac
   // trang thai tu dong" nen chung song qua reload (2026-08-26). Cac
   // flag con lai van transient theo phien.
-  state: () => {
-    const automation = loadPersistedUiAutomationFlags()
+  const automation = loadPersistedUiAutomationFlags()
 
-    return {
-    leftPanelMode: null as LeftPanelMode,
+  // Slice 3.2 (V1): single authoritative state owner for which overlay
+  // surface is open above Dong Phu (`null` when the home vista is uncovered).
+  const activeHomeSurface = ref<HomeSurfaceId | null>(null)
 
-    architectureFocusBuildingId: null as string | null,
+  // Remembers which of the two character/inventory scroll tabs was last
+  // selected when a caller toggles `characterOverlayOpen = true` directly.
+  const lastCharacterSceneTab = ref<'character' | 'inventory'>('character')
 
-    characterOverlayOpen: false,
+  const architectureFocusBuildingId = ref<string | null>(null)
 
-    // Which imperial scroll the home overlay currently shows:
-    // 'character' (scene 04) or 'inventory' (scene 09). The boolean above
-    // keeps governing whether the overlay is open at all.
-    characterSceneTab: 'character' as 'character' | 'inventory',
+  // Command wheel (dong-fu-command-wheel plan) - mo/dong bang click
+  // nhan vat tu luyen giua Dong Phu; Escape/click vung trong dong.
+  // Transient theo phien, KHONG luu save.
+  const isCommandWheelOpen = ref(false)
 
-    // Command wheel (dong-fu-command-wheel plan) - mo/dong bang click
-    // nhan vat tu luyen giua Dong Phu; Escape/click vung trong dong.
-    // Transient theo phien, KHONG luu save.
-    isCommandWheelOpen: false,
+  const activeBagTab = ref<BagTab>('material')
 
-    activeBagTab: 'material' as BagTab,
+  // Sort theo tung tab (plan Workstream E) - chi song trong phien choi,
+  // KHONG ghi vao game save. Doi mode tu reset direction ve 'asc'.
+  const bagSorts = ref<BagSortStateMap>({
+    equipment: { mode: 'default', direction: 'asc' },
+    material: { mode: 'default', direction: 'asc' },
+    pill: { mode: 'default', direction: 'asc' },
+    dissolve: { mode: 'default', direction: 'asc' },
+    decompose: { mode: 'default', direction: 'asc' },
+  })
 
-    // Sort theo tung tab (plan Workstream E) - chi song trong phien choi,
-    // KHONG ghi vao game save. Doi mode tu reset direction ve 'asc'.
-    bagSorts: {
-      equipment: { mode: 'default', direction: 'asc' },
-      material: { mode: 'default', direction: 'asc' },
-      pill: { mode: 'default', direction: 'asc' },
-      dissolve: { mode: 'default', direction: 'asc' },
-      decompose: { mode: 'default', direction: 'asc' },
-    } as BagSortStateMap,
+  const battleRunMode = ref<BattleRunMode>(automation.battleRunMode ?? 'manual')
 
-    // Dong Phu quick nav - command wheel entries mo cac overlay DOC
-    // LAP (xem StandalonePanel o tren), thay cho loadoutTab cu (2 tab
-    // cua chung 1 LoadoutManager.vue, da xoa). Transient (KHONG luu
-    // save) - cung nhom isAuto.
-    standalonePanel: null as StandalonePanel,
+  // Slice 7 - combat input mode, persist cung nhom automation flags.
+  const combatInputMode = ref<CombatInputMode>(automation.combatInputMode ?? 'auto')
 
+  const selectedZoneId = ref<string | null>(null)
+  const selectedStageId = ref<string | null>(null)
+  const combatOrigin = ref<'stage' | 'tribulation' | null>(null)
 
-    battleRunMode: automation.battleRunMode ?? 'manual',
+  const hasHomeOverlayOpen = computed(() => activeHomeSurface.value !== null)
 
-    // Slice 7 - combat input mode, persist cung nhom automation flags.
-    combatInputMode: automation.combatInputMode ?? 'auto',
-
-    // (2026-08-30) isAutoConsumeTinhHoa da GO - Luyen The tu dau tu qua
-    // essence stream (App.vue), khong con flag auto.
-
-    // Tham Hiem rework - Dia Gioi + Man dang chon de danh (App.vue's
-    // fightStage() doc 2 field nay thay vi hardcode STAGES[0]) + che
-    // do Auto-refight ung xu ra sao khi thang (xem
-    // GameManager.getNextStageInZone() - can selectedZoneId de biet
-    // tim Man ke tiep trong DUNG Dia Gioi nao).
-    // battleRunMode: 2026-08-26 DUOC LUU qua localStorage (automation
-    // flags); selected* van transient theo phien choi hien tai.
-    selectedZoneId: null as string | null,
-
-    selectedStageId: null as string | null,
-
-    // Nguon goc tran dang/vua dien ra - Stage (qua StageSelectPanel) co
-    // CombatResultModal rieng (reward/Danh Lai/Tiep Tuc theo dung spec);
-    // Tribulation (Dot Pha) da co luong thang/thua RIENG tu truoc (xem
-    // useTribulation.ts's resolveVictory/resolveDefeat + World
-    // Announcement) - Combat Scene van hien chien truong cho Tribulation
-    // nhung KHONG hien CombatResultModal (tranh hien 2 lop ket qua chong
-    // nhau). null = chua tung co tran nao.
-    combatOrigin: null as 'stage' | 'tribulation' | null,
-    }
-  },
-
-  actions: {
-    /**
-     * Ghi snapshot automation flags vao localStorage - goi tu cac action
-     * doi flag; mutation TRUC TIEP tu panel duoc bat boi $subscribe o
-     * App.vue (cung ham save, hai duong vao mot dich).
-     */
-    persistAutomationFlags() {
-      savePersistedUiAutomationFlags({
-        battleRunMode: this.battleRunMode,
-        combatInputMode: this.combatInputMode,
-      })
+  // Writable projections derived strictly from `activeHomeSurface` so existing
+  // consumers and tests continue to work while `activeHomeSurface` remains the
+  // sole source of truth (mutual exclusion guaranteed by construction).
+  const leftPanelMode = computed<LeftPanelMode>({
+    get() {
+      return isFunctionLeftPanelSurface(activeHomeSurface.value)
+        ? activeHomeSurface.value
+        : null
     },
-
-    openLeftPanel(mode: Exclude<LeftPanelMode, null>) {
-      // BETA SCOPE LOCK v2 (Phase-6): scope-hidden mode no-ops.
-      if (!isBetaLeftPanelMode(mode)) {
+    set(mode) {
+      if (mode === null) {
+        if (isFunctionLeftPanelSurface(activeHomeSurface.value)) {
+          activeHomeSurface.value = null
+        }
         return
       }
-
       if (mode === 'character' || mode === 'inventory') {
-        this.closeHomeOverlays()
-        this.characterOverlayOpen = true
-        this.characterSceneTab = mode
-        this.activeBagTab = 'material'
+        lastCharacterSceneTab.value = mode
+      }
+      activeHomeSurface.value = mode
+    },
+  })
+
+  const standalonePanel = computed<StandalonePanel>({
+    get() {
+      const surface = activeHomeSurface.value
+      return surface !== null && STANDALONE_PANELS.has(surface)
+        ? (surface as StandalonePanel)
+        : null
+    },
+    set(panel) {
+      if (panel === null) {
+        if (activeHomeSurface.value !== null && STANDALONE_PANELS.has(activeHomeSurface.value)) {
+          activeHomeSurface.value = null
+        }
         return
       }
-      this.closeHomeOverlays()
-
-      this.leftPanelMode = mode
+      activeHomeSurface.value = panel
     },
+  })
 
-    openArchitecture(focusBuildingId: string | null = null) {
-      this.closeHomeOverlays()
-      this.architectureFocusBuildingId = focusBuildingId
-      this.leftPanelMode = 'architecture'
+  const characterOverlayOpen = computed<boolean>({
+    get() {
+      return activeHomeSurface.value === 'character' || activeHomeSurface.value === 'inventory'
     },
-
-    openStandalonePanel(panel: Exclude<StandalonePanel, null>) {
-      // BETA SCOPE LOCK v2 (Phase-6): scope-hidden panels
-      // (artifact / tran_phap / companion) fail closed - no caller can
-      // open them through this seam.
-      if (!isBetaStandalonePanel(panel)) {
+    set(open) {
+      if (open) {
+        if (activeHomeSurface.value !== 'character' && activeHomeSurface.value !== 'inventory') {
+          activeHomeSurface.value = lastCharacterSceneTab.value
+        }
         return
       }
-
-      this.closeHomeOverlays()
-
-      this.standalonePanel = panel
-    },
-
-    /** Dong toan bo chrome/overlay cua Dong Phu khi click nen chinh. */
-    closeHomeOverlays() {
-      this.leftPanelMode = null
-      this.architectureFocusBuildingId = null
-      this.characterOverlayOpen = false
-      this.standalonePanel = null
-      this.isCommandWheelOpen = false
-    },
-
-    toggleCommandWheel() {
-      if (this.isCommandWheelOpen) {
-        this.isCommandWheelOpen = false
-
-        return
+      if (activeHomeSurface.value === 'character' || activeHomeSurface.value === 'inventory') {
+        activeHomeSurface.value = null
       }
-
-      this.closeHomeOverlays()
-      this.isCommandWheelOpen = true
     },
+  })
 
-    closeCommandWheel() {
-      this.isCommandWheelOpen = false
+  const characterSceneTab = computed<'character' | 'inventory'>({
+    get() {
+      return activeHomeSurface.value === 'character' || activeHomeSurface.value === 'inventory'
+        ? activeHomeSurface.value
+        : lastCharacterSceneTab.value
     },
-
-    setActiveBagTab(tab: BagTab) {
-      this.activeBagTab = tab
-    },
-
-    // Doi tieu chi sort cua mot tab - direction reset ve 'asc' va UI
-    // section tu goi resetPage() (watch tren bagSorts) quay ve trang dau.
-    setBagSortMode<K extends keyof BagSortStateMap>(
-      tab: K,
-
-      mode: BagSortStateMap[K]['mode'],
-    ) {
-      const sort = this.bagSorts[tab] as BagSortState
-
-      if (sort.mode === mode) {
-        return
+    set(tab) {
+      lastCharacterSceneTab.value = tab
+      if (activeHomeSurface.value === 'character' || activeHomeSurface.value === 'inventory') {
+        activeHomeSurface.value = tab
       }
-
-      sort.mode = mode
-
-      sort.direction = 'asc'
     },
+  })
 
-    toggleBagSortDirection(tab: keyof BagSortStateMap) {
-      const sort = this.bagSorts[tab] as BagSortState
+  /**
+   * Ghi snapshot automation flags vao localStorage - goi tu cac action
+   * doi flag; mutation TRUC TIEP tu panel duoc bat boi $subscribe o
+   * App.vue (cung ham save, hai duong vao mot dich).
+   */
+  function persistAutomationFlags() {
+    savePersistedUiAutomationFlags({
+      battleRunMode: battleRunMode.value,
+      combatInputMode: combatInputMode.value,
+    })
+  }
 
-      sort.direction = sort.direction === 'asc' ? 'desc' : 'asc'
-    },
+  /** Dong toan bo chrome/overlay cua Dong Phu khi click nen chinh. */
+  function closeHomeOverlays() {
+    activeHomeSurface.value = null
+    architectureFocusBuildingId.value = null
+    isCommandWheelOpen.value = false
+  }
 
-    // Action "Mac dinh" - tra lai original order.
-    resetBagSort(tab: keyof BagSortStateMap) {
-      const sort = this.bagSorts[tab] as BagSortState
+  function openLeftPanel(mode: Exclude<LeftPanelMode, null>) {
+    // BETA SCOPE LOCK v2 (Phase-6): scope-hidden mode no-ops.
+    if (!isBetaLeftPanelMode(mode)) {
+      return
+    }
 
-      sort.mode = 'default'
+    closeHomeOverlays()
+    if (mode === 'character' || mode === 'inventory') {
+      lastCharacterSceneTab.value = mode
+      activeBagTab.value = 'material'
+    }
+    activeHomeSurface.value = mode
+  }
 
-      sort.direction = 'asc'
-    },
+  function openArchitecture(focusBuildingId: string | null = null) {
+    closeHomeOverlays()
+    architectureFocusBuildingId.value = focusBuildingId
+    activeHomeSurface.value = 'architecture'
+  }
 
-    setBattleRunMode(mode: BattleRunMode) {
-      this.battleRunMode = mode
+  function openStandalonePanel(panel: Exclude<StandalonePanel, null>) {
+    // BETA SCOPE LOCK v2 (Phase-6): scope-hidden panels
+    // (artifact / tran_phap / companion) fail closed - no caller can
+    // open them through this seam.
+    if (!isBetaStandalonePanel(panel)) {
+      return
+    }
 
-      this.persistAutomationFlags()
-    },
+    closeHomeOverlays()
+    activeHomeSurface.value = panel
+  }
 
-    setCombatInputMode(mode: CombatInputMode) {
-      this.combatInputMode = mode
+  function openHomeSurface(surface: HomeSurfaceId) {
+    if (surface === 'feedback') {
+      closeHomeOverlays()
+      activeHomeSurface.value = 'feedback'
+      return
+    }
+    if (STANDALONE_PANELS.has(surface)) {
+      openStandalonePanel(surface as Exclude<StandalonePanel, null>)
+      return
+    }
+    openLeftPanel(surface as Exclude<LeftPanelMode, null>)
+  }
 
-      this.persistAutomationFlags()
-    },
+  function toggleCommandWheel() {
+    if (isCommandWheelOpen.value) {
+      isCommandWheelOpen.value = false
+      return
+    }
 
-    // Records which domain flow produced the current combat - read by
-    // CombatResultModal/CombatExitConfirmModal to gate stage-only result
-    // UI. Scene visibility itself is owned by the coordinator route
-    // (useCombatSceneActive/useStageActive) - the old dismissed/active
-    // flags were removed with the R12 cleanup.
-    enterCombatScene(origin: 'stage' | 'tribulation') {
-      this.combatOrigin = origin
-    },
-  },
+    closeHomeOverlays()
+    isCommandWheelOpen.value = true
+  }
+
+  function closeCommandWheel() {
+    isCommandWheelOpen.value = false
+  }
+
+  function setActiveBagTab(tab: BagTab) {
+    activeBagTab.value = tab
+  }
+
+  // Doi tieu chi sort cua mot tab - direction reset ve 'asc' va UI
+  // section tu goi resetPage() (watch tren bagSorts) quay ve trang dau.
+  function setBagSortMode<K extends keyof BagSortStateMap>(
+    tab: K,
+    mode: BagSortStateMap[K]['mode'],
+  ) {
+    const sort = bagSorts.value[tab] as BagSortState
+    if (sort.mode === mode) {
+      return
+    }
+    sort.mode = mode
+    sort.direction = 'asc'
+  }
+
+  function toggleBagSortDirection(tab: keyof BagSortStateMap) {
+    const sort = bagSorts.value[tab] as BagSortState
+    sort.direction = sort.direction === 'asc' ? 'desc' : 'asc'
+  }
+
+  // Action "Mac dinh" - tra lai original order.
+  function resetBagSort(tab: keyof BagSortStateMap) {
+    const sort = bagSorts.value[tab] as BagSortState
+    sort.mode = 'default'
+    sort.direction = 'asc'
+  }
+
+  function setBattleRunMode(mode: BattleRunMode) {
+    battleRunMode.value = mode
+    persistAutomationFlags()
+  }
+
+  function setCombatInputMode(mode: CombatInputMode) {
+    combatInputMode.value = mode
+    persistAutomationFlags()
+  }
+
+  // Records which domain flow produced the current combat - read by
+  // CombatResultModal/CombatExitConfirmModal to gate stage-only result
+  // UI. Scene visibility itself is owned by the coordinator route
+  // (useCombatSceneActive/useStageActive) - the old dismissed/active
+  // flags were removed with the R12 cleanup.
+  function enterCombatScene(origin: 'stage' | 'tribulation') {
+    combatOrigin.value = origin
+  }
+
+  return {
+    activeHomeSurface,
+    lastCharacterSceneTab,
+    hasHomeOverlayOpen,
+    leftPanelMode,
+    standalonePanel,
+    characterOverlayOpen,
+    characterSceneTab,
+    architectureFocusBuildingId,
+    isCommandWheelOpen,
+    activeBagTab,
+    bagSorts,
+    battleRunMode,
+    combatInputMode,
+    selectedZoneId,
+    selectedStageId,
+    combatOrigin,
+    persistAutomationFlags,
+    openHomeSurface,
+    openLeftPanel,
+    openArchitecture,
+    openStandalonePanel,
+    closeHomeOverlays,
+    toggleCommandWheel,
+    closeCommandWheel,
+    setActiveBagTab,
+    setBagSortMode,
+    toggleBagSortDirection,
+    resetBagSort,
+    setBattleRunMode,
+    setCombatInputMode,
+    enterCombatScene,
+  }
 })
+

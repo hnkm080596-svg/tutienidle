@@ -6,7 +6,6 @@ import RouteMount from '../game/RouteMount.vue'
 import CombatSceneOverlay from '../game/combat/CombatSceneOverlay.vue'
 import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay.vue'
 import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
-import LeftPanel from './LeftPanel.vue'
 import FunctionOverlayPanel from './FunctionOverlayPanel.vue'
 // Standalone overlay panels load lazily: the module is fetched on first
 // open (v-if below), then the component stays mounted so OverlayPanel's
@@ -56,7 +55,7 @@ const ui = useUiStore()
 const player = usePlayerStore()
 
 // Combat UI Redesign - Combat Scene chiem TOAN man hinh, thay han
-// chrome Dong Phu (LeftPanel/CommandWheel) - plaque cong trinh duoc render
+// chrome Dong Phu (FunctionOverlayPanel/CommandWheel) - plaque cong trinh duoc render
 // trong DongFuStage de art cong trinh nam dung phia sau nhan vat.
 // MainScene (Phaser canvas) van LUON mount (tu chuyen scene noi bo,
 // xem MainScene.vue), chi DOM chrome xung quanh no an/hien theo co nay.
@@ -146,9 +145,9 @@ function closeSidePanels() {
              approved dong-fu-v2 fidelity surface renders all of it in
              the scaled design canvas above the vista. -->
 
-        <!-- LeftPanel hosts the character/inventory paper surfaces; the
-             old drawer-width wrapper is gone (each scene owns its overlay). -->
-        <LeftPanel />
+        <!-- FunctionOverlayPanel hosts all non-standalone home paper/overlay
+             surfaces (character, inventory, stage_select, pill_room,
+             equipment_hall, settings, architecture, exploration, legacy). -->
         <FunctionOverlayPanel />
 
         <!-- Ky Nang (2026-08-20) - tach khoi LeftPanel thanh overlay

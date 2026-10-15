@@ -1,42 +1,31 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { SCAN_TIMEOUT, isTestFile, srcCorpus } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
 const SRC_ROOT = join(GAME_ROOT, 'src')
 
-function collectSourceFiles(dir: string): string[] {
-  const results: string[] = []
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry)
-    const stat = statSync(full)
-    if (stat.isDirectory()) {
-      results.push(...collectSourceFiles(full))
-    } else if (/\.(ts|vue|js|css)$/.test(entry)) {
-      results.push(full)
-    }
-  }
-  return results
-}
-
 describe('UI Preview Isolation & Dead Code Pruning (Slice 3.1)', () => {
-  it('forbids production source files outside src/ui-preview from importing ui-preview', () => {
-    const files = collectSourceFiles(SRC_ROOT)
-    const violations: string[] = []
+  it(
+    'forbids production source files outside src/ui-preview from importing ui-preview',
+    () => {
+      const files = srcCorpus(SRC_ROOT)
+      const violations: string[] = []
 
-    for (const file of files) {
-      const rel = relative(SRC_ROOT, file).replace(/\\/g, '/')
-      if (rel.startsWith('ui-preview/')) continue
-      if (rel.endsWith('.test.ts') || rel.endsWith('.spec.ts')) continue
+      for (const file of files) {
+        if (file.fromSrc.startsWith('ui-preview/')) continue
+        if (isTestFile(file.fromSrc) || file.fromSrc.endsWith('.spec.ts')) continue
 
-      const content = readFileSync(file, 'utf-8')
-      if (/(?:from|import)\s+['"][^'"]*ui-preview\b/.test(content)) {
-        violations.push(rel)
+        if (/(?:from|import)\s+['"][^'"]*ui-preview\b/.test(file.text)) {
+          violations.push(file.fromSrc)
+        }
       }
-    }
 
-    expect(violations).toEqual([])
-  })
+      expect(violations).toEqual([])
+    },
+    SCAN_TIMEOUT,
+  )
 
   it('pins removal of dead UI components, orphan stylesheets, and legacy duplicates', () => {
     const deletedPaths = [

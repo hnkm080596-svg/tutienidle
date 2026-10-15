@@ -6,7 +6,7 @@
 // actions route to the existing owners: commandWheelCatalog slots,
 // useBuildingNavigation, ui store panels, ThienCoEntry.run(),
 // FeedbackDialog. Nothing here owns domain state (A7).
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
@@ -55,20 +55,16 @@ const { chips } = useCurrencyChips()
 // Overlay scene canvases (stage select, character, settings, standalone
 // panels...) stack a second scaled canvas above this stage - floating
 // home chrome must not bleed onto their paper surfaces.
+// Slice 3.2 (V1): `ui.activeHomeSurface` is the single authority for all
+// home overlays (including `'feedback'`).
+const feedbackOpen = computed(() => ui.activeHomeSurface === 'feedback')
 const surfaceOpen = computed(
-  () => ui.leftPanelMode !== null || ui.characterOverlayOpen || ui.standalonePanel !== null,
+  () => ui.activeHomeSurface !== null && ui.activeHomeSurface !== 'feedback',
 )
 
-const feedbackOpen = ref(false)
 const boardOpen = ref(true)
 const railCollapsed = ref(true)
 const railIndicator = ref(true)
-// The dialog and every other surface are mutually exclusive: any seam
-// (wheel, rail, building hotspot, board CTA) that opens a surface also
-// dismisses the dialog, whichever path opened it.
-watch(surfaceOpen, (open) => {
-  if (open) feedbackOpen.value = false
-})
 
 function toggleRail() {
   railCollapsed.value = !railCollapsed.value
@@ -241,10 +237,7 @@ const NAV_TARGET: Partial<Record<PcPaperIcon, () => void>> = {
   production: () => navigation.openBuilding('gathering_outpost'),
   sect: () => ui.openArchitecture(),
   settings: () => ui.openLeftPanel('settings'),
-  feedback: () => {
-    ui.closeHomeOverlays()
-    feedbackOpen.value = true
-  },
+  feedback: () => ui.openHomeSurface('feedback'),
 }
 
 // Which panel a nav id reads as "open" - mirrors the surface each target
@@ -269,24 +262,19 @@ const NAV_ACTIVE_STANDALONE: Partial<Record<PcPaperIcon, 'skill' | 'realm' | 'qu
 
 function navActive(id: PcPaperIcon): boolean {
   if (navLocked(id)) return false
-  if (id === 'home') return !surfaceOpen.value && !feedbackOpen.value
-  // 'character'/'inventory' live behind the shared overlay boolean +
-  // characterSceneTab, not leftPanelMode (ui store lines ~206).
-  if ((id === 'character' || id === 'inventory') && ui.characterOverlayOpen && ui.characterSceneTab === id) return true
+  if (id === 'home') return !ui.hasHomeOverlayOpen
+  if ((id === 'character' || id === 'inventory') && ui.activeHomeSurface === id) return true
   const left = NAV_ACTIVE_PANEL[id]
-  if (left && ui.leftPanelMode === left) return true
+  if (left && ui.activeHomeSurface === left) return true
   const standalone = NAV_ACTIVE_STANDALONE[id]
-  if (standalone && ui.standalonePanel === standalone) return true
-  if (id === 'feedback' && feedbackOpen.value) return true
+  if (standalone && ui.activeHomeSurface === standalone) return true
+  if (id === 'feedback' && ui.activeHomeSurface === 'feedback') return true
   return false
 }
 
 function navAction(id: PcPaperIcon) {
   if (navLocked(id)) return
   useAudioStore().cue('ui.wheel.select')
-  // feedbackOpen lives in this component, outside closeHomeOverlays -
-  // every other rail action (home included) must close the dialog too.
-  if (id !== 'feedback') feedbackOpen.value = false
   if (id === 'home') {
     ui.closeHomeOverlays()
     return
@@ -420,7 +408,7 @@ function onKeydown(event: KeyboardEvent) {
   // The wheel must not open while a surface is up: it mounts inside the
   // canvas, so it would stay invisible under the panel and pop up open
   // when the panel closes.
-  if (event.key === '`' && !stageActive.value && !surfaceOpen.value && !feedbackOpen.value) {
+  if (event.key === '`' && !stageActive.value && !ui.hasHomeOverlayOpen) {
     event.preventDefault()
     ui.toggleCommandWheel()
   }
@@ -488,7 +476,7 @@ onBeforeUnmount(() => {
       </aside>
       <img v-if="surfaceOpen" class="home-navigation-landscape-seam" :src="navSeamUrl" alt="">
       <button
-        v-if="railCollapsed && railIndicator && !surfaceOpen && !feedbackOpen"
+        v-if="railCollapsed && railIndicator && !ui.hasHomeOverlayOpen"
         class="home-navigation-toggle"
         type="button"
         :aria-label="t('dongFu.railOpen')"
@@ -512,7 +500,7 @@ onBeforeUnmount(() => {
       <div class="pc-paper-scene__frame" aria-hidden="true" />
     </main>
   </SceneDesignCanvas>
-  <FeedbackDialog rail :open="feedbackOpen" @close="feedbackOpen = false" />
+  <FeedbackDialog rail :open="feedbackOpen" @close="ui.closeHomeOverlays()" />
 </template>
 
 <style scoped>

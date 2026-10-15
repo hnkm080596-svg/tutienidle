@@ -45,3 +45,14 @@ export type StandalonePanel =
   | 'technique'
   | 'body'
   | null
+
+/**
+ * Canonical single-owner identifier for whichever overlay surface is open
+ * above the Dong Phu home stage (`stores/ui.ts` `activeHomeSurface`).
+ * All 20 home overlay surfaces share one mutually-exclusive slot.
+ */
+export type HomeSurfaceId =
+  | Exclude<LeftPanelMode, null>
+  | Exclude<StandalonePanel, null>
+  | 'feedback'
+

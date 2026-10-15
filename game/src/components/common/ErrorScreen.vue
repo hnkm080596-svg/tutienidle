@@ -67,6 +67,9 @@ const updateLabel = computed(() => {
 // report is most valuable. The dialog mounts above this surface (appError
 // layer + 1) prefilled with the error message; submit still goes through
 // the same intake path (and degrades to export-only when auth is dead).
+// Ruling D4 (Slice 3.2): kept as a local ref exception because ErrorScreen
+// renders when the app or store is in a faulted state and does not participate
+// in the Dong Phu home surface slot (`ui.activeHomeSurface`).
 const feedbackOpen = ref(false)
 
 onMounted(() => {

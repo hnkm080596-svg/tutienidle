@@ -3,6 +3,8 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import { useBuildingHeaderState } from '@/composables/useBuildingHeaderState'
+import InventoryPanel from '@/components/panels/InventoryPanel.vue'
+import CharacterSurface from '@/components/scenes/character/CharacterSurface.vue'
 import ProductionPanel from '@/components/panels/ProductionPanel.vue'
 import SettingsSurface from '@/components/scenes/settings/SettingsSurface.vue'
 import PillRoomPanel from '@/components/panels/PillRoomPanel.vue'
@@ -86,13 +88,14 @@ function close() {
 </script>
 
 <template>
-  <!-- Scene 10/11/12/17 fidelity: stage_select + pill_room +
-       equipment_hall + settings own their paper chrome (Son Ha Do /
-       Luyen Dan / Khi Duong / Cai Dat scene) - they mount outside the
-       legacy overlay while keeping the same mode/beta-gate/close
-       contract. -->
+  <!-- Scene 04/09/10/11/12/17 fidelity: character, inventory, stage_select,
+       pill_room, equipment_hall, settings, architecture, and exploration
+       own their paper chrome - they mount inside one shared transition
+       governed by `ui.activeHomeSurface` (Slice 3.2). -->
   <Transition name="th-panel-swap">
-    <StageSelectPanel v-if="paperMode === 'stage_select'" />
+    <CharacterSurface v-if="ui.activeHomeSurface === 'character'" />
+    <InventoryPanel v-else-if="ui.activeHomeSurface === 'inventory'" />
+    <StageSelectPanel v-else-if="paperMode === 'stage_select'" />
     <PillRoomPanel v-else-if="paperMode === 'pill_room'" />
     <EquipmentHallPanel v-else-if="paperMode === 'equipment_hall'" />
     <SettingsSurface v-else-if="paperMode === 'settings'" />
