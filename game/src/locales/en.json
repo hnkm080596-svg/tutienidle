@@ -1,4 +1,19 @@
 {
+  "testSandbox": {
+    "enter": "Enter test sandbox",
+    "tools": "Dev Power",
+    "leave": "Return to normal mode",
+    "badge": "TEST — local save",
+    "saving": "Saving…",
+    "switchFailed": "Could not switch modes. Check storage and try again; the current mode is retained.",
+    "startFailed": "Could not open the test save. Reload to retry or return to normal mode.",
+    "presets": "Quick test characters",
+    "presetUnavailable": "This path is outside the current release scope. Sandbox preserves this restriction.",
+    "preset": { "mortal": "Mortal", "spell": "Spell initiate", "body": "Body initiate" },
+    "confirmTitle": "Replace the test character?",
+    "confirmMessage": "This preset replaces all progress in the test save with a fresh character. Normal saves and online accounts are preserved.",
+    "presetFailed": "Could not save the preset. The current character is retained."
+  },
   "skillVfxLab": {
     "title": "Training · Skill Effects",
     "intro": "Preview skills and monster attacks without creating a character or entering combat. Monster entries play right-to-left; the Ngu Diem aura and Phap The seal ride the caster figure in every mode.",

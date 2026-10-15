@@ -1,4 +1,19 @@
 {
+  "testSandbox": {
+    "enter": "Vào chế độ test",
+    "tools": "Dev Power",
+    "leave": "Về chế độ thường",
+    "badge": "TEST — lưu cục bộ",
+    "saving": "Đang lưu…",
+    "switchFailed": "Chưa thể chuyển chế độ. Kiểm tra lưu trữ rồi thử lại; tiến trình vẫn ở chế độ hiện tại.",
+    "startFailed": "Không thể mở save test. Bạn có thể tải lại để thử lại hoặc về chế độ thường.",
+    "presets": "Dựng nhanh nhân vật test",
+    "presetUnavailable": "Đạo lộ này chưa mở trong phạm vi phát hành hiện tại. Sandbox giữ nguyên giới hạn này.",
+    "preset": { "mortal": "Phàm nhân", "spell": "Pháp tu nhập môn", "body": "Thể tu nhập môn" },
+    "confirmTitle": "Thay nhân vật test?",
+    "confirmMessage": "Preset sẽ thay toàn bộ tiến trình trong save test bằng nhân vật mới. Save thường và tài khoản online được giữ nguyên.",
+    "presetFailed": "Không thể lưu preset. Nhân vật hiện tại vẫn được giữ nguyên."
+  },
   "skillVfxLab": {
     "title": "Diễn võ · Hiệu ứng kỹ năng",
     "intro": "Thử trực tiếp kỹ năng và đòn đánh quái vật mà không cần tạo nhân vật hay vào trận. Đòn quái chạy từ phía địch sang; aura Ngự Diễm và con dấu Pháp Thế bám theo nhân vật ở mọi mẫu.",
