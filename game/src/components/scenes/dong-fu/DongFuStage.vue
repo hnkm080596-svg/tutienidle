@@ -16,9 +16,12 @@ import { useBuildingNavigation } from '@/composables/useBuildingNavigation'
 import { useThienCoEntries } from '@/composables/useThienCoEntries'
 import { useCurrencyChips } from '@/composables/useCurrencyChips'
 import {
+  HOME_RAIL_ENTRIES,
+  HOME_RAIL_ENTRY_BY_ID,
+  WHEEL_SLOT_SYMBOL,
   type CommandWheelDisabledContext,
   type CommandWheelSlot,
-} from '@/data/ui/commandWheelCatalog'
+} from '@/data/ui/homeNavigationCatalog'
 import { betaWheelSlots, isBetaStandalonePanel } from '@/core/betaScopeSurface'
 import { isBetaTechniqueSurfaceUnlocked } from '@/core/betaScopeTechniqueDomain'
 import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
@@ -106,35 +109,17 @@ const disabledContext = computed<CommandWheelDisabledContext>(() => ({
 
 const renderedSlots = computed(() => betaWheelSlots().filter((slot) => slot.available()))
 
-const SLOT_SYMBOL: Record<string, string> = {
-  character: 'character',
-  realm: 'realm',
-  skill: 'skill',
-  quest: 'quest',
-  phap_bao: 'equipment',
-  talisman_slot: 'technique',
-  formation_slot: 'realm',
-  companion_roster: 'character',
-  teleport_array: 'exploration',
-  pill_room: 'alchemy',
-  gathering_outpost: 'auto-farm',
-  chi_hien_quan: 'home',
-  equipment_hall: 'equipment',
-  scripture_pavilion: 'technique',
-  settings: 'settings',
-}
-
 function slotDisabledReason(slot: CommandWheelSlot): string | null {
   return slot.disabledReason?.(disabledContext.value) ?? null
 }
 
 function slotActive(slot: CommandWheelSlot): boolean {
   const target = slot.target
-  if (target?.kind === 'left_panel') return ui.leftPanelMode === target.mode
-  if (target?.kind === 'standalone') return ui.standalonePanel === target.panel
+  if (target?.kind === 'left_panel') return ui.activeHomeSurface === target.mode
+  if (target?.kind === 'standalone') return ui.activeHomeSurface === target.panel
   if (slot.buildingId) {
     const { template } = navigation.getBuildingPresentation(slot.buildingId)
-    return template?.functionType !== undefined && ui.leftPanelMode === template.functionType
+    return template?.functionType !== undefined && ui.activeHomeSurface === template.functionType
   }
   return false
 }
@@ -154,7 +139,7 @@ function slotAction(slot: CommandWheelSlot): DongFuUiAction {
   return {
     id: slot.id,
     labelKey: slot.labelKey,
-    symbol: SLOT_SYMBOL[slot.id] ?? 'home',
+    symbol: WHEEL_SLOT_SYMBOL[slot.id] ?? 'home',
     disabledReason: slotDisabledReason(slot),
     badge: slotBadge(slot),
     active: slotActive(slot),
@@ -185,7 +170,7 @@ const boardEntries = computed(() =>
   })),
 )
 
-// ================= Landscape chrome (landscape-design mock) ============
+// ================= Landscape chrome (homeNavigationCatalog authority) ==
 const sceneBackground = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/world-vista-warm-v1.png')
 const sceneStyle = {
   backgroundImage: `url("${sceneBackground}")`,
@@ -195,81 +180,18 @@ const sceneStyle = {
 const navBackingUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/navigation-backing-dark-v3.png')
 const navSeamUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/navigation-landscape-seam-v1.png')
 
-// Rail order + lock set copied verbatim from the approved mock: the five
-// locked entries are domains with no beta surface yet (artifact/companion/
-// guild/sect/portal render grayscale like the design).
-const NAV_LOCKED: readonly PcPaperIcon[] = ['artifact', 'companion', 'guild', 'portal']
-const NAV_ITEMS: readonly PcPaperIcon[] = [
-  'home', 'character', 'skill', 'equipment', 'body', 'technique', 'realm',
-  'inventory', 'alchemy', 'formation', 'exploration', 'quest', 'production',
-  'vendor', 'sect', 'settings', 'feedback', ...NAV_LOCKED,
-]
-
-// A nav id renders locked when the surface behind it is scope-hidden:
-// 'formation' -> the tran_phap standalone panel is feature-gated off, so
-// the button must read like the other locked entries instead of
-// looking clickable and failing closed on tap.
-const NAV_FEATURE_LOCKED: Partial<Record<PcPaperIcon, string>> = {
-  formation: 'tran_phap',
-}
 function navLocked(id: PcPaperIcon): boolean {
-  if (id === 'vendor' || NAV_LOCKED.includes(id)) return true
-  if (id === 'technique' && !isBetaTechniqueSurfaceUnlocked(player.$state)) return true
-  const panel = NAV_FEATURE_LOCKED[id]
-  return panel !== undefined && !isBetaStandalonePanel(panel)
-}
-
-// Nav id -> the real surface it opens. Building-backed destinations reuse
-// useBuildingNavigation so a scope-hidden building fails closed the same
-// way it does from the wheel.
-const NAV_TARGET: Partial<Record<PcPaperIcon, () => void>> = {
-  character: () => ui.openLeftPanel('character'),
-  skill: () => ui.openStandalonePanel('skill'),
-  equipment: () => navigation.openBuilding('equipment_hall'),
-  body: () => ui.openStandalonePanel('body'),
-  technique: () => ui.openStandalonePanel('technique'),
-  realm: () => ui.openStandalonePanel('realm'),
-  inventory: () => ui.openLeftPanel('inventory'),
-  alchemy: () => navigation.openBuilding('pill_room'),
-  formation: () => ui.openStandalonePanel('tran_phap'),
-  exploration: () => ui.openLeftPanel('stage_select'),
-  quest: () => ui.openStandalonePanel('quest'),
-  production: () => navigation.openBuilding('gathering_outpost'),
-  sect: () => ui.openArchitecture(),
-  settings: () => ui.openLeftPanel('settings'),
-  feedback: () => ui.openHomeSurface('feedback'),
-}
-
-// Which panel a nav id reads as "open" - mirrors the surface each target
-// opens above (building ids resolve through their functionType panel).
-const NAV_ACTIVE_PANEL: Partial<Record<PcPaperIcon, LeftPanelModeMarker>> = {
-  equipment: 'equipment_hall',
-  alchemy: 'pill_room',
-  exploration: 'stage_select',
-  production: 'exploration',
-  sect: 'architecture',
-  settings: 'settings',
-}
-type LeftPanelModeMarker = 'equipment_hall' | 'pill_room' | 'exploration' | 'architecture' | 'stage_select' | 'worker_lodge' | 'settings'
-const NAV_ACTIVE_STANDALONE: Partial<Record<PcPaperIcon, 'skill' | 'realm' | 'quest' | 'tran_phap' | 'technique' | 'body'>> = {
-  skill: 'skill',
-  realm: 'realm',
-  quest: 'quest',
-  formation: 'tran_phap',
-  technique: 'technique',
-  body: 'body',
+  const entry = HOME_RAIL_ENTRY_BY_ID[id]
+  if (!entry || entry.staticLocked) return true
+  if (entry.requiresTechniqueUnlock && !isBetaTechniqueSurfaceUnlocked(player.$state)) return true
+  return entry.betaStandaloneGate !== undefined && !isBetaStandalonePanel(entry.betaStandaloneGate)
 }
 
 function navActive(id: PcPaperIcon): boolean {
   if (navLocked(id)) return false
   if (id === 'home') return !ui.hasHomeOverlayOpen
-  if ((id === 'character' || id === 'inventory') && ui.activeHomeSurface === id) return true
-  const left = NAV_ACTIVE_PANEL[id]
-  if (left && ui.activeHomeSurface === left) return true
-  const standalone = NAV_ACTIVE_STANDALONE[id]
-  if (standalone && ui.activeHomeSurface === standalone) return true
-  if (id === 'feedback' && ui.activeHomeSurface === 'feedback') return true
-  return false
+  const entry = HOME_RAIL_ENTRY_BY_ID[id]
+  return entry?.surfaceId !== null && ui.activeHomeSurface === entry?.surfaceId
 }
 
 function navAction(id: PcPaperIcon) {
@@ -279,7 +201,19 @@ function navAction(id: PcPaperIcon) {
     ui.closeHomeOverlays()
     return
   }
-  NAV_TARGET[id]?.()
+  const entry = HOME_RAIL_ENTRY_BY_ID[id]
+  if (!entry) return
+  if (entry.buildingId) {
+    navigation.openBuilding(entry.buildingId)
+    return
+  }
+  if (entry.opensArchitecture) {
+    ui.openArchitecture()
+    return
+  }
+  if (entry.surfaceId) {
+    ui.openHomeSurface(entry.surfaceId)
+  }
 }
 
 
@@ -461,7 +395,7 @@ onBeforeUnmount(() => {
         <img class="home-navigation-backing" :src="navBackingUrl" alt="">
         <nav class="home-independent-navigation">
           <button
-            v-for="id in NAV_ITEMS"
+            v-for="{ id } in HOME_RAIL_ENTRIES"
             :key="id"
             type="button"
             :class="{ active: navActive(id), locked: navLocked(id) }"
