@@ -8,6 +8,7 @@ import { createDefaultPlayer } from '@/core/player/Player'
 import { buildings } from '@/data/building/buildings'
 import { i18n } from '@/i18n'
 import { GAME_MANAGER_KEY, BUMP_STATE_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
+import { vTooltip } from '@/directives/tooltip'
 import { isBetaLeftPanelMode } from '@/core/betaScopeSurface'
 
 function mountArchitecture() {
@@ -19,10 +20,14 @@ function mountArchitecture() {
   manager.catalogOps.registerBuildings(buildings)
   manager.buildingOps.reconcileBuildings(player, 0)
   manager.setActivePlayer(player)
+  for (const site of manager.productionSystem.getSiteDefinitions()) {
+    manager.productionSystem.ensureSiteState(site.siteId)
+  }
   document.body.appendChild(container)
   const app = createApp({ render: () => h(ArchitectureSurface) })
   app.use(pinia)
   app.use(i18n)
+  app.directive('tooltip', vTooltip)
   app.provide(GAME_MANAGER_KEY, manager)
   app.provide(STATE_VERSION_KEY, stateVersion)
   app.provide(BUMP_STATE_KEY, () => { stateVersion.value += 1 })
@@ -37,45 +42,62 @@ describe('Architecture surface', () => {
     expect(isBetaLeftPanelMode('architecture')).toBe(true)
   })
 
-  it('renders the six authored buildings with art-only states and no English IDs', () => {
+  it('renders equipment, alchemy, teleport and three production cards without retired surfaces', () => {
     const mounted = mountArchitecture()
     try {
-      expect(mounted.container.querySelectorAll('[data-testid="architecture-building-card"]')).toHaveLength(6)
-      expect(mounted.container.querySelector('[data-building-id="vendor"]')?.textContent).toContain('Chỉ trưng bày')
-      expect(mounted.container.querySelector('[data-building-id="chi_hien_quan"]')?.textContent).toContain('Chỉ trưng bày')
-      expect(mounted.container.querySelectorAll('[data-building-id="vendor"] [data-testid="architecture-building-upgrade"]')).toHaveLength(0)
-      expect(mounted.container.querySelectorAll('[data-building-id="chi_hien_quan"] [data-testid="architecture-building-upgrade"]')).toHaveLength(0)
+      const ids = Array.from(mounted.container.querySelectorAll('[data-testid="architecture-building-card"]'))
+        .map(card => card.getAttribute('data-building-id'))
+      const siteIds = mounted.manager.buildingOps.getProductionViews().map(view => view.definition.siteId)
+      expect(ids).toHaveLength(6)
+      expect(new Set(ids)).toEqual(new Set(['equipment_hall', 'pill_room', 'teleport_array', ...siteIds]))
+      for (const id of ['gathering_outpost', 'vendor', 'chi_hien_quan']) {
+        expect(mounted.container.querySelector(`[data-building-id="${id}"]`)).toBeNull()
+      }
+      expect(mounted.container.querySelector('[data-testid="architecture-details"]')).toBeNull()
       expect(mounted.container.textContent).not.toContain('gathering_outpost')
       expect(mounted.container.textContent).not.toContain('pill_room')
     } finally { mounted.app.unmount() }
   })
 
-  it('opens Khai Vật details with the four production-site upgrade actions', async () => {
+  it('shows production upgrade costs directly on all three source cards', () => {
     const mounted = mountArchitecture()
     try {
-      const details = mounted.container.querySelector<HTMLButtonElement>('[data-building-id="gathering_outpost"] [data-testid="architecture-details"]')!
-      details.click()
-      await nextTick()
-      expect(mounted.container.querySelectorAll('[data-testid="architecture-site-upgrade"]')).toHaveLength(3)
-      expect(mounted.container.querySelector('[data-testid="architecture-resource-spirit_stone"]')).not.toBeNull()
+      const sites = mounted.manager.buildingOps.getProductionViews()
+      expect(sites.map(view => view.definition.kind).sort()).toEqual(['forest', 'grotto', 'mine'])
+      for (const { definition } of sites) {
+        const card = mounted.container.querySelector(`[data-building-id="${definition.siteId}"]`)!
+        const quote = mounted.manager.buildingOps.quoteProductionUpgrade(definition.siteId, mounted.player)
+        expect(card).not.toBeNull()
+        expect(card.querySelector('.architecture-card__actions button')).not.toBeNull()
+        expect(card.querySelectorAll('.architecture-card__cost-slot')).toHaveLength(quote.cost ? 2 : 0)
+      }
     } finally { mounted.app.unmount() }
   })
 
-  it('keeps a failed site upgrade clickable and gives a localized reason', async () => {
+  it('keeps an unaffordable site upgrade clickable and reports the owner quote without spending', async () => {
     const mounted = mountArchitecture()
     const quote = vi.spyOn(mounted.manager.buildingOps, 'quoteProductionUpgrade')
-    const upgrade = vi.spyOn(mounted.manager.buildingOps, 'upgradeProductionSite').mockReturnValue(false)
+    const upgrade = vi.spyOn(mounted.manager.buildingOps, 'upgradeProductionSite')
     try {
-      mounted.container.querySelector<HTMLButtonElement>('[data-building-id="gathering_outpost"] [data-testid="architecture-details"]')!.click()
-      await nextTick()
-      const action = mounted.container.querySelector<HTMLButtonElement>('[data-testid="architecture-site-upgrade"]')!
+      const site = mounted.manager.buildingOps.getProductionViews().find(view => view.definition.kind === 'forest')!
+      const ownerQuote = mounted.manager.buildingOps.quoteProductionUpgrade(site.definition.siteId, mounted.player)
+      expect(ownerQuote.upgradable).toBe(false)
+      expect(ownerQuote.reasons.length).toBeGreaterThan(0)
+      const before = mounted.manager.materialBag.getAll()
+      const action = mounted.container.querySelector<HTMLButtonElement>(
+        `[data-building-id="${site.definition.siteId}"] .architecture-card__actions button`,
+      )!
+      expect(action).not.toBeNull()
       expect(action.disabled).toBe(false)
       quote.mockClear()
       action.click()
       await nextTick()
-      expect(quote).toHaveBeenCalled()
+      expect(quote).toHaveBeenCalledWith(site.definition.siteId, expect.anything())
       expect(upgrade).not.toHaveBeenCalled()
-      expect(mounted.container.querySelector('[role="status"]')?.textContent).toMatch(/tối đa|thiếu|không đủ|cảnh giới/i)
+      expect(mounted.container.querySelector('[role="status"]')?.textContent)
+        .toBe(i18n.global.t(`architecture.productionReasons.${ownerQuote.reasons[0]}`))
+      expect(mounted.manager.materialBag.getAll()).toEqual(before)
+      expect(mounted.manager.productionSystem.getState(site.definition.siteId)?.level).toBe(site.state.level)
     } finally { mounted.app.unmount() }
   })
 })

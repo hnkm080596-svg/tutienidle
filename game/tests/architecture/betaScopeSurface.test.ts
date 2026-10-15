@@ -137,11 +137,11 @@ describe('betaScopeSurface - navigation allow-lists', () => {
     }
   })
 
-  it('isBetaEquipmentTab admits the four live tabs, still fails closed', () => {
-    for (const tab of ['enhance', 'wash', 'refine', 'dissolve']) {
+  it('isBetaEquipmentTab admits live equipment and decomposition surfaces, still fails closed', () => {
+    for (const tab of ['enhance', 'wash', 'refine', 'dissolve', 'decompose']) {
       expect(isBetaEquipmentTab(tab), `expected ${tab} admitted`).toBe(true)
     }
-    for (const tab of ['decompose', 'made_up_tab']) {
+    for (const tab of ['ore_decompose', 'made_up_tab']) {
       expect(isBetaEquipmentTab(tab), `expected ${tab} hidden`).toBe(false)
     }
   })

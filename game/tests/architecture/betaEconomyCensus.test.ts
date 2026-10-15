@@ -23,6 +23,7 @@
  * emissions are gated this phase and do not count.
  */
 import { describe, expect, it } from 'vitest'
+import { HERB_AGES } from '@/core/production/ProductionTypes'
 import { materials } from '@/data/materials/materials'
 import { STAGE_DROP_TABLES } from '@/data/drop/StageDropTables'
 import { FAMILY_DROP_TABLES } from '@/data/drop/FamilyDropTables'
@@ -119,10 +120,10 @@ function collectEconomy(): {
 
   // --- faucets ---
   for (const reward of THANH_VAN_FOREST_REWARDS) {
-    addSource(reward.materialId, `forest:${reward.realmId}`)
+    addSource(reward.materialId, `forest:${reward.age}`)
   }
   for (const reward of THANH_VAN_MINE_REWARDS) {
-    addSource(reward.materialId, `mine:${reward.realmId}`)
+    addSource(reward.materialId, `mine:${reward.age}`)
   }
   for (const herb of THANH_VAN_GROTTO_HERBS) {
     // ProductionSystem gates the grotto identity roll on the same
@@ -254,13 +255,41 @@ describe('sec.17 beta economy census - no orphan source, no orphan sink', () => 
   const { sources, sinks } = collectEconomy()
 
   it('the census itself covers the designed economy surface', () => {
-    // Faucets: 15 forest wood + 15 mine ore + 45 beta-family grotto
-    // herbs (3 herbs x 3 realms x 5 ages) + signature drops + Linh
-    // Tuyen spirit stone + dissolve tinh hoa = ~80 live source rows.
-    // An importer regression that yields an empty set must fail here,
-    // not pass vacuously below.
-    expect(sources.size).toBeGreaterThanOrEqual(60)
-    expect(sinks.size).toBeGreaterThanOrEqual(60)
+    // Identity coverage survives age-only consolidation without a numeric census floor.
+    for (const age of HERB_AGES) {
+      for (const [kind, producer] of [['wood', 'forest'], ['ore', 'mine']] as const) {
+        const id = buildProfessionMaterialId(kind, age)
+        expect(materialById.get(id)?.profession?.realmId, id).toBeUndefined()
+        expect(sources.get(id), id).toContain(`${producer}:${age}`)
+        expect(sinks.get(id), id).toContain(`decompose:${kind}`)
+      }
+    }
+    expect(THANH_VAN_FOREST_REWARDS.map(row => row.materialId).sort())
+      .toEqual(HERB_AGES.map(age => buildProfessionMaterialId('wood', age)).sort())
+    expect(THANH_VAN_MINE_REWARDS.map(row => row.materialId).sort())
+      .toEqual(HERB_AGES.map(age => buildProfessionMaterialId('ore', age)).sort())
+    const liveRecipes = alchemyRecipes.filter(recipe =>
+      BETA_REALM_IDS.has(recipe.realmId) && betaRecipeFamilyOfId(recipe.id) !== null && !recipe.retired)
+    expect(liveRecipes.length).toBeGreaterThan(0)
+    for (const recipe of liveRecipes) {
+      for (const herb of recipe.herbVariants) {
+        expect(sources.get(herb.materialId), herb.materialId).toContain(`grotto:${recipe.realmId}`)
+        expect(sinks.get(herb.materialId), herb.materialId).toContain(`recipe:${recipe.id}:herb`)
+      }
+      expect(sinks.get(BUI_GO_ID)).toContain(`recipe:${recipe.id}:fuel`)
+      expect(sinks.get(LUYEN_DAN_TINH_HOA_ID)).toContain(`recipe:${recipe.id}:tinh_hoa`)
+    }
+    expect(sources.get(BUI_GO_ID)).toContain('decompose:wood')
+    expect(sources.get(LUYEN_DAN_TINH_HOA_ID)).toContain('decompose:herb')
+    expect(sources.get(LUYEN_KHI_TINH_HOA_ID)).toContain('equipment:dissolve')
+    expect(sources.get(LUYEN_KHI_TINH_HOA_ID)).toContain('decompose:ore')
+    for (const realmId of BETA_REALM_IDS) {
+      expect(sinks.get(SPIRIT_STONE_MATERIAL_ID)).toContain(`enhance:${realmId}:stone`)
+    }
+    expect(sources.get(SPIRIT_STONE_MATERIAL_ID)).toContain('building:gathering_outpost')
+    expect(sinks.get(buildProfessionMaterialId('wood', 'decade'))).toContain('building:equipment_hall')
+    expect(sinks.get(buildProfessionMaterialId('wood', 'decade'))).toContain('building:pill_room')
+    expect([...sources.values()].some(labels => [...labels].some(label => label.startsWith('stage:')))).toBe(true)
   })
 
   it('every material with a live beta source has a live beta sink or an exemption', () => {

@@ -52,6 +52,7 @@ function buildContext(stock: { herb?: number; buiGo?: number; tinhHoa?: number }
   bag.add(registry.get(LUYEN_DAN_TINH_HOA_ID), stock.tinhHoa ?? 100)
 
   const system = new AlchemySystem()
+  system.setRecipeLookup((id) => id === RECIPE.id ? RECIPE : undefined)
 
   return { bag, registry, system }
 }
@@ -81,7 +82,7 @@ describe('QA-B seam — luyen_dan_tinh_hoa batch accounting', () => {
     expect(result).toEqual({ ok: false, reason: 'missing_tinh_hoa' })
   })
 
-  it('cancelJob refunds tinh hoa for units that never entered the cauldron', () => {
+  it('cancelJob refunds every unfinished unit including the active unit', () => {
     const { bag, registry, system } = buildContext({ tinhHoa: 30 })
 
     // 3 merged clicks = one order of 3, tinh hoa burned 3x3 = 9 total
@@ -94,15 +95,17 @@ describe('QA-B seam — luyen_dan_tinh_hoa batch accounting', () => {
 
     const jobId = system.getJobs()[0]!.jobId
 
-    // now = 2_000: unit 0 is in the cauldron (burned), units 1-2 not
-    // started -> refund must mirror herb/bui_go/specials per unit.
+    // The active unit is unfinished too: all three reserved units refund.
     const cancelled = system.cancelJob(jobId, bag, registry, 2_000)
 
-    expect(cancelled).toEqual({ ok: true, unprocessedUnits: 2 })
-    expect(bag.getAmount('herb_decade')).toBe(100 - 2 * 3 + 2 * 2)
-    expect(bag.getAmount(BUI_GO_ID)).toBe(100 - 2 * 3 + 2 * 2)
-    // tinh hoa silently vanishes today: 30 - 9 + 0 refunded.
-    expect(bag.getAmount(LUYEN_DAN_TINH_HOA_ID)).toBe(30 - 3 * 3 + 3 * 2)
+    expect(cancelled).toEqual({ ok: true, unprocessedUnits: 3 })
+    expect(bag.getAmount('herb_decade')).toBe(100)
+    expect(bag.getAmount(BUI_GO_ID)).toBe(100)
+    // Every ingredient returns to its pre-order balance.
+    expect(bag.getAmount(LUYEN_DAN_TINH_HOA_ID)).toBe(30)
+    expect(system.getJobs()).toHaveLength(0)
+    expect(system.cancelJob(jobId, bag, registry, 2_000)).toEqual({ ok: false })
+    expect(bag.getAmount(LUYEN_DAN_TINH_HOA_ID)).toBe(30)
   })
 })
 
@@ -113,17 +116,32 @@ describe('QA-B seam — merge legality at full slot count', () => {
     expect(system.enqueueJob(RECIPE, 'herb_decade', bag, registry, 0, 1, 1_000, 1).ok).toBe(true)
     expect(system.getJobs()).toHaveLength(1)
 
-    // Slots are full (1/1) yet the second same-order click merges into
-    // the tail order - it consumes NO new slot. The surface's
-    // canBrew/brewBlockReason (jobs.length >= maxJobSlots -> disabled
-    // 'job_slots_full') contradicts this contract on every 1-slot
-    // pill_room: the +1-unit click the rework is built around is
-    // unreachable for the common case.
+    // The explicit total capacity is one; appending this active recipe
+    // changes its quantity without allocating another order.
     const merged = system.enqueueJob(RECIPE, 'herb_decade', bag, registry, 0, 1, 2_000, 1)
 
     expect(merged).toMatchObject({ ok: true, merged: true })
     expect(system.getJobs()).toHaveLength(1)
     expect(system.getJobs()[0]!.quantity).toBe(2)
+  })
+})
+
+describe('QA-B seam - level-1 total order capacity', () => {
+  it('admits four orders, merges the waiting tail at capacity, and rejects a fifth atomically', () => {
+    const { bag, registry, system } = buildContext()
+    const recipes = Array.from({ length: 5 }, (_, index) => ({ ...RECIPE, id: `recipe_${index}` }))
+    system.setRecipeLookup(id => recipes.find(recipe => recipe.id === id))
+    for (const recipe of recipes.slice(0, 4)) {
+      expect(system.enqueueJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 4).ok).toBe(true)
+    }
+    expect(system.getJobs()).toHaveLength(4)
+    expect(system.enqueueJob(recipes[3]!, 'herb_decade', bag, registry, 0, 1, 2_000, 4)).toMatchObject({ ok: true, merged: true })
+    expect(system.getJobs()).toHaveLength(4)
+    expect(system.getJobs()[3]!.quantity).toBe(2)
+    const ingredients = [bag.getAmount('herb_decade'), bag.getAmount(BUI_GO_ID), bag.getAmount(LUYEN_DAN_TINH_HOA_ID)]
+    expect(system.enqueueJob(recipes[4]!, 'herb_decade', bag, registry, 0, 1, 2_000, 4)).toEqual({ ok: false, reason: 'job_slots_full', merged: false })
+    expect(system.getJobs()).toHaveLength(4)
+    expect([bag.getAmount('herb_decade'), bag.getAmount(BUI_GO_ID), bag.getAmount(LUYEN_DAN_TINH_HOA_ID)]).toEqual(ingredients)
   })
 })
 

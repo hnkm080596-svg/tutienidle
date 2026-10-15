@@ -242,11 +242,7 @@ describe('r31-AUT F1e - legacy Decompose state remains inert', () => {
       nextCycleAt: BOUND - 1,
       started: true,
     }, BOUND - 1)
-    expect(system.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(system.getSaveState()).toEqual({})
   })
 })
 

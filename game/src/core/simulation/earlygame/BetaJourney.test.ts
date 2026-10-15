@@ -110,7 +110,7 @@ const SCOPE_HIDDEN_WHEEL_SLOTS = [
 const SCOPE_HIDDEN_BUILDINGS = ['chi_hien_quan'] as const
 const SCOPE_HIDDEN_STANDALONE_PANELS = ['artifact', 'tran_phap', 'companion'] as const
 const SCOPE_HIDDEN_LEFT_MODES = ['worker_lodge'] as const
-const SCOPE_HIDDEN_EQUIPMENT_TABS = ['decompose', 'ore_decompose'] as const
+const SCOPE_HIDDEN_EQUIPMENT_TABS = ['ore_decompose'] as const
 // Every tier above the beta ceiling (foundation_establishment) is a
 // scope-hidden realm: derived from the authoritative tier list, so a
 // realm added post-ceiling is covered without touching this test.
@@ -254,7 +254,8 @@ function assertScopeSanity(label: string): void {
   }
 
   // Economy surfaces: equipment hall admits enhance/wash/refine/
-  // dissolve; decompose stays scope_hidden at the domain seam.
+  // dissolve; generic material decomposition is separately admitted.
+  expect(isBetaEquipmentTab('decompose'), `${label}: approved decomposition`).toBe(true)
   for (const tab of SCOPE_HIDDEN_EQUIPMENT_TABS) {
     expect(isBetaEquipmentTab(tab), `${label}: equipment tab ${tab}`).toBe(false)
   }

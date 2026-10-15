@@ -31,7 +31,7 @@ import { BETA_FEATURES, type BetaFeatureName } from '@/core/betaScope'
 import { restoreAuthoredFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 
 // The global test setup unlocks every feature for pre-lock suites; the
-// corpus must see the shipped flags (wash/refine live, rest hidden).
+// corpus must see the shipped flags (wash/refine/decomposition live, rest hidden).
 restoreAuthoredFeaturesForTests()
 
 const SRC_ROOT = fileURLToPath(new URL('../../src', import.meta.url))
@@ -62,7 +62,7 @@ function stripComments(text: string): string {
 // ---------------------------------------------------------------------------
 // Tokens that only exist to surface a scope-hidden system (spec sec.9 list:
 // Sword, Body profession, Hidden paths, Ultimate, Companion, Formation,
-// Artifact, Kim Dan, Daily quests, Manual workforce, Ore Decompose,
+// Artifact, Kim Dan, Daily quests, Manual workforce,
 // coming-soon placeholders).
 //
 // Tokens are surface-ids or rendered labels, chosen so a bare word in an
@@ -83,12 +83,6 @@ const FORBIDDEN_TOKENS = [
   { id: 'formation', pattern: /formation_slot|tran_phap|Trận Pháp/ },
   { id: 'companion', pattern: /companion_roster|Đồng Hành|Companion\b/ },
   { id: 'worker-lodge', pattern: /worker_lodge|chi_hien_quan|Nhân Công/ },
-  {
-    // wash/refine ship in beta (2026-10-09) - only the ore decompose
-    // tab is still a forbidden equipment surface.
-    id: 'equipment-forbidden-tab',
-    pattern: /['"]decompose['"]|ore_decompose/,
-  },
   { id: 'daily-quest', pattern: /daily_quest|Nhiệm Vụ Ngày/ },
   { id: 'coming-soon', pattern: /coming_soon|comingSoon|Sắp Ra Mắt|isComingSoon/ },
 ] as const
@@ -164,6 +158,16 @@ const MOUNT_GATES: MountGate[] = [
 
 const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: string }> = [
   {
+    file: 'components/game/combat/CombatSceneOverlay.vue',
+    tokens: ['ultimate'],
+    reason: 'asset preparation reads participant icons only; it renders no skill roles or ultimate labels',
+  },
+  {
+    file: 'components/game/combat/hud/BattleCard.vue',
+    tokens: ['ultimate'],
+    reason: 'human cards use the beta-filtered TurnCombatSkillBar; the other branch is companion-only and CombatBuild emits no companions while scope-hidden',
+  },
+  {
     // Path moved under legacy/ with the realm surface port - same
     // verdict: the node renders props only.
     file: 'components/scenes/realm/legacy/RealmAscentNode.vue',
@@ -171,52 +175,7 @@ const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: s
     reason:
       'the node renders props only; betaRealmLadderNodes() (betaScopeSurface) flattens comingSoon to false for every emitted node, so the comingSoon branch is unreachable - BetaJourney pins the guarantee',
   },
-  // Huyen Kim fidelity preview fixtures (S12 pending integration): the
-  // approved forge design is a 5-tab workspace, so the preview renders the
-  // full tab set for visual review. ui-preview entries are dev-only
-  // surfaces - never mounted in production - and the S12 production
-  // adapter must consume isBetaEquipmentTab (the EquipmentSurface pin above
-  // already guards that authority) before any of these mount.
-  {
-    file: 'components/scenes/equipment/fidelity/EquipmentFidelityScene.vue',
-    tokens: ['equipment-forbidden-tab'],
-    reason:
-      'preview fixture tabs only; S12 integration gates the mode list through isBetaEquipmentTab before production mount',
-  },
-  {
-    file: 'components/scenes/equipment/fidelity/ForgeFidelityScene.vue',
-    tokens: ['equipment-forbidden-tab'],
-    reason:
-      'preview fixture tabs only; S12 integration gates the mode list through isBetaEquipmentTab before production mount',
-  },
-  {
-    file: 'components/scenes/equipment/fidelity/ForgeFidelityWorkspace.vue',
-    tokens: ['equipment-forbidden-tab'],
-    reason:
-      'renders only the mode id the host passes in; production mode admission is isBetaEquipmentTab-gated at S12 integration',
-  },
-  {
-    file: 'ui-preview/ForgePreview.vue',
-    tokens: ['equipment-forbidden-tab'],
-    reason:
-      'ui-preview dev surface validating the approved 5-tab design; not mounted in production',
-  },
-  // Tien-hiep artUI mocks (slice A preview harness) - dev-only surfaces
-  // reproducing the approved mock layouts; never mounted in production.
-  // The equipment-forbidden-tab token reproduces the mock's full tab row;
-  // the formation token in SecondaryPreview reproduces the aux pentagram
-  // design. Production admission stays gated at S12 integration via
-  // isBetaEquipmentTab / BETA_STANDALONE_PANEL_FEATURES.
-  // (CollectionCraftDesignPreview / DesignSystemPreview /
-  // EquipmentForgePreview lost their only forbidden hits when wash/refine
-  // shipped - their mock tab rows now name live surfaces, so no benign
-  // registration is needed.)
-  {
-    file: 'ui-preview/HomeInventoryArtPanel.vue',
-    tokens: ['equipment-forbidden-tab'],
-    reason:
-      'ui-preview dev surface validating the approved mock tab row; not mounted in production',
-  },
+  // Dev-only preview of a deliberately scope-hidden formation surface.
   {
     file: 'ui-preview/SecondaryPreview.vue',
     tokens: ['formation'],
@@ -248,11 +207,11 @@ const FEATURE_TOKEN_MAP: Record<BetaFeatureName, TokenId | null> = {
   formation: 'formation',
   artifact: 'phap-bao',
   manualWorkforce: 'worker-lodge',
-  // equipmentWash/equipmentRefine ship in beta - their surfaces are
+  // Wash, refine and material decomposition ship in beta; their surfaces are
   // legal, so no corpus token may watch them (null = none expected).
   equipmentWash: null,
   equipmentRefine: null,
-  equipmentOreDecompose: 'equipment-forbidden-tab',
+  equipmentOreDecompose: null,
   dailyQuest: 'daily-quest',
 }
 
@@ -380,6 +339,19 @@ describe('beta scope rendered-token corpus guard', () => {
       unaccounted,
       `unaccounted scope-hidden tokens on shipped surfaces:\n${unaccounted.join('\n')}`,
     ).toEqual([])
+  })
+
+  it('ultimate benign registrations retain their rendering and admission boundaries', () => {
+    const overlay = stripComments(readFileSync(join(SRC_ROOT, 'components/game/combat/CombatSceneOverlay.vue'), 'utf8'))
+    expect(overlay.slice(overlay.indexOf('<template>'))).not.toMatch(/\bultimate\b/)
+    const card = stripComments(readFileSync(join(SRC_ROOT, 'components/game/combat/hud/BattleCard.vue'), 'utf8'))
+    expect(card).toContain('<TurnCombatSkillBar v-if="isHuman"')
+    expect(card).toContain('<div v-else class="battle-card__skills battle-card__companion-skills">')
+    const build = stripComments(readFileSync(join(SRC_ROOT, 'core/game/CombatBuild.ts'), 'utf8'))
+    expect(build).toMatch(/const companions: ResolvedCompanionBuild\[\] = isScopeHidden\('companion'\)\s*\? \[\]/)
+    const skillBar = stripComments(readFileSync(join(SRC_ROOT, 'components/game/combat/hud/TurnCombatSkillBar.vue'), 'utf8'))
+    expect(skillBar).toContain('betaCombatRolesFor')
+    expect(skillBar).toContain(":aria-label=\"slot.state === 'scope-hidden' ? t('combat.overlay.skillBar.empty')")
   })
 
   it('the token corpus tracks the BETA_FEATURES flags exactly', () => {

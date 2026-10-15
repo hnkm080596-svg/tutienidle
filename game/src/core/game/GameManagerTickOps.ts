@@ -1,3 +1,4 @@
+import type { MaterialReceipt } from '../material/MaterialReceipt'
 import type { AlchemySystem } from '../alchemy/AlchemySystem'
 import type { BuffPersistence } from '../buff2/BuffPersistence'
 import type { Material } from '../material/Material'
@@ -45,7 +46,7 @@ export class GameManagerTickOps {
       questSystem: QuestSystem
       questRegistry: QuestRegistry
       questManager: QuestManager
-      notifyMaterialGained: (materialId: string, amount: number) => void
+      notifyMaterialGained: (materialId: string, amount: number, receipt: MaterialReceipt | null) => void
       notifications: NotificationQueue
       productionSystem: ProductionSystem
       settleAutomaticProduction?: (player: PlayerData) => void
@@ -114,6 +115,7 @@ export class GameManagerTickOps {
       return
     }
 
+    this.deps.materialBag.prepareCredit()
     const activePlayer = this.deps.getActivePlayer()
 
     // Timed effect theo thoi gian thuc - tick expiry o MOI update (ca
@@ -177,7 +179,7 @@ export class GameManagerTickOps {
         // Collect-quest hook (review 2026-08-28) - production settle la
         // nguon material chinh cua collect-quest. Chi tinh luong that su
         // vao tui (tru overflow).
-        this.deps.notifyMaterialGained(event.materialId, delivered)
+        this.deps.notifyMaterialGained(event.materialId, delivered, event.receipt)
 
         if (delivered > 0) {
           this.deps.notifications.push({
@@ -277,7 +279,7 @@ export class GameManagerTickOps {
         sourceType: 'building',
       }
 
-    const overflow = this.deps.materialBag.add(tinhHoa, entry.amount)
+    const { overflow, receipt } = this.deps.materialBag.credit(tinhHoa, entry.amount)
 
     const delivered = entry.amount - overflow
 
@@ -288,7 +290,7 @@ export class GameManagerTickOps {
     // full-overflow delivery (delivered === 0) is not a landing - the
     // funnel is not invoked at all (C2C r76-f1).
     if (delivered > 0) {
-      this.deps.notifyMaterialGained(entry.materialId, delivered)
+      this.deps.notifyMaterialGained(entry.materialId, delivered, receipt)
 
       this.deps.notifications.push({
         kind: 'craft',

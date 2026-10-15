@@ -96,7 +96,7 @@ function makeSave(
     save.tribulation = overrides.tribulation
   }
   if (overrides.quests !== undefined) {
-    save.quests = overrides.quests
+    save.quests = { ...(save.quests as object), ...(overrides.quests) }
   }
   if (overrides.autoWorkerCapacity !== undefined) {
     ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity =

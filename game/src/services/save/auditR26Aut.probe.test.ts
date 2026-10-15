@@ -1,3 +1,5 @@
+import { MaterialBag } from '../../core/material/MaterialBag'
+import { QuestManager } from '../../core/quest/QuestManager'
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
@@ -99,7 +101,7 @@ function makeSave(
     save.productionSites = overrides.productionSites
   }
   if (overrides.quests !== undefined) {
-    save.quests = overrides.quests
+    save.quests = { ...save.quests, ...overrides.quests }
   }
   if (overrides.autoWorkerCapacity !== undefined) {
     ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity =
@@ -378,14 +380,14 @@ describe('arm B - remote-authoritative boot wedges at the post-accrual commit', 
     const gameManagerStub = {
       eventBus: { on: vi.fn(), off: vi.fn() },
       materialRegistry: { has: () => false },
-      materialBag: { add: vi.fn(), getAll: () => [] },
+      materialBag: (() => { const bag = new MaterialBag(); vi.spyOn(bag, 'add').mockReturnValue(0); return bag })(),
       techniqueManager: { getAll: () => [] },
       skillManager: { getAll: () => [] },
       equipmentBag: { getAll: () => [] },
       pillBag: { getAll: () => [] },
       equipmentSlotManager: { getAll: () => [] },
       alchemySystem: { getJobs: () => [] },
-      questManager: { getState: () => ({}) },
+      questManager: new QuestManager(),
       decomposeSystem: { getSaveState: () => ({}) },
       tribulationDirector: { serializeRuntime: () => ({}) },
       productionSystem: { getSiteDefinitions: () => [], getAllStates: () => [] },

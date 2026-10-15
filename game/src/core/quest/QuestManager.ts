@@ -1,7 +1,9 @@
+import { parseMaterialConsumerCheckpoint, type MaterialGrant, type MaterialConsumerCheckpoint, type MaterialReceiptState } from '../material/MaterialReceipt'
 import type { QuestProgress } from './QuestProgress'
 import type { Quest } from './Quest'
 
 export interface QuestManagerState {
+  materialReceipts?: MaterialConsumerCheckpoint
   active: QuestProgress[]
 
   completedOnceIds: string[]
@@ -43,7 +45,35 @@ export class QuestManager {
   private state: QuestManagerState = createDefaultState()
   // One manager serializes all quest grants, including callback reentry
   // into a different quest that may share the same turn-in materials.
+  private materialDeliveryInProgress = false
   private claimingQuestId: string | undefined
+
+  getCompletedOnceIds(): readonly string[] { return [...this.state.completedOnceIds] }
+
+  materialReceiptSnapshot(identity: MaterialReceiptState): MaterialConsumerCheckpoint {
+    return this.state.materialReceipts ? structuredClone(this.state.materialReceipts) : {
+      version: 2, playerId: identity.playerId, runId: identity.runId, acknowledgedThrough: 0,
+    }
+  }
+
+  consumeMaterialGrant(grant: MaterialGrant, apply: () => void): boolean {
+    const saved = this.state.materialReceipts
+    if (saved && (saved.playerId !== grant.playerId || saved.runId !== grant.runId)) throw new Error('Foreign material receipt consumer')
+    const acknowledgedThrough = saved?.acknowledgedThrough ?? 0
+    if (grant.sequence <= acknowledgedThrough) return false
+    if (grant.sequence !== acknowledgedThrough + 1) throw new Error('Material receipt sequence gap')
+    if (this.materialDeliveryInProgress) throw new Error('Material receipt consumer reentry')
+    const active = structuredClone(this.state.active)
+    this.materialDeliveryInProgress = true
+    try {
+      apply()
+      this.state.materialReceipts = { version: 2, playerId: grant.playerId, runId: grant.runId, acknowledgedThrough: grant.sequence }
+    } catch (error) {
+      this.state.active = active.map((progress) => this.withRuntimeClaimContext(progress))
+      throw error
+    } finally { this.materialDeliveryInProgress = false }
+    return true
+  }
 
   isClaiming(): boolean {
     return this.claimingQuestId !== undefined
@@ -201,6 +231,7 @@ export class QuestManager {
    * leak into live state (A3).
    */
   restore(state: QuestManagerState, nowMs: number = Date.now()): void {
+    if (state.materialReceipts !== undefined && !parseMaterialConsumerCheckpoint(state.materialReceipts)) throw new Error('Malformed material consumer checkpoint')
     // Mission A3 defense-in-depth: normalize instead of trusting the
     // declared shape - a payload that bypassed the validator (active as
     // a string, non-finite reset marker) must not crash consumers.
@@ -225,6 +256,7 @@ export class QuestManager {
           : state.lastDailyResetAtMs
     }
     this.state = {
+      ...(state.materialReceipts ? { materialReceipts: parseMaterialConsumerCheckpoint(state.materialReceipts) ?? undefined } : {}),
       // Canonicalize to the declared element shape - a bypassed payload
       // carrying extra keys must not self-replicate into future saves
       // (same invariant as the player top-level whitelist, MA-R1-01).

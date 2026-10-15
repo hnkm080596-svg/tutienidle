@@ -48,6 +48,7 @@ export function isHerbAge(value: unknown): value is HerbAge {
 
 /** Cycle dang chay - moi ket qua reward CHUA roll, chi snapshot dieu kien (sec4.1). */
 export interface ProductionCycle {
+  receiptOrdinal?: number
   cycleId: string
 
   siteId: string
@@ -68,7 +69,15 @@ export interface ProductionCycle {
   completesAtMs: number
 }
 
+export interface ProductionReceiptCursor {
+  issuedThrough: number
+  settledThrough: number
+  settledAhead: number[]
+  legacyOrigins: { cycleId: string; ordinal: number }[]
+}
+
 export interface ProductionSiteState {
+  receiptCursor?: ProductionReceiptCursor
   siteId: string
 
   level: number

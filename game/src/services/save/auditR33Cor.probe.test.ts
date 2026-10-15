@@ -575,8 +575,7 @@ describe('r33 COR - D: legacy Decompose timing state is inert', () => {
         { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 4 }, nextCycleAt: deadline, started: true },
         BOUND - 1,
       )
-      expect(system.getSaveState().nextCycleAt).toBe(0)
-      expect(system.getSaveState().started).toBe(false)
+      expect(system.getSaveState()).toEqual({})
     }
   })
 

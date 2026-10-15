@@ -278,8 +278,7 @@ describe('r31 COR - B: retired Decompose window state stays inert', () => {
       nextCycleAt: currentMs,
       started: true,
     }, currentMs)
-    expect(system.getSaveState().started).toBe(false)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
+    expect(system.getSaveState()).toEqual({})
     expect(bag.get(ore.id)?.amount).toBe(oreAmountBefore)
   })
 
@@ -813,8 +812,7 @@ describe('r31 COR - H: [0, 2^52) seam domain truth table', () => {
         nextCycleAt: edge,
         started: true,
       }, edge)
-      expect(system.getSaveState().nextCycleAt).toBe(0)
-      expect(system.getSaveState().started).toBe(false)
+      expect(system.getSaveState()).toEqual({})
     }
   })
 

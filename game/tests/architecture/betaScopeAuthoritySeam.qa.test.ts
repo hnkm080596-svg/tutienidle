@@ -158,9 +158,8 @@ describe('building write seam: chi_hien_quan is an art-only Architecture landmar
  gameManager.setActivePlayer(p)
 
  // Carried save: the dormant instance already exists (restore never
- // strips owned records). Level 1 -> 2 meets the realm requirement
- // (qi_refining tier 2 >= level+1) and the ore is funded - scope is
- // the ONLY possible rejector.
+ // strips owned records). Recruitment is art-only with no upgrade cost;
+ // funding canonical ore must not turn it into a spendable action.
  gameManager.buildingManager.add({
  instanceId: 'inst_chq',
  buildingId: 'chi_hien_quan',
@@ -168,11 +167,11 @@ describe('building write seam: chi_hien_quan is an art-only Architecture landmar
  lastCollectedAt: 0,
  accrualRealmId: 'qi_refining',
  })
- const ore = materials.find((m) => m.id === 'mortal_ore_decade')!
+ const ore = materials.find((m) => m.id === 'material_spirit_ore_decade')!
  gameManager.materialBag.add(ore, 10)
 
  expect(gameManager.buildingOps.upgradeBuilding('inst_chq')).toBe(false)
- expect(gameManager.materialBag.getAmount('mortal_ore_decade')).toBe(10)
+ expect(gameManager.materialBag.getAmount('material_spirit_ore_decade')).toBe(10)
  expect(gameManager.buildingManager.get('inst_chq')?.level).toBe(1)
  expect('autoWorkerCapacity' in p).toBe(false)
  })

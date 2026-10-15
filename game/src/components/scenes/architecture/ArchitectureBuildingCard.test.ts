@@ -38,13 +38,15 @@ describe('architecture upgrade preview',()=>{
     await nextTick()
     expect(host.querySelector('.is-preview')).toBeNull()
   })
-  it('does not preview or dispatch a disabled upgrade',async()=>{
+  it('unavailable upgrade remains dim and clickable without previewing',async()=>{
     const {host,button,upgrade}=mount(false)
     button.dispatchEvent(new Event('mouseenter'))
     await nextTick()
     button.click()
     expect(host.querySelector('.is-preview')).toBeNull()
-    expect(upgrade).not.toHaveBeenCalled()
+    expect(button.disabled).toBe(false)
+    expect(button.classList.contains('is-unavailable')).toBe(true)
+    expect(upgrade).toHaveBeenCalledOnce()
   })
   it('invalidates a hover preview when eligibility changes',async()=>{
     const {host,button,model}=mount()

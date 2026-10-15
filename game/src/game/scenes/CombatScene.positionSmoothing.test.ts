@@ -58,6 +58,7 @@ function createScene() {
   scene.characterHeight = 50
   scene.laneRowCenterY = []
   scene.time = { now: 0 }
+  scene.tweens = { timeScale: 1, add: vi.fn(), killTweensOf: vi.fn() }
 
   scene.physics = {
     moveToObject: vi.fn(),

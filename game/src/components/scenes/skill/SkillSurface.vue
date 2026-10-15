@@ -26,6 +26,7 @@ import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { ELEMENT_ORDER, ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { viewBranchTags } from '@/core/progression/NodeBranchViews'
+import { describeNodeLevelEffects } from '@/core/progression/NodeSystem'
 import { CAST_LEVELING_THRESHOLDS } from '@/core/skill/CastLeveling'
 import { MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
 import { NODE_ICON_MANIFEST, SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
@@ -531,57 +532,33 @@ function grantUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: Graph
     actionDisabled: true,
     actionHint: '',
     nextCost: null,
-    levelEffects: buildLevelEffects(node, row),
+    levelEffects: formatNodeLevelEffects(node, row),
   }
 }
 
-// 'Hieu Qua' ladder (Minh 2026-10-07): each level line carries the real
-// cumulative contribution that level buys - numbers folded from
-// node.effect (statModifiers + cast-scoped/cooldown deltas), not prose.
-// A 'once' contrib (e.g. the Ngu Viem +1-CD trade) lands only on the
-// level-1 line since ownership applies it once.
-interface LevelContrib {
-  label: string
-  value: number
-  stat?: StatType
-  turns?: boolean
-  once?: boolean
-}
-function levelContribs(node: ProgressionNode): LevelContrib[] {
-  const out: LevelContrib[] = []
-  for (const mod of node.effect?.statModifiers ?? []) {
-    out.push({ label: statLabel(mod.stat), value: mod.perLevelFlat ?? mod.flat ?? 0, stat: mod.stat })
-  }
-  for (const spec of node.effect?.skillDefinitionModifiers ?? []) {
-    const sName = skillName(spec.skillId)
-    for (const cm of spec.castStatModifiers ?? []) {
-      out.push({ label: `${sName} · ${statLabel(cm.stat)}`, value: cm.perLevel, stat: cm.stat })
-    }
-    if (spec.cooldownTurnsDelta?.perLevel !== undefined) {
-      out.push({ label: `${sName} · ${t('skill.statCooldown')}`, value: spec.cooldownTurnsDelta.perLevel, turns: true })
-    }
-    if (spec.cooldownTurnsDelta?.flat !== undefined) {
-      out.push({ label: `${sName} · ${t('skill.statCooldown')}`, value: spec.cooldownTurnsDelta.flat, turns: true, once: true })
-    }
-  }
-  return out
-}
-function buildLevelEffects(
+// 'Hieu Qua' ladder (Minh 2026-10-07, unified V4c 2026-10-15): each level
+// line formats the pure cumulative entries returned by
+// describeNodeLevelEffects(node, lv) in NodeSystem.ts - no modifier math
+// lives in the Vue surface.
+function formatNodeLevelEffects(
   node: ProgressionNode,
   row: BetaSkillTreeNode,
 ): SkillUiNode['levelEffects'] {
-  const contribs = levelContribs(node)
-  if (!contribs.length) return undefined
+  if (describeNodeLevelEffects(node, 1).length === 0) return undefined
   return Array.from({ length: row.maxLevel }, (_, i) => {
     const lv = i + 1
-    const parts = contribs
-      .filter((c) => !c.once || lv === 1)
-      .map((c) => {
-        const v = c.value * (c.once === true ? 1 : lv)
-        if (c.turns === true) return `${c.label} ${v > 0 ? '+' : ''}${v} hiệp`
-        const fmt = c.stat !== undefined ? formatStat(c.stat, v) : `${v}`
-        return `${c.label} ${v >= 0 ? '+' : ''}${fmt}`
-      })
+    const parts = describeNodeLevelEffects(node, lv).map((entry) => {
+      if (entry.kind === 'cooldownTurns') {
+        const label = `${skillName(entry.skillId)} · ${t('skill.statCooldown')}`
+        return `${label} ${entry.value > 0 ? '+' : ''}${entry.value} ${t('skill.turnUnit')}`
+      }
+      const label =
+        entry.kind === 'castStat'
+          ? `${skillName(entry.skillId)} · ${statLabel(entry.stat)}`
+          : statLabel(entry.stat)
+      const fmt = formatStat(entry.stat, entry.value)
+      return `${label} ${entry.value >= 0 ? '+' : ''}${fmt}`
+    })
     return { lv, text: parts.join(' · '), met: lv <= row.level }
   })
 }
@@ -656,7 +633,7 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     // whenever a level gate shrinks effectiveMaxLevel, but the Insight
     // price still exists, so the model carries the authored price.
     nextCost: row.authoredNextLevelCost,
-    levelEffects: buildLevelEffects(node, row),
+    levelEffects: formatNodeLevelEffects(node, row),
     frameKind: row.grantsSkillIds.some((id) => ELEMENT_SPECIAL_SKILL_IDS.has(id))
       ? 'parent'
       : row.role === 'keystone'

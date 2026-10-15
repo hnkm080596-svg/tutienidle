@@ -19,11 +19,14 @@ import { createI18n } from 'vue-i18n'
 // (the 'current' frontier). Actual: ai 1 (state 'completed').
 
 const capturedStageIds: (string | null | undefined)[] = []
+let emitBuildFromScene: (() => void) | undefined
 
 vi.mock('./fidelity/ExplorationFidelityScene.vue', () => ({
   default: defineComponent({
     props: ['model', 'stage', 'chapter', 'notice', 'preview'],
-    setup(props) {
+    emits: ['open-build'],
+    setup(props, { emit }) {
+      emitBuildFromScene = () => emit('open-build')
       return () => {
         capturedStageIds.push((props.stage as { id?: string } | null)?.id ?? null)
         return h('div')
@@ -42,6 +45,7 @@ vi.mock('@/components/common/SceneDesignCanvas.vue', () => ({
 
 import ExplorationSurface from './ExplorationSurface.vue'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
+import { useUiStore } from '@/stores/ui'
 
 const STAGES = [
   { id: 'ai1', name: 'Ai 1', chapter: 1, floor: 1, description: '', totalEnemyCount: 3 },
@@ -100,6 +104,21 @@ describe('QA-C D1 - exploration selection anchors on the frontier stage', () => 
       // The documented pick is "the earliest incomplete" - under model
       // states completed/completed/current that is ai3 (the frontier).
       expect(capturedStageIds.at(-1)).toBe('ai3')
+    } finally {
+      app.unmount()
+    }
+  })
+
+  it('routes @build through ui.openStandalonePanel("skill") so only one panel stays open (Slice 1.3 / D7)', async () => {
+    const app = mountSurface()
+    try {
+      const ui = useUiStore()
+      ui.openLeftPanel('stage_select')
+      expect(ui.leftPanelMode).toBe('stage_select')
+
+      emitBuildFromScene?.()
+      expect(ui.standalonePanel).toBe('skill')
+      expect(ui.leftPanelMode).toBeNull()
     } finally {
       app.unmount()
     }

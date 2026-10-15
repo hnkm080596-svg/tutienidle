@@ -1,3 +1,5 @@
+import { cursorFor, issueProductionIdentity, cycleSettled, markCycleSettled, validateProductionCursor, admitCycleIdentity, rollbackUnpublishedIssuance } from './ProductionReceiptCursor'
+import type { MaterialReceipt } from '../material/MaterialReceipt'
 // ProductionSystem owns Lam, Mine, and Grotto production. Each active
 // site owns one independent cycle. Start-time realm, level, reward-table
 // version, and seed are snapshotted; rewards are granted once at
@@ -47,6 +49,7 @@ import { betaRecipeFamilyOfId, isScopeHidden } from '../betaScope'
 
 /** Mot giao dich settle da xay ra - dung cho notification UI (sec9.1). */
 export interface ProductionSettlementEvent {
+  receipt: MaterialReceipt | null
   siteId: string
 
   materialId: string
@@ -129,6 +132,16 @@ export class ProductionSystem {
     return state
   }
 
+  /** Retire all issued work without rewards; preserve site configuration and delivery state. */
+  cancelPendingCycles(): void {
+    for (const state of this.states.values()) {
+      const cursor = cursorFor(state)
+      cursor.settledThrough = cursor.issuedThrough
+      cursor.settledAhead = []
+      state.productionCycles = []
+    }
+  }
+
   /**
    * M1 (ARCH-001) - restore REPLACES the whole site-state map, and every
    * restored entry is a detached copy (productionCycles included): the
@@ -136,7 +149,8 @@ export class ProductionSystem {
    * live state (A3). Whitelisted fields only - legacy keys (e.g. the
    * removed `activeCycle`) are dropped here, not migrated.
    */
-  restoreStates(states: ProductionSiteStateInput[], restoreNowMs: number = this.nowMs()): void {
+  restoreStates(states: ProductionSiteStateInput[], restoreNowMs: number = this.nowMs(), replaceReceipts = false): void {
+    const previous = new Map(this.states)
     // r29-COR-F1: the shift only fires under a sane restore clock -
     // a non-finite or exact-integer-domain-overflow restoreNowMs from
     // an ungated caller must not re-anchor every began-pair
@@ -159,7 +173,19 @@ export class ProductionSystem {
         continue
       }
 
+      const priorCursor = replaceReceipts ? undefined : previous.get(state.siteId)?.receiptCursor
+      let receiptCursor = state.receiptCursor ? structuredClone(state.receiptCursor) : priorCursor
+      if (priorCursor && receiptCursor && !replaceReceipts) {
+        const settledThrough = Math.max(priorCursor.settledThrough, receiptCursor.settledThrough)
+        receiptCursor = { issuedThrough: Math.max(priorCursor.issuedThrough, receiptCursor.issuedThrough), settledThrough,
+          settledAhead: [...new Set([...priorCursor.settledAhead, ...receiptCursor.settledAhead])].filter((ordinal) => ordinal > settledThrough),
+          legacyOrigins: [...new Map([...priorCursor.legacyOrigins, ...receiptCursor.legacyOrigins].map((origin) => [origin.cycleId, origin])).values()] }
+      }
+      if (receiptCursor && !validateProductionCursor(receiptCursor)) throw new Error('Malformed production receipt cursor')
+      const identityOwner: ProductionSiteState = { siteId: state.siteId, level: state.level, autoRestart: true,
+        receiptCursor: receiptCursor ? structuredClone(receiptCursor) : undefined }
       this.states.set(state.siteId, {
+        receiptCursor: cursorFor(identityOwner),
         siteId: state.siteId,
         level: state.level,
         autoRestart: true,
@@ -202,12 +228,12 @@ export class ProductionSystem {
           ) {
             const shiftMs = cycle.startedAtMs - restoreNowMs
             return [{
-              ...cycle,
+              ...admitCycleIdentity(identityOwner, cycle),
               startedAtMs: cycle.startedAtMs - shiftMs,
               completesAtMs: cycle.completesAtMs - shiftMs,
             }]
           }
-          return [{ ...cycle }]
+          return [admitCycleIdentity(identityOwner, cycle)]
         }),
         hiddenChannelCycles: state.hiddenChannelCycles
           ? { ...state.hiddenChannelCycles }
@@ -223,6 +249,7 @@ export class ProductionSystem {
     return {
       ...state,
       productionCycles: state.productionCycles?.map((cycle) => ({ ...cycle })),
+      receiptCursor: state.receiptCursor ? structuredClone(state.receiptCursor) : undefined,
       hiddenChannelCycles: state.hiddenChannelCycles
         ? { ...state.hiddenChannelCycles }
         : undefined,
@@ -393,6 +420,8 @@ export class ProductionSystem {
     const collectionRealmId = resolveTerritoryTier(this.deps.territory, currentRealmId)
 
     for (const state of advanceableStates) {
+      bag.prepareCredit()
+      const beforeIssued = cursorFor(state).issuedThrough
       state.productionCycles ??= []
 
       const definition = this.getSiteDefinition(state.siteId)
@@ -415,13 +444,16 @@ export class ProductionSystem {
         nowMs,
         emptyLaneStartMs: nowMs,
         advanceMode: 'observe',
+        issueIdentity: () => issueProductionIdentity(state),
         rng,
       })
 
-      state.productionCycles = result.pending
-
-      for (const cycle of result.completed) {
-        this.grantCycleRewards(cycle, bag, registry)
+      try {
+        for (const cycle of result.completed) this.grantCycleRewards(cycle, bag, registry)
+        state.productionCycles = result.pending
+      } catch (error) {
+        rollbackUnpublishedIssuance(state, beforeIssued)
+        throw error
       }
     }
   }
@@ -480,23 +512,23 @@ export class ProductionSystem {
 
   /** Cong reward cua mot cycle vao Bag + ghi settle event (dung chung moi duong settle). */
   private grantCycleRewards(cycle: ProductionCycle, bag: MaterialBag, registry: MaterialRegistry): void {
-    // M-F-BODY-HIDDEN (spec sec.4) - hidden-channel emission appends
-    // post-table rewards that RIDE this same bag.add/pendingEvents
-    // delivery loop; channel draws consume a dedicated stream
-    // (rollSeed ^ GROTTO_CHANNEL_SEED_TAG), never the table stream.
-    for (const reward of [...this.rollRewards(cycle), ...this.rollHiddenChannelRewards(cycle, registry)]) {
-      if (!registry.has(reward.materialId) || reward.amount <= 0) {
-        continue
+    const state = this.states.get(cycle.siteId)
+    if (!state || cycleSettled(state, cycle)) return
+    bag.prepareCredit()
+    const counters = state.hiddenChannelCycles ? { ...state.hiddenChannelCycles } : undefined
+    try {
+      const rewards = [...this.rollRewards(cycle), ...this.rollHiddenChannelRewards(cycle, registry)]
+        .filter((reward) => registry.has(reward.materialId) && reward.amount > 0)
+      const grants = bag.creditBatch(rewards.map((reward, index) => ({ material: registry.get(reward.materialId), amount: reward.amount,
+        sourceId: `production:${cycle.siteId}:${cycle.receiptOrdinal}:${index}` })))
+      for (const [index, grant] of grants.entries()) {
+        this.pendingEvents.push({ siteId: cycle.siteId, materialId: grant.materialId, amount: rewards[index]!.amount,
+          overflow: grant.overflow > 0 ? grant.overflow : undefined, receipt: grant.receipt })
       }
-
-      const overflow = bag.add(registry.get(reward.materialId), reward.amount)
-
-      this.pendingEvents.push({
-        siteId: cycle.siteId,
-        materialId: reward.materialId,
-        amount: reward.amount,
-        overflow: overflow > 0 ? overflow : undefined,
-      })
+      markCycleSettled(state, cycle)
+    } catch (error) {
+      state.hiddenChannelCycles = counters
+      throw error
     }
   }
 

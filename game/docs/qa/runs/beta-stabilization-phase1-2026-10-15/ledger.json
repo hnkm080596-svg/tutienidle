@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "beta-stabilization-phase1-2026-10-15",
+    "createdAt": "2026-10-15T09:44:22.678Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [],
+    "nonGoals": [],
+    "checkout": "E:/tutienidle/.agent-worktrees/phase-1-beta-fixes/game",
+    "branch": "phase-1-beta-fixes",
+    "base": "796034053",
+    "head": "796034053",
+    "state": {
+      "productStateId": "",
+      "contractId": "",
+      "attackModelId": "",
+      "environmentId": ""
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": true,
+    "phase": "INTAKE",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null
+  },
+  "briefs": [],
+  "assignments": [],
+  "consumptions": [],
+  "invariants": [],
+  "census": [],
+  "findings": [],
+  "evidence": [],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-10-15T09:44:22.682Z",
+      "kind": "PHASE",
+      "actor": "coordinator-18608",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "a6f4b171bfbf912075b0ed0ef2685d7d86d395b0c0b6ef66b9c5f38c8ec94ecf",
+      "eventHash": "64e4966f52c7ef66091c3e220bb765041e667fb3d1eafb5568e971b1f3db0ffc"
+    }
+  ]
+}

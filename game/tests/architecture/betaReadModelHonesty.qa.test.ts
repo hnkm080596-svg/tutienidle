@@ -3,8 +3,8 @@
 // QA FIXPOINT probe - read-model honesty (frontend-contract.md):
 // - sec.D: post-commit the 4 non-committed element branches are
 //   scope-hidden - the panel must not render them (no teaser, no 'locked').
-// - sec.7/8: the combat role rail drops 'scope-hidden' roles - ultimate
-//   has no beta role and must not render a slot.
+// - sec.7/8: scope-hidden ultimate remains inert even when card mode
+//   renders decorative chrome for its seat.
 // - sec.F: alchemy renders only beta-enabled recipe families - dormant
 //   families must not appear (their craft path fails closed anyway, so a
 //   rendered row is a dead button plus a content teaser).
@@ -53,13 +53,14 @@ lockBetaFeaturesForTests()
 // presentation carries an EMPTY ultimate entry (the scope-hidden role). ---
 const barMocks = vi.hoisted(() => ({
   slotList: [] as TurnSkillPresentationEntry[],
+  awaitingChoice: false,
   chooseSlot: vi.fn(),
   setBattleManualMode: vi.fn(),
 }))
 
 vi.mock('@/composables/useTurnCombatManual', () => ({
   useTurnCombatManual: () => ({
-    isAwaitingChoice: { value: false },
+    isAwaitingChoice: { value: barMocks.awaitingChoice },
     isBattleFighting: { value: true },
     slotList: { value: barMocks.slotList },
     chooseSlot: barMocks.chooseSlot,
@@ -75,6 +76,7 @@ function mountPanel(
   component: object,
   manager: GameManager,
   setup?: (player: ReturnType<typeof usePlayerStore>, pinia: ReturnType<typeof createPinia>) => void,
+  props: Record<string, unknown> = {},
 ) {
   const container = document.createElement('div')
   document.body.appendChild(container)
@@ -87,7 +89,7 @@ function mountPanel(
 
   const stateVersion = ref(0)
   const pinia = createPinia()
-  const app = createApp({ render: () => h(component as never) })
+  const app = createApp({ render: () => h(component as never, props) })
 
   app.use(pinia)
   app.use(i18n)
@@ -109,6 +111,7 @@ function mountPanel(
 function stubGameManager(): GameManager {
   return {
     skillManager: { getAll: () => [], get: () => undefined },
+    catalogOps: { getSkillTemplate: () => undefined },
     getTurnBattle: () => null,
     techniqueManager: { getActive: () => undefined },
     nodeRegistry: { getAll: () => [], get: () => undefined },
@@ -127,6 +130,7 @@ function stubGameManager(): GameManager {
     hasPathCapability: () => false,
     setBattleManualMode: () => {},
     progressionOps: {
+      previewNodeRespec: () => null,
       getResolvedSkillRoles: () => ({ basic: { kind: 'dynamic', label: '-' } }),
       getSkillLevel: () => 1,
       getSkillCoreUpgradeCost: () => undefined,
@@ -183,7 +187,7 @@ describe('QA read-model honesty: skill path element branches (contract sec.D)', 
 })
 
 describe('QA read-model honesty: combat role rail (contract sec.7/8)', () => {
-  it('a scope-hidden ultimate role renders no slot button for a beta player', async () => {
+  it('card-mode ultimate stays decorative and cannot submit a beta manual choice', async () => {
     const READY: TurnSkillPresentationEntry = {
       skillId: 'tram', cooldownRemaining: 0, cooldownTotal: 0, resourceCost: 0, state: 'ready',
     }
@@ -191,6 +195,7 @@ describe('QA read-model honesty: combat role rail (contract sec.7/8)', () => {
       skillId: '', cooldownRemaining: 0, cooldownTotal: 0, resourceCost: 0, state: 'empty',
     }
     barMocks.slotList = [READY, READY, EMPTY]
+    barMocks.awaitingChoice = true
 
     const gameManager = {
       ...stubGameManager(),
@@ -202,7 +207,7 @@ describe('QA read-model honesty: combat role rail (contract sec.7/8)', () => {
       player.$state.realmId = 'mortal'
       player.$state.cultivationPath = undefined
       player.$state.cultivationWay = undefined
-    })
+    }, { card: true })
     useUiStore(view.pinia).combatInputMode = 'auto'
 
     await nextTick()
@@ -213,7 +218,14 @@ describe('QA read-model honesty: combat role rail (contract sec.7/8)', () => {
       ),
     )
 
-    expect(buttons.length).toBe(2)
+    expect(buttons.length).toBe(3)
+    expect(buttons[2]!.getAttribute('aria-disabled')).toBe('true')
+    barMocks.chooseSlot.mockClear()
+    buttons[2]!.click()
+    expect(barMocks.chooseSlot).not.toHaveBeenCalled()
+    buttons[0]!.click()
+    expect(barMocks.chooseSlot).toHaveBeenCalledExactlyOnceWith('basic')
+    barMocks.awaitingChoice = false
 
     view.unmount()
   })
@@ -248,7 +260,7 @@ const DORMANT_RECIPE: AlchemyRecipe = {
 
 const QA_MATERIALS: Material[] = [
   { id: 'qa_herb', name: 'QA Herb', category: 'herb', sourceType: 'exploration' },
-  { id: 'mortal_wood_decade', name: 'QA Wood', category: 'wood', sourceType: 'exploration' },
+  { id: 'material_spirit_wood_decade', name: 'QA Wood', category: 'wood', sourceType: 'exploration' },
 ]
 
 const QA_PILLS: Pill[] = [

@@ -19,6 +19,7 @@ import {
 } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
 import type { Material } from '@/core/material/Material'
+import { buildProfessionMaterialId } from '@/core/profession/ProfessionMaterial'
 import type { HerbAge } from '@/core/production/ProductionTypes'
 import { vTooltip } from '@/directives/tooltip'
 import { useTooltip } from '@/composables/useTooltip'
@@ -39,17 +40,16 @@ const ORE: Material = {
   sourceType: 'exploration',
 }
 
-// Quang that (co profession meta) x 2 tuoi cung realm - moi tuoi render
+// Age-only ore metadata: each age renders
 // 1 o rieng, nhan day du theo ten material.
 function ore(age: HerbAge): Material {
   return {
-    id: `mortal_ore_${age}`,
+    id: buildProfessionMaterialId('ore', age),
     name: `${AGE_NAME[age]} Linh Khoáng`,
     category: 'ore',
     sourceType: 'exploration',
     profession: {
       resourceKind: 'ore',
-      realmId: 'mortal',
       age,
     },
   }
@@ -283,7 +283,7 @@ describe('MaterialBag — filter/search (plan §3.2 B4)', () => {
     mounted.unmount()
   })
 
-  it('quáng cùng realm tách ô riêng: mỗi bậc tuổi 1 ô với tên đầy đủ', async () => {
+  it('quáng theo tuổi tách ô riêng và không mang cảnh giới', async () => {
     gameManager.catalogOps.registerMaterials([ORE_HOANG, ORE_HUYEN])
     gameManager.materialBag.add(gameManager.materialRegistry.get(ORE_HOANG.id), 3)
     gameManager.materialBag.add(gameManager.materialRegistry.get(ORE_HUYEN.id), 5)
@@ -300,7 +300,9 @@ describe('MaterialBag — filter/search (plan §3.2 B4)', () => {
     // Tooltip o Bach Nien hien dung bac cua no.
     const slots = mounted.container.querySelectorAll<HTMLElement>('.bag-section__grid .bag-section__slot')
     slots[1]!.dispatchEvent(new Event('pointerenter', { bubbles: true }))
-    expect(JSON.stringify(useTooltip().content.value)).toContain('Bách Niên')
+    const oreTooltip = JSON.stringify(useTooltip().content.value)
+    expect(oreTooltip).toContain('Bách Niên')
+    expect(oreTooltip).not.toContain('Phàm Nhân')
     useTooltip().dismissTooltip()
 
     mounted.unmount()

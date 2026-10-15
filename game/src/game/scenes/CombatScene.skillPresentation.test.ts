@@ -21,6 +21,7 @@ const resolved: SkillPresentationResolved = { ref, sealed: true, groups: [{
 }] }
 function fixture() {
   const scene = createTestScene()
+  scene.tweens = { timeScale: 1, add: vi.fn(), killTweensOf: vi.fn() }
   const port = { getPendingPlaybackToken: () => ref.token, acknowledgeActionImpact: vi.fn(),
     acknowledgeActionComplete: vi.fn(), acknowledgeTurnReady: vi.fn() }
   scene.gameManagerRef = port
@@ -115,17 +116,19 @@ describe('CombatScene shared skill playback wiring', () => {
     expect(port.acknowledgeActionComplete).toHaveBeenCalledExactlyOnceWith(ref.token)
     expect(scene.skillVfxDebug.pool.active).toBe(0)
   })
-  it('drives the actor impulse toward the declared target on a melee cast', () => {
+  it('keeps the actor still while the shared runner admits a melee cast', () => {
     const { scene, port } = fixture()
     scene.sprites.set('player', spriteStub(50))
     scene.sprites.set('enemy', spriteStub(400))
     const tweenConfigs: Array<Record<string, unknown>> = []
     scene.tweens = { add: (cfg: Record<string, unknown>) => tweenConfigs.push(cfg), killTweensOf: vi.fn() }
     scene.onSkillCast({ ...cast, presetId: 'slash' })
-    expect(tweenConfigs[0]).toMatchObject({ targets: scene.sprites.get('player'), offsetX: 8, yoyo: true, duration: 180 })
+    expect(tweenConfigs).toEqual([])
+    expect(scene.sprites.get('player').offsetX).toBe(0)
+    expect(scene.skillVfxDebug.playback).toMatchObject({ phase: 'cast', faultCount: 0 })
     expect(port.acknowledgeActionImpact).not.toHaveBeenCalled()
   })
-  it('still fires the impulse under reduced motion - it is the "who acted" signal', () => {
+  it('does not restore the retired actor impulse under reduced motion', () => {
     const { scene } = fixture()
     vi.stubGlobal('matchMedia', () => ({ matches: true }))
     try {
@@ -133,7 +136,8 @@ describe('CombatScene shared skill playback wiring', () => {
       const tweenConfigs: Array<Record<string, unknown>> = []
       scene.tweens = { add: (cfg: Record<string, unknown>) => tweenConfigs.push(cfg), killTweensOf: vi.fn() }
       scene.onSkillCast({ ...cast, presetId: 'slash' })
-      expect(tweenConfigs.some(cfg => cfg.offsetX === 8)).toBe(true)
+      expect(tweenConfigs).toEqual([])
+      expect(scene.sprites.get('player').offsetX).toBe(0)
     } finally { vi.unstubAllGlobals() }
   })
   it('resumes a post-impact receipt without replaying damage and returns all pool leases', () => {

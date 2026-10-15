@@ -504,6 +504,8 @@ describe('ProductionSystem - hidden grotto channels (m-f-body-hidden sec.4)', ()
     const prior = system.getAllStates()
     const grotto = prior.find((state) => state.siteId === GROTTO)
 
+    const cursor = grotto?.receiptCursor ?? { issuedThrough: 0, settledThrough: 0, settledAhead: [], legacyOrigins: [] }
+    const ordinal = cursor.issuedThrough + 1
     system.restoreStates([
       ...prior,
       {
@@ -511,9 +513,11 @@ describe('ProductionSystem - hidden grotto channels (m-f-body-hidden sec.4)', ()
         level: 1,
         autoRestart: false,
         hiddenChannelCycles: grotto?.hiddenChannelCycles,
+        receiptCursor: { ...cursor, issuedThrough: ordinal },
         productionCycles: [
           {
             cycleId: `cycle_${rollSeed}_${prior.length}`,
+            receiptOrdinal: ordinal,
             siteId: GROTTO,
             collectionRealmId,
             siteLevelAtStart: 1,
@@ -778,5 +782,31 @@ describe('age-only production resources', () => {
         expect(bag.getAll().every(stack => stack.material.id.startsWith('material_spirit_'))).toBe(true)
       }
     }
+  })
+})
+
+
+describe('production cancellation receipt frontier', () => {
+  it('retires canceled identities across snapshot reopen without granting or changing site state', () => {
+    const system = createSystem()
+    const { bag, registry } = createBag()
+    system.ensureSiteState('thanh_van_lam')
+    system.tick(1_000, bag, registry, 'mortal')
+    const before = system.getState('thanh_van_lam')!
+    const cycle = before.productionCycles![0]!
+    const inventory = bag.getAll()
+    system.cancelPendingCycles()
+    const canceled = system.getState('thanh_van_lam')!
+    expect(canceled).toEqual({ ...before, productionCycles: [], receiptCursor: {
+      ...before.receiptCursor!, settledThrough: before.receiptCursor!.issuedThrough, settledAhead: [],
+    } })
+    system.cancelPendingCycles()
+    expect(system.getState('thanh_van_lam')).toEqual(canceled)
+    const reopened = createSystem()
+    reopened.restoreStates(JSON.parse(JSON.stringify(system.getAllStates())), 1_000, true)
+    reopened.restoreStates([{ ...canceled, productionCycles: [cycle] }], 1_000)
+    reopened.tick(cycle.completesAtMs, bag, registry, 'mortal')
+    expect(bag.getAll()).toEqual(inventory)
+    expect(reopened.drainSettlementEvents()).toEqual([])
   })
 })

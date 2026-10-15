@@ -1,3 +1,5 @@
+import { MaterialBag } from '../../core/material/MaterialBag'
+import { QuestManager } from '../../core/quest/QuestManager'
 // @vitest-environment jsdom
 // W5-AUT audit repro harness (temp file - not part of the suite).
 //
@@ -272,14 +274,14 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
         time: new TimeAuthority({ wallNow: () => 1_760_000_000_000, monotonicNow: () => 0 }),
         eventBus: { on: vi.fn(), off: vi.fn() },
         materialRegistry: { has: () => false },
-        materialBag: { add: vi.fn(), getAll: () => [] },
+        materialBag: (() => { const bag = new MaterialBag(); vi.spyOn(bag, 'add').mockReturnValue(0); return bag })(),
         techniqueManager: { getAll: () => [] },
         skillManager: { getAll: () => [] },
         equipmentBag: { getAll: () => [] },
         pillBag: { getAll: () => [] },
         equipmentSlotManager: { getAll: () => [] },
         alchemySystem: { getJobs: () => [] },
-        questManager: { getState: () => ({}) },
+        questManager: new QuestManager(),
         decomposeSystem: { getSaveState: () => ({}) },
         tribulationDirector: { serializeRuntime: () => ({}) },
         productionSystem: { getSiteDefinitions: () => [], getAllStates: () => [] },

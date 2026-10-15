@@ -1675,4 +1675,39 @@ describe('AlchemySystem — enqueueJob merge-into-last-order', () => {
     expect(system.getJobs()[0]!.quantity).toBe(1)
     expect(bag.getAmount(BUI_GO_ID)).toBe(60 - WOOD_AMOUNT)
   })
+
+  it('R5: two independent AlchemySystem instances with the same clock produce identical jobIds', () => {
+    const ctxA = clickContext()
+    const ctxB = clickContext()
+    ctxA.system.startJob(ctxA.recipe, 'herb_decade', ctxA.bag, ctxA.registry, 0, 1, 2_000, 5)
+    ctxB.system.startJob(ctxB.recipe, 'herb_decade', ctxB.bag, ctxB.registry, 0, 1, 2_000, 5)
+    expect(ctxA.system.getJobs()[0]!.jobId).toBe(ctxB.system.getJobs()[0]!.jobId)
+  })
+
+  it('R5: restoreJobs reseeds jobCounter so subsequent jobs never collide with restored jobId', () => {
+    const ctx = clickContext()
+    ctx.system.startJob(ctx.recipe, 'herb_decade', ctx.bag, ctx.registry, 0, 1, 2_000, 5)
+    const savedJobs = ctx.system.getJobs()
+    expect(savedJobs).toHaveLength(1)
+    const firstId = savedJobs[0]!.jobId
+
+    const resumed = clickContext()
+    resumed.system.restoreJobs(savedJobs, 2_000)
+    // Start a second distinct job at the same timestamp (2_000) using a different herb variant so it does not merge.
+    const started = resumed.system.startJob(
+      resumed.recipe,
+      'herb_century',
+      resumed.bag,
+      resumed.registry,
+      0,
+      1,
+      2_000,
+      5,
+    )
+    expect(started.ok).toBe(true)
+    const jobs = resumed.system.getJobs()
+    expect(jobs).toHaveLength(2)
+    expect(jobs[1]!.jobId).not.toBe(firstId)
+  })
 })
+

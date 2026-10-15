@@ -39,17 +39,17 @@ describe('GameManager — independent production site progress', () => {
     }
   })
 
-  it('disabled sites remain idle while enabled sites keep their own cycle', () => {
+  it('untouched sites produce by default independently of an explicitly enabled site', () => {
     const manager = makeManager()
     manager.setActivePlayer(createDefaultPlayer())
-    const [enabled, disabled] = manager.productionSystem.getSiteDefinitions()
+    const [enabled, untouched] = manager.productionSystem.getSiteDefinitions()
     expect(enabled).toBeDefined()
-    expect(disabled).toBeDefined()
+    expect(untouched).toBeDefined()
     manager.buildingOps.setProductionAutoRestart(enabled!.siteId, true)
     manager.tickOps.update(1)
 
     expect(manager.productionSystem.getState(enabled!.siteId)?.productionCycles).toHaveLength(1)
-    expect(manager.productionSystem.getState(disabled!.siteId)?.productionCycles ?? []).toHaveLength(0)
+    expect(manager.productionSystem.getState(untouched!.siteId)?.productionCycles ?? []).toHaveLength(1)
   })
 })
 

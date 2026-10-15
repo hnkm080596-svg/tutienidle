@@ -267,11 +267,7 @@ describe('seam (b) - fallback window vs calculateOfflineTime cap split', () => {
     // Deny: zero accrual on a corrupt authority - no channel settle.
     expect(result.offline.elapsedSeconds).toBe(0)
     expect(settleSpy).not.toHaveBeenCalled()
-    expect(manager.decomposeSystem.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(manager.decomposeSystem.getSaveState()).toEqual({})
     // The unconditional alchemy pass anchors at the payload marker
     // (min(lastSavedAt + 0, NOW, NOW)) - deferred dues keep their times.
     expect(alchemySpy).toHaveBeenCalledWith(

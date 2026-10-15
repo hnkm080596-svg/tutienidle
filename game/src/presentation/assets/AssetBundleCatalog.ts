@@ -530,6 +530,8 @@ function preferredDomDensity(): '@1x' | '@2x' {
  * table is their manifest.
  */
 const UI_SHARED_CHROME_URLS = [
+  // GameDropdownButton is shared across panel surfaces.
+  '/assets/ui/tien-hiep-2026-10/controls/dropdown-frame-cloud-v1.svg',
   // InkWashBackdrop overlay layers.
   '/assets/ui/ink-wash/overlays/wash-corner-mountain-left.png',
   '/assets/ui/ink-wash/overlays/wash-corner-mountain-right.png',
@@ -576,6 +578,25 @@ const UI_SHARED_CHROME_URLS = [
  * guard - a quoted art path with no registry owner.
  */
 const UI_SCENE_SINGLE_URLS = [
+  // Component-owned combat, production and expedition art warms lazily.
+  '/assets/backgrounds/thanh-van/spring/morning/03-battle-ground.png',
+  '/assets/ui/tien-hiep-2026-10/combat/battle-card/backdrop-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/battle-card/frame-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/battle-card/meter-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/battle-card/ring-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/expand-button-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/health-fill-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/item-slot-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/player-card/avatar-ring-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/player-card/backdrop-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/player-card/frame-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/player-card/meter-frame-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/skill-active-v1.png',
+  '/assets/ui/tien-hiep-2026-10/combat/skill-inactive-v1.png',
+  '/assets/ui/tien-hiep-2026-10/production/blessed-forest-v1.png',
+  '/assets/ui/tien-hiep-2026-10/production/herb-grotto-v1.png',
+  '/assets/ui/tien-hiep-2026-10/production/spirit-mine-v1.png',
+  '/assets/ui/tien-hiep-2026-10/production/spirit-vein-v1.png',
   // Tien Hiep 2026-10 pack chrome (slice A assets).
   '/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png',
   '/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png',

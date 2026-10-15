@@ -8,7 +8,7 @@
 // MUTATES the TurnBattle object in place, so `battle` computed resolves
 // to the same reference forever and derived projections never invalidate.
 //
-// This test mounts the REAL consumers (TurnCombatSkillBar + BattleLogPanel
+// This test mounts the REAL card-mode skill consumer + BattleLogPanel
 // + TurnOrderStrip) against a REAL GameManager + ManualClockSource - the
 // same domain object, the same in-place mutations, the same shared
 // stateVersion bridge App.vue drives. It asserts:
@@ -110,7 +110,7 @@ function mountHud(gameManager: GameManager): {
 
   const app = createApp({
     render: () =>
-      h('div', [h(TurnCombatSkillBar), h(BattleLogPanel), h(TurnOrderStrip)]),
+      h('div', [h(TurnCombatSkillBar, { card: true, class: 'battle-card__skills' }), h(BattleLogPanel), h(TurnOrderStrip)]),
   })
 
   app.use(createPinia())
@@ -166,7 +166,7 @@ describe('ARCH-005 (M12) — combat HUD reactivity over the in-place-mutated Tur
 
     expect(battle.state).toBe('intro')
     expect(container.querySelector('.turn-combat-skill-bar')).toBeNull()
-    expect(container.querySelector('.turn-order-strip')).toBeNull()
+    expect(container.querySelector('.combat-initiative-track')).toBeNull()
     expect(container.querySelector('.battle-log-panel')).toBeNull()
 
     // Drive the engine to 'fighting' WITHOUT a version bump: state is
@@ -181,16 +181,17 @@ describe('ARCH-005 (M12) — combat HUD reactivity over the in-place-mutated Tur
     // No invalidation signal yet -> projections keep their stale cache.
     await nextTick()
     expect(container.querySelector('.turn-combat-skill-bar')).toBeNull()
-    expect(container.querySelector('.turn-order-strip')).toBeNull()
+    expect(container.querySelector('.combat-initiative-track')).toBeNull()
 
     // The version bump (what App.vue does every tick) must invalidate.
     await bump()
 
     expect(container.querySelector('.turn-combat-skill-bar')).not.toBeNull()
-    // Mortal rail = basic + progression-locked special; the ultimate
-    // role is scope-hidden and never renders a slot.
-    expect(container.querySelectorAll('.turn-combat-skill-bar__slot-button')).toHaveLength(2)
-    expect(container.querySelector('.turn-order-strip')).not.toBeNull()
+    // The bottom player card uses the shared three-role slot component.
+    // Its hidden ultimate remains inert decorative chrome.
+    expect(container.querySelectorAll('.battle-card__skills .turn-combat-skill-bar__slot-button')).toHaveLength(3)
+    expect(container.querySelectorAll('.battle-card__skills .combat-skill-slot')).toHaveLength(3)
+    expect(container.querySelector('.combat-initiative-track')).not.toBeNull()
 
     // Auto turns append battle.log in place; the panel surfaces after bump.
     for (let i = 0; i < 150 && (battle.log?.length ?? 0) === 0; i++) {
@@ -214,12 +215,22 @@ describe('ARCH-005 (M12) — combat HUD reactivity over the in-place-mutated Tur
 
     expect(container.querySelector('.turn-combat-skill-bar__awaiting')).not.toBeNull()
 
+    const hiddenUltimate = container.querySelectorAll<HTMLButtonElement>(
+      '.battle-card__skills .turn-combat-skill-bar__slot-button',
+    )[2]!
+    expect(hiddenUltimate.getAttribute('aria-disabled')).toBe('true')
+    hiddenUltimate.click()
+    expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
+
     const tappable = container.querySelector<HTMLButtonElement>(
       '.turn-combat-skill-bar__slot-button.is-tappable',
     )
 
     expect(tappable).not.toBeNull()
     expect(tappable!.disabled).toBe(false)
+    tappable!.click()
+    await nextTick()
+    expect(gameManager.isAwaitingManualTurnChoice()).toBe(false)
 
     app.unmount()
     container.remove()

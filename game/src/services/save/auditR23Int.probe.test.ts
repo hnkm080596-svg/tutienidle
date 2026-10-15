@@ -408,8 +408,7 @@ describe('fixpoint r23 INT - integration coherence probes (da0d553d)', () => {
       nextCycleAt: TWO_POW_52 - 1,
       started: true,
     })
-    expect(decompose.getSaveState().nextCycleAt).toBe(0)
-    expect(decompose.getSaveState().started).toBe(false)
+    expect(decompose.getSaveState()).toEqual({})
   })
 
   // ------------------------------------------------------------------

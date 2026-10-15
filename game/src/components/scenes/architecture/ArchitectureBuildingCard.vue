@@ -55,13 +55,14 @@ const next=computed(()=> {
         </div>
       </div>
       <div class="architecture-card__actions" v-tooltip="!maxed && !model.canUpgrade ? {title:t('architecture.upgrade'),description:'reason' in model && model.reason ? t(`architecture.reasons.${model.reason}`) : 'reasons' in model ? model.reasons.map(reason=>t(`architecture.productionReasons.${reason}`)).join('\n') : ''} : undefined">
-        <GameActionButton v-if="!maxed" :disabled="!model.canUpgrade" @mouseenter="hovered=true" @mouseleave="hovered=false" @click="emit('upgrade')">{{t('architecture.upgrade')}}</GameActionButton>
+        <GameActionButton v-if="!maxed" class="architecture-card__upgrade" :class="{'is-unavailable':!model.canUpgrade}" :gold="model.canUpgrade" @mouseenter="hovered=true" @mouseleave="hovered=false" @click="emit('upgrade')">{{t('architecture.upgrade')}}</GameActionButton>
         <span v-else>{{t('architecture.maximum')}}</span>
       </div>
     </div>
   </GameCard>
 </template>
 <style scoped>
+.architecture-card__upgrade.is-unavailable { opacity: .55; }
 .architecture-card { min-width:0; min-height:0; margin-top:12px; height:calc(100% - 12px); display:flex; flex-direction:column; }
 .architecture-card__landscape { position:absolute; inset:0; background:center/cover no-repeat; opacity:.8; }
 .architecture-card__landscape::after { content:''; position:absolute; inset:0; background:linear-gradient(rgba(7,12,10,.15),rgba(7,12,10,.85) 65%); }

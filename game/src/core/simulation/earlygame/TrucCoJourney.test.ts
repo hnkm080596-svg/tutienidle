@@ -326,6 +326,8 @@ const QI_STAGE_IDS = [
   'qi_refining_abyssal_pool',
 ]
 
+const FIXED_EPOCH = 1_700_000_000_000
+
 beforeEach(() => {
   setActivePinia(createPinia())
 })
@@ -341,6 +343,7 @@ describe('TrucCoJourney - ordered journey', () => {
     { timeout: 300_000 },
     () => {
       vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(FIXED_EPOCH)
     // Honest journey steps advance both clock domains, unlike exploit probes.
     vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
       // Economy/equipment draws ride unseeded Math.random BY DESIGN
@@ -1075,6 +1078,7 @@ describe('TrucCoJourney - ordered journey', () => {
 describe('TrucCoJourney - determinism', () => {
   const driveJourneyCore = (): GameSave => {
     vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(FIXED_EPOCH)
     // Honest journey steps advance both clock domains, unlike exploit probes.
     vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     // Each run owns an independent store - otherwise run two's seeded
@@ -1138,6 +1142,7 @@ describe('TrucCoJourney - grade ladder', () => {
     realmLevel: number,
   ): string | undefined => {
     vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(FIXED_EPOCH)
     // Honest journey steps advance both clock domains, unlike exploit probes.
     vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     const s = makeJourneySession()
@@ -1206,6 +1211,7 @@ describe('TrucCoJourney - grade ladder', () => {
     // hidden: mortal hidden body complete + Lv18 + all-5 at the
     // mortal effective cap (floor(10 x 1.1) = 11) BEFORE the ritual.
     vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(FIXED_EPOCH)
     // Honest journey steps advance both clock domains, unlike exploit probes.
     vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     const s = makeJourneySession()
@@ -1256,6 +1262,7 @@ describe('TrucCoJourney - grade ladder', () => {
 describe('TrucCoJourney - save integrity', () => {
   it('rejects a save whose zhou_tian progressed past the meridian gate', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(FIXED_EPOCH)
     // Honest journey steps advance both clock domains, unlike exploit probes.
     vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     const s = makeJourneySession()

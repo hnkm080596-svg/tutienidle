@@ -4,9 +4,8 @@
  * That file polices WHICH authority a live surface consumes; this file
  * polices whether a scope-hidden surface exists in the shell at all:
  *
- *   - no Ultimate beta slot: the rail model emits the ultimate role
- *     permanently scope-hidden, so a beta surface may never carry the
- *     token or reach for the live-combat role authorities;
+ *   - no executable Ultimate beta action: the model emits it scope-hidden;
+ *     card mode may draw inert chrome but cannot submit a manual cast;
  *   - no Kim Dan CTA: betaNextRealmSurfaceFor fails closed at the Truc Co
  *     ceiling - golden_core/kim_dan vocabulary never reaches the shell;
  *   - no companion/formation/artifact/worker-lodge exposure: mounts live
@@ -86,7 +85,7 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
   )
 
   it(
-    'no shell file creates an Ultimate beta slot - the rail emits it scope-hidden',
+    'ultimate vocabulary stays in gated skills or decorative combat carriers',
     () => {
       // betaCombatRolesFor always emits the ultimate entry as
       // {state:'scope-hidden'}; a beta surface renders entries, it never
@@ -100,6 +99,10 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       // - a new beta surface may not join the list.
       const list = offenders(/\bultimate\b/, [
         'components/game/combat/hud/TurnCombatSkillBar.vue',
+        // BattleCard projects companion slots; the human row uses the gated shared bar.
+        'components/game/combat/hud/BattleCard.vue',
+        // CombatSceneOverlay enumerates icon URLs for decode, never manual actions.
+        'components/game/combat/CombatSceneOverlay.vue',
         'components/panels/CompanionPanel.vue',
         'composables/useTurnCombatManual.ts',
         // SkillSurface's design_ultimate_placeholder is the skill
@@ -110,6 +113,11 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       ])
 
       expect(list).toEqual([])
+      const card = SHELL_FILES.find(file => file.fromSrc === 'components/game/combat/hud/BattleCard.vue')!
+      expect(card.text).toContain('<TurnCombatSkillBar v-if="isHuman" card')
+      expect(card.text).not.toMatch(/submitTurnChoice|chooseSlot/)
+      const overlay = SHELL_FILES.find(file => file.fromSrc === 'components/game/combat/CombatSceneOverlay.vue')!
+      expect(overlay.text).not.toMatch(/submitTurnChoice|chooseSlot/)
     },
     SCAN_TIMEOUT,
   )

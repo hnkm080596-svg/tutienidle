@@ -1,24 +1,5 @@
-// QA R4 attack repro (blind wave 4) - FINDING R4-SAVE-1 (HIGH).
-//
-// Attack vector: the v89 -> v90 re-stamp migration shipped inside
-// inspectLocalSave (SaveSystem.ts:566-588) ONLY. The boot comment chain
-// says every consumer runs "the same pipeline the boot load runs", but
-// recoveryApi.validateRecoveryData still hard-requires
-// `foundVersion === CURRENT_SAVE_VERSION` (recoveryApi.ts:50) with no
-// migration step.
-//
-// Honest flow that breaks: a player exports a save on a v89 build (the
-// exact file the Export button produced YESTERDAY - same bytes, same
-// shape, no corruption), upgrades to the v90 build, and imports it back.
-// validateRecoveryData classifies it 'incompatible' while the local
-// load pipeline consumes the identical bytes fine. On the previous
-// build (CURRENT=89) the same file validated 'valid' - the bump
-// introduced the rejection, not the file.
-//
-// Repro: seed localStorage with a valid v89 save. inspectLocalSave
-// returns 'ok' (the migration works - kept as the intent witness).
-// validateRecoveryData on the SAME bytes must also return 'valid'.
-// Currently returns 'incompatible' -> FAIL on current HEAD.
+// Local boot and recovery import deliberately reject non-current versions.
+// Incompatible bytes stay unchanged and exportable; validation never writes slots.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CURRENT_SAVE_VERSION, inspectLocalSave } from './SaveSystem'
@@ -69,36 +50,44 @@ function validGameSave(): GameSave {
   }
 }
 
-describe('R4-SAVE-1 - a v89 payload migrates on every pipeline, not only inspectLocalSave', () => {
+describe('strict rejection of old versions across local and recovery admission', () => {
   beforeEach(() => {
     vi.stubGlobal('localStorage', new MemoryStorage())
     vi.stubGlobal('sessionStorage', new MemoryStorage())
     setSaveAccountId('u1')
   })
 
-  it('local boot pipeline consumes a v89 save (intent witness - passes)', () => {
+  it('validates current-schema recovery bytes without writing the local slot', () => {
+    const raw = JSON.stringify(validGameSave())
+    const prior = 'untouched local slot'
+    localStorage.setItem(resolveSaveKey(), prior)
+    const result = validateRecoveryData(raw)
+    expect(result.status).toBe('valid')
+    if (result.status !== 'valid') return
+    expect(result.version).toBe(CURRENT_SAVE_VERSION)
+    expect(JSON.parse(result.normalizedRaw).version).toBe(CURRENT_SAVE_VERSION)
+    expect(localStorage.getItem(resolveSaveKey())).toBe(prior)
+  })
+
+  it('local boot rejects a v89 save without altering its slot', () => {
     const raw = JSON.stringify({ ...validGameSave(), version: 89 })
     localStorage.setItem(resolveSaveKey(), raw)
 
     const inspected = inspectLocalSave()
 
-    expect(inspected.status).toBe('ok')
-    if (inspected.status === 'ok') {
-      expect(inspected.save.version).toBe(CURRENT_SAVE_VERSION)
-    }
+    expect(inspected).toEqual({ status: 'incompatible', foundVersion: 89, raw })
+    expect(localStorage.getItem(resolveSaveKey())).toBe(raw)
   })
 
-  it('recovery import accepts the SAME v89 bytes (currently incompatible)', () => {
+  it('recovery import rejects the same v89 bytes without replacing the local slot', () => {
     const raw = JSON.stringify({ ...validGameSave(), version: 89 })
 
+    const prior = JSON.stringify(validGameSave())
+    localStorage.setItem(resolveSaveKey(), prior)
     const result = validateRecoveryData(raw)
 
-    // The file comment promises "the same pipeline the boot load runs
-    // (parse -> version -> shape -> acceptance)". The version step must
-    // therefore migrate 89 -> CURRENT exactly like inspectLocalSave.
-    expect(result.status).toBe('valid')
-    if (result.status === 'valid') {
-      expect(result.version).toBe(CURRENT_SAVE_VERSION)
-    }
+    // Both entry points preserve incompatible bytes without migration.
+    expect(result).toEqual({ status: 'incompatible', foundVersion: 89, raw })
+    expect(localStorage.getItem(resolveSaveKey())).toBe(prior)
   })
 })

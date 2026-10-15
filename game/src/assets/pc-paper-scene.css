@@ -38,7 +38,7 @@
 .pc-paper-button--secondary::before { border-image-source: var(--pc-secondary-button); }
 .pc-paper-button--icon { min-width: 46px; padding: 9px 12px; }
 .pc-paper-button:hover { filter: brightness(1.08); }
-.pc-paper-button:focus-visible, .pc-paper-tabs button:focus-visible { outline: none; }
+.pc-paper-button:focus-visible, .pc-paper-tabs button:focus-visible { outline: 2px solid var(--pc-gold, #b28a43); outline-offset: 2px; }
 .pc-paper-inspector { background-image: var(--pc-inspector-art); background-size: 100% 100%; background-repeat: no-repeat; color: #f4e4c0; padding: 23px 27px; border: 0; }
 .pc-paper-inspector h2 { font-size: 25px; margin: 0; text-align: center; }
 .pc-paper-inspector h3 { margin: 17px 0 12px; border-block: 1px solid #ab8a4b66; padding: 10px 0; font-size: 20px; text-align: center; }

@@ -245,11 +245,7 @@ describe('auditR27 INT probe - round-trip agreement (R)', () => {
     expect(reader.tribulationDirector.serializeRuntime().cooldownUntil).toBe(
       currentMs + TRIBULATION_COOLDOWN_SECONDS * 1000,
     )
-    expect(reader.decomposeSystem.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(reader.decomposeSystem.getSaveState()).toEqual({})
 
     // Round-trip: the next write is judged by the SAME gate and now passes
     // - every persisted stamp sits at or below the new marker.
@@ -649,7 +645,7 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
     // forces a full re-restore and carries an earlier legacy deadline.
     const wire2 = validWireSave()
     wire2.player.lastSavedAt = currentMs - 5_000
-    wire2.quests = { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 } as never
+    wire2.quests = { ...wire2.quests, active: [], completedOnceIds: [], lastDailyResetAtMs: 0 } as never
     attachLegacyWorkerMetadata(wire2)
     wire2.productionSites = [
       {
@@ -671,11 +667,7 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
     expect(lanes).toHaveLength(1)
     expect(lanes[0]!.cycleId).toBe('lane-two')
 
-    expect(reader.decomposeSystem.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(reader.decomposeSystem.getSaveState()).toEqual({})
   })
 
   it('D3 payload-identity dedupe excludes only lastSavedAt - a marker-only delta converges, a content delta re-restores', () => {
@@ -686,8 +678,9 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
     // Content identical across markers (identity excludes lastSavedAt).
     // Both markers sit under the 60s settle gate so the lane survives
     // verbatim - the probe isolates dedupe, not settle interplay.
+    const contentBaseline = validWireSave()
     const makeWire = (marker: number): GameSave => {
-      const wire = validWireSave()
+      const wire = structuredClone(contentBaseline)
       wire.player.lastSavedAt = marker
       attachLegacyWorkerMetadata(wire)
       wire.productionSites = [
@@ -728,7 +721,7 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
     ).toBe('tampered')
 
     // Content delta (different lane ids -> different identity): full restore.
-    const wire3 = validWireSave()
+    const wire3 = structuredClone(contentBaseline)
     wire3.player.lastSavedAt = currentMs - 5_000
     attachLegacyWorkerMetadata(wire3)
     wire3.productionSites = [
@@ -810,11 +803,7 @@ describe('auditR27 INT probe - documented asymmetries (E)', () => {
     )
     expect(shapeDecompose.ok).toBe(true)
     const { reader } = restoreIntoReader(wireDecompose, undefined)
-    expect(reader.decomposeSystem.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(reader.decomposeSystem.getSaveState()).toEqual({})
 
     const wireTrib = validWireSave()
     wireTrib.tribulation = { cooldownUntil: currentMs + 9_000_000_000 }

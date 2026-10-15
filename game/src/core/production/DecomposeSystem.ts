@@ -1,3 +1,4 @@
+import type { MaterialReceipt } from '../material/MaterialReceipt'
 // Instant ore-to-essence exchange. Legacy worker settings remain only in
 // the save shape so existing saves can be read without reviving that system.
 import { BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID, LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
@@ -34,7 +35,7 @@ export interface DecomposeOreStack {
 
 export interface DecomposeSystemOptions {
   deliverOutput?: (entry: DecomposeOutputEntry) => void
-  onEssenceProduced?: (materialId: string, amount: number) => void
+  onEssenceProduced?: (materialId: string, amount: number, receipt: MaterialReceipt | null) => void
 }
 
 export type DecomposeOreResult =
@@ -134,6 +135,7 @@ export class DecomposeSystem {
   }
 
   decomposeWithResult(ids: readonly string[]): DecomposeBatchResult {
+    return this.bag.withAcquisition<DecomposeBatchResult>(() => {
     if (isScopeHidden('equipmentOreDecompose')) return { ok: false, reason: 'scope_hidden' }
     const stacks = this.resolveDecomposableStacks(ids)
     const outputs: DecomposeOutputEntry[] = []
@@ -167,20 +169,24 @@ export class DecomposeSystem {
     }
 
     for (const output of outputs) {
-      if (!this.deliver(output)) return { ok: false, reason: 'output_capacity' }
-      this.onEssenceProduced?.(output.materialId, output.amount)
+      const delivery = this.deliver(output)
+      if (!delivery.ok) return { ok: false, reason: 'output_capacity' }
+      this.onEssenceProduced?.(output.materialId, output.amount, delivery.receipt)
     }
     return { ok: true }
+
+    })
   }
 
-  private deliver(entry: DecomposeOutputEntry): boolean {
+  private deliver(entry: DecomposeOutputEntry): { ok: boolean; receipt: MaterialReceipt | null } {
     if (this.deliverOutput) {
       this.deliverOutput(entry)
-      return true
+      return { ok: true, receipt: null }
     }
     const material = materials.find((candidate) => candidate.id === entry.materialId)
-    if (!material || this.bag.add(material, entry.amount) > 0) return false
-    return true
+    if (!material || this.bag.canAcceptAmount(material, entry.amount) < entry.amount) return { ok: false, receipt: null }
+    const grant = this.bag.credit(material, entry.amount)
+    return { ok: true, receipt: grant.receipt }
   }
 
   private resolveDecomposableStacks(ids: readonly string[]): Readonly<MaterialStack>[] {
@@ -211,6 +217,7 @@ export class DecomposeSystem {
 
   /** Atomically exchange a player-selected ore quantity for refined essence. */
   decomposeOre(materialId: string, amount: number): DecomposeOreResult {
+    return this.bag.withAcquisition<DecomposeOreResult>(() => {
     const quote = this.resolveDecomposeOre(materialId, amount)
     if (!quote.ok) return quote
 
@@ -220,13 +227,16 @@ export class DecomposeSystem {
       return { ok: false, reason: 'insufficient_ore' }
     }
 
-    if (!this.deliver({ materialId: quote.materialId, amount: quote.produced })) {
+    const delivery = this.deliver({ materialId: quote.materialId, amount: quote.produced })
+    if (!delivery.ok) {
       this.bag.add(oreMaterial, quote.consumed)
       return { ok: false, reason: 'output_capacity' }
     }
 
-    this.onEssenceProduced?.(quote.materialId, quote.produced)
+    this.onEssenceProduced?.(quote.materialId, quote.produced, delivery.receipt)
     return quote
+
+    })
   }
 
   /** Legacy settings/timer are normalized to inert values on every write. */

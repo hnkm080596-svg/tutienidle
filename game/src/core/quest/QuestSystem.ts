@@ -1,3 +1,4 @@
+import type { MaterialReceipt } from '../material/MaterialReceipt'
 import type { Quest, QuestLeafCondition, QuestItemReward, QuestObjective } from './Quest'
 import { isValidQuestCondition, questObjectives } from './Quest'
 import type { QuestRegistry } from './QuestRegistry'
@@ -43,7 +44,7 @@ export interface QuestBagDeps {
   // instead of calling onMaterialCollected directly, so quest progress
   // AND canonical discovery share exactly-once semantics. Absent
   // (test/mock path) falls back to the legacy direct call.
-  onMaterialGained?: (materialId: string, delivered: number) => void
+  onMaterialGained?: (materialId: string, delivered: number, receipt: MaterialReceipt | null) => void
 
   // (optional) - realm of the claiming player; domain-scoped reward
   // materials (doan_bao_thach) consult isDomainScopedAcquisitionEnabled
@@ -471,7 +472,7 @@ export class QuestSystem {
           // 9.8 - tran tui: quest chi tinh delivered; push toast khi co sink.
           const template: Material = bags.materialRegistry.get(drop.itemId)
 
-          const overflow = bags.materialBag.add(template, amount)
+          const { overflow, receipt } = bags.materialBag.credit(template, amount)
 
           const delivered = amount - overflow
 
@@ -480,9 +481,12 @@ export class QuestSystem {
           // material-into-bag path). M-F-BODY-PERFECTION: prefer the
           // caller's funnel so discovery counts the same landing once.
           if (bags.onMaterialGained) {
-            bags.onMaterialGained(drop.itemId, delivered)
+            bags.onMaterialGained(drop.itemId, delivered, receipt)
           } else {
-            this.onMaterialCollected(registry, manager, drop.itemId, delivered)
+            manager.consumeMaterialGrant({ sequence: receipt?.sequence ?? bags.materialBag.receiptSnapshot().sequence,
+              playerId: bags.materialBag.receiptSnapshot().playerId, runId: bags.materialBag.receiptSnapshot().runId,
+              sourceId: receipt?.sourceId ?? 'overflow', materialId: drop.itemId, requested: amount, overflow, receipt }, () =>
+              this.onMaterialCollected(registry, manager, drop.itemId, delivered))
           }
 
           if (overflow > 0 && bags.notifications) {
@@ -525,6 +529,9 @@ export class QuestSystem {
         }
       }
 
+      // Reward arrivals belong to the carried active set. Consume before
+      // onClaimed admits successors; a failed consumer cancels this claim.
+      bags.materialBag.flushDeliveries()
       manager.markClaimed(questId)
 
       if (quest.cadence === 'once') {
@@ -536,7 +543,7 @@ export class QuestSystem {
       return true
       }
 
-      return bags.withAtomicClaim(settle)
+      return bags.withAtomicClaim(() => bags.materialBag.withAcquisition(settle))
     } finally {
       manager.endClaim(questId)
     }

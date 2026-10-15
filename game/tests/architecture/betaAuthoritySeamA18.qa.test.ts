@@ -119,12 +119,8 @@ function noopTarget(): PillTarget {
   return { addCultivation: () => {}, heal: () => {}, applyBuff: () => {} } as PillTarget
 }
 
-describe('A18-1 bag forge: above-realm material cannot restore', () => {
-  // mortal (tier 1) player cannot produce a golden_core (tier 4) wood -
-  // the claim is out of envelope. F-MAT-REALM closes this at the
-  // boundary: a profession.realmId tier more than one above the claimed
-  // realm tier is rejected outright (the +1 lead is what authored
-  // no-gate collect quests tolerate).
+describe('A18-1 bag identity: retired realm resources reject and canonical ages restore', () => {
+  // Realm-keyed wood IDs are retired; canonical wood identity carries age only.
   it('mortal save carrying golden_core wood is rejected at the shape boundary', () => {
     const { save } = validSave()
     save.materials = [{ materialId: 'golden_core_wood_thuong_co', amount: 5 }]
@@ -134,15 +130,14 @@ describe('A18-1 bag forge: above-realm material cannot restore', () => {
     expect(result.status).toBe('rejected')
   })
 
-  // The admitted edge: a mortal bag of qi_refining wood (tier +1)
-  // restores with every forged unit intact.
-  it('mortal save carrying qi_refining wood restores intact', () => {
+  // Canonical age-only wood is admitted without inventing a resource realm.
+  it('mortal save carrying canonical age-only wood restores intact', () => {
     const { save } = validSave()
-    save.materials = [{ materialId: 'qi_refining_wood_decade', amount: 5 }]
+    save.materials = [{ materialId: 'material_spirit_wood_decade', amount: 5 }]
 
     const { manager, result } = boot(save)
     expect(result.status).toBe('ok')
-    expect(manager.materialBag.getAmount('qi_refining_wood_decade')).toBe(5)
+    expect(manager.materialBag.getAmount('material_spirit_wood_decade')).toBe(5)
   })
 })
 

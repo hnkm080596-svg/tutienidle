@@ -934,7 +934,7 @@ describe('r34 COR - G: slot accounting after the drop', () => {
     }
   })
 
-  it('all-inverted without autoRestart: site stays inert (no lanes to advance)', () => {
+  it('all-inverted carried toggle is retired: always-producing site re-seeds a valid cycle', () => {
     const manager = registeredManager()
     manager.productionSystem.restoreStates(
       [
@@ -948,7 +948,12 @@ describe('r34 COR - G: slot accounting after the drop', () => {
       currentMs,
     )
     manager.productionSystem.tick(currentMs, manager.materialBag, manager.materialRegistry, 'mortal')
-    expect(manager.productionSystem.getState(SITE_ID)!.productionCycles!).toHaveLength(0)
+    const state = manager.productionSystem.getState(SITE_ID)!
+    expect(state.autoRestart).toBe(true)
+    expect(state.productionCycles).toHaveLength(1)
+    expect(state.productionCycles![0]!.cycleId).not.toBe('inv')
+    expect(state.productionCycles![0]!.startedAtMs).toBe(currentMs)
+    expect(state.productionCycles![0]!.completesAtMs).toBeGreaterThan(currentMs)
   })
 
   it('restore drops obsolete worker scalars and retains valid production progress', () => {

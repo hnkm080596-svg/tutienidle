@@ -1,3 +1,4 @@
+import type { MaterialReceipt } from '../material/MaterialReceipt'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import { EquipmentRegistry } from '../equipment/EquipmentRegistry'
@@ -36,7 +37,7 @@ export interface EquipmentOpsSystemDeps {
   // Collect-quest + perfection-discovery hook (xem GameManager.notifyMaterialGained) - GameManager
   // cung cap closure vi hook that can questSystem/questRegistry/questManager,
   // nhung state khong thuoc pham vi trang bi.
-  notifyMaterialGained: (materialId: string, amount: number) => void
+  notifyMaterialGained: (materialId: string, amount: number, receipt: MaterialReceipt | null) => void
   // Seeded stream for all paid/random rolls (enhance, wash, refine,
   // dissolve, createInstance affix draws) - GameManager binds
   // sessionRng; undefined falls back to each seam's Math.random default.
@@ -92,6 +93,7 @@ export class EquipmentOpsSystem {
   }
 
   obtainEquipment(equipmentId: string, player: PlayerData): EquipmentInstance | null {
+    return this.deps.materialBag.withAcquisition<ReturnType<EquipmentOpsSystem['obtainEquipment']>>(() => {
     if (!this.deps.equipmentRegistry.has(equipmentId)) {
       return null
     }
@@ -104,6 +106,8 @@ export class EquipmentOpsSystem {
     this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
 
     return instance
+
+    })
   }
 
   /**
@@ -123,9 +127,9 @@ export class EquipmentOpsSystem {
     for (const reward of autoDissolved) {
       if (this.deps.materialRegistry.has(reward.materialId)) {
         // 9.8 - tran tui: quest chi tinh delivered + toast bag.overflow.
-        const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
+        const { overflow, receipt } = this.deps.materialBag.credit(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
-        this.deps.notifyMaterialGained(reward.materialId, reward.amount - overflow)
+        this.deps.notifyMaterialGained(reward.materialId, reward.amount - overflow, receipt)
 
         if (overflow > 0) {
           this.deps.notifications.push(
@@ -373,16 +377,23 @@ export class EquipmentOpsSystem {
     reason?: string
     rewards?: Array<{ materialId: string; amount: number }>
   } {
+    return this.deps.materialBag.withAcquisition<ReturnType<EquipmentOpsSystem['dissolveItems']>>(() => {
     const result = this.deps.equipmentSystem.dissolveInstances(instanceIds, this.deps.equipmentBag, this.deps.sessionRng)
 
     if (result.ok && result.rewards) {
+      // A domain result retains one row per item; delivery is one commit per material.
+      const totals = new Map<string, number>()
       for (const reward of result.rewards) {
+        totals.set(reward.materialId, (totals.get(reward.materialId) ?? 0) + reward.amount)
+      }
+      for (const [materialId, amount] of totals) {
+        const reward = { materialId, amount }
         if (this.deps.materialRegistry.has(reward.materialId)) {
           // 9.8 - tran tui: quest chi tinh delivered + toast (contract
           // result.rewards GIU NGUYEN - tong Tinh Hoa phan giai).
-          const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
+          const { overflow, receipt } = this.deps.materialBag.credit(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
-          this.deps.notifyMaterialGained(reward.materialId, reward.amount - overflow)
+          this.deps.notifyMaterialGained(reward.materialId, reward.amount - overflow, receipt)
 
           if (overflow > 0) {
             this.deps.notifications.push(
@@ -394,6 +405,8 @@ export class EquipmentOpsSystem {
     }
 
     return result
+
+    })
   }
 
   /**

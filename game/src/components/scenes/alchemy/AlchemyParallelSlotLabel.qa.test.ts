@@ -1,21 +1,5 @@
 // @vitest-environment jsdom
-// QA R3 seam repro (blind wave 3) - FINDING R3-ALCH-L1 (LOW, cosmetic).
-//
-// Seam: the order-rail labels every card after index 0
-// `${t('alchemy.queued')} #${i + 1}` - a 1-slot queue mental model
-// (AlchemyFidelityScene.vue:213). The domain has brewed orders in
-// PARALLEL since the pill-room level curve (L3/L6/L9 grant 2/3/4
-// concurrentJobSlots): AlchemySystem.tick() walks EVERY job and rolls
-// each order's own per-unit deadlines from its own startedAtMs - there
-// is no head-of-line gate, so at capacity >= 2 order #2 brews at the
-// same time as order #1. Rendering it "Cho #2" is a straight mislabel:
-// the order IS brewing.
-//
-// Repro part A (domain truth): two restored jobs each settle a unit on
-// the same tick - order #2 is provably brewing, not waiting.
-// Repro part B (label): mounted with capacity 2 and two in-flight
-// jobs, the second card must say brewing - it says Cho #2.
-// Deterministic: seeded rollSeedBase deadlines, fixed clock.
+// Single-kiln regression: restored orders and their labels remain sequential.
 
 import { describe, expect, it } from 'vitest'
 import { createApp, h } from 'vue'
@@ -27,7 +11,7 @@ import AlchemyFidelityScene from './fidelity/AlchemyFidelityScene.vue'
 import type { AlchemyJobDisplay } from './fidelity/alchemyUi'
 
 const RECIPE: AlchemyRecipe = {
-  id: 'alchemy_r3_label',
+  id: 'alchemy_tu_linh_dan_qi_refining',
   pillId: 'pill_r3_label',
   realmId: 'mortal',
   herbVariants: [{ materialId: 'herb_r3', age: 'decade', label: 'Herb' }],
@@ -58,32 +42,34 @@ function makeJob(jobId: string, startedAtMs: number, completesAtMs: number) {
   )
 }
 
-describe('R3-ALCH-L1 - "queued #N" mislabel on a parallel-brewing order', () => {
-  it('order #2 settles its own unit deadline on the same tick as order #1 (parallel, not queued)', () => {
+describe('single active kiln and waiting-order labels', () => {
+  it('restored overlapping orders settle sequentially through one kiln', () => {
     const system = new AlchemySystem()
     system.setRecipeLookup((id) => (id === RECIPE.id ? RECIPE : undefined))
-    // Two orders in flight at capacity >= 2 (pill_room L3+). Each job's
-    // units are due at its own completesAtMs - the domain treats them
-    // as independent parallel slots.
+    // Restore serializes two overlapping live-family orders.
     const jobA = makeJob('job_a', 0, 60_000)
     const jobB = makeJob('job_b', 5_000, 65_000)
     system.restoreJobs([jobA, jobB], 0)
     const bag = new PillBag()
     system.tick(70_000, bag, () => ({ id: RECIPE.pillId }), () => 0)
     const events = system.drainSettlementEvents()
-    // Both orders delivered their unit - order #2 was BREWING while the
-    // card rail would call it "queued".
-    expect(events.map((e) => e.jobId).sort()).toEqual(['job_a', 'job_b'])
+    // Only the first order is due before the promoted second deadline.
+    expect(events.map((e) => e.jobId)).toEqual(['job_a'])
+    expect(system.getJobs().map((job) => job.jobId)).toEqual(['job_b'])
+    system.tick(120_000, bag, () => ({ id: RECIPE.pillId }), () => 0)
+    expect(system.drainSettlementEvents().map((event) => event.jobId)).toEqual(['job_b'])
+    expect(system.getJobs()).toHaveLength(0)
   })
 
-  it('the second card reads brewing when a second order occupies its own slot', () => {
+  it('the active card reads active kiln and the second card reads waiting', () => {
     const i18n = createI18n({
       legacy: false,
       locale: 'vi',
       messages: {
         vi: {
           alchemy: {
-            brewing: 'Đang luyện',
+            activeKiln: 'Đang luyện',
+            waitingJob: 'Chờ luyện',
             queued: 'Chờ',
             queueTitle: 'Hàng Luyện',
             emptySlot: 'Ô trống',
@@ -96,6 +82,7 @@ describe('R3-ALCH-L1 - "queued #N" mislabel on a parallel-brewing order', () => 
     const jobs: AlchemyJobDisplay[] = [
       {
         id: 'job_a',
+        state: 'active',
         recipeId: RECIPE.id,
         herbMaterialId: 'herb_r3',
         roomLevelAtStart: 1,
@@ -108,6 +95,7 @@ describe('R3-ALCH-L1 - "queued #N" mislabel on a parallel-brewing order', () => 
       },
       {
         id: 'job_b',
+        state: 'waiting',
         recipeId: RECIPE.id,
         herbMaterialId: 'herb_r3',
         roomLevelAtStart: 1,
@@ -134,9 +122,10 @@ describe('R3-ALCH-L1 - "queued #N" mislabel on a parallel-brewing order', () => 
       const states = [...container.querySelectorAll<HTMLElement>('.job-card__state')].map(
         (el) => el.textContent?.trim(),
       )
-      // DEFECT: job_b occupies its own parallel slot and is brewing -
-      // its card must not say "Cho #2".
-      expect(states[1]).toBe('Đang luyện')
+      // Explicit display states agree with the single-kiln owner.
+      expect(states).toEqual(['Đang luyện', 'Chờ luyện'])
+      expect(container.querySelectorAll('.job-card--brewing')).toHaveLength(1)
+      expect(container.querySelectorAll('.job-card--waiting')).toHaveLength(1)
     } finally {
       app.unmount()
       container.remove()

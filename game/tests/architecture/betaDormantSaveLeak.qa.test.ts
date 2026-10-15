@@ -479,7 +479,7 @@ describe('beta-live progression: physique essences fund the realm body chapters 
   function buildLoot() {
     const materialRegistry = new MaterialRegistry()
     materialRegistry.register(ESSENCE)
-    const bag: Array<{ id: string; amount: number }> = []
+    const bag = new MaterialBag()
     const gained: Array<{ id: string; amount: number }> = []
     const deps = {
       eventBus: { emit: () => {} },
@@ -487,12 +487,7 @@ describe('beta-live progression: physique essences fund the realm body chapters 
       stageManager: { getActive: () => undefined },
       zoneRegistry: { getZoneForStage: () => undefined },
       materialRegistry,
-      materialBag: {
-        add: (material: Material, amount: number) => {
-          bag.push({ id: material.id, amount })
-          return 0
-        },
-      },
+      materialBag: bag,
       notifyMaterialGained: (id: string, amount: number) => {
         gained.push({ id, amount })
       },
@@ -514,7 +509,8 @@ describe('beta-live progression: physique essences fund the realm body chapters 
 
     grant(loot, [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 3 }])
 
-    expect(bag).toEqual([{ id: 'tinh_hoa_pham_the', amount: 3 }])
+    expect(bag.getAmount('tinh_hoa_pham_the')).toBe(3)
+    expect(bag.getAll()).toHaveLength(1)
     expect(gained).toEqual([{ id: 'tinh_hoa_pham_the', amount: 3 }])
   })
 })

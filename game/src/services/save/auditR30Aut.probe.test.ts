@@ -179,11 +179,7 @@ describe('r30-AUT F1 - legacy Decompose state remains inert', () => {
     const ore = materials.find((material) => material.id.includes('_ore_'))!
     bag.add(ore, 100_000)
     const oreAmountBefore = bag.get(ore.id)?.amount
-    expect(system.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(system.getSaveState()).toEqual({})
     expect(bag.get(ore.id)?.amount).toBe(oreAmountBefore)
   })
 })
@@ -434,7 +430,6 @@ describe('r30-AUT held - DecomposeSystem.restore ignores legacy timer authority'
       NaN,
     )
 
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-    expect(system.getSaveState().started).toBe(false)
+    expect(system.getSaveState()).toEqual({})
   })
 })

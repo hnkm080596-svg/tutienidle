@@ -1,9 +1,127 @@
+import { parseMaterialReceiptState, sameMaterialReceipt, receiptId, MAX_PENDING_MATERIAL_DELIVERIES, type MaterialGrant, type MaterialReceipt, type MaterialReceiptState } from './MaterialReceipt'
 import type { Material } from './Material'
 import type { MaterialStack } from './MaterialStack'
 import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
 
 
 export class MaterialBag {
+  constructor(private readonly now: () => number = Date.now) {}
+  private receiptState: MaterialReceiptState = {
+    version: 2, playerId: crypto.randomUUID(), runId: crypto.randomUUID(), sequence: 0, acknowledgedThrough: 0, pending: [],
+  }
+  private deliveryConsumer: ((grant: MaterialGrant) => void) | undefined
+  private delivering = false
+  private acquisitionDepth = 0
+
+  setDeliveryConsumer(consumer: (grant: MaterialGrant) => void): void { this.deliveryConsumer = consumer }
+
+  /** Retry outstanding work before a new producer is allowed to debit or grant. */
+  prepareCredit(): void { if (this.acquisitionDepth === 0) this.flushDeliveries() }
+
+  withAcquisition<T>(operation: () => T): T {
+    this.prepareCredit()
+    this.acquisitionDepth++
+    let committed = false
+    try { const result = operation(); committed = true; return result }
+    finally {
+      this.acquisitionDepth--
+      if (committed && this.acquisitionDepth === 0) {
+        try { this.flushDeliveries() } catch { /* Block the next command; keep this committed outbox. */ }
+      }
+    }
+  }
+
+  flushDeliveries(): void {
+    if (this.delivering) throw new Error('Material delivery consumer reentry')
+    this.delivering = true
+    try {
+      while (this.receiptState.pending.length > 0) {
+        const grant = this.receiptState.pending[0]!
+        this.deliveryConsumer?.(structuredClone(grant))
+        this.receiptState.acknowledgedThrough = grant.sequence
+        this.receiptState.pending.shift()
+      }
+    } finally { this.delivering = false }
+  }
+
+  /** Arbitrary origin strings are retired, never reinterpreted as a fresh grant. */
+  credit(material: Material, amount: number, retiredOrigin?: string): MaterialGrant {
+    if (retiredOrigin !== undefined) throw new Error('Retired material origin cannot issue a fresh grant')
+    return this.creditBatch([{ material, amount }])[0]!
+  }
+
+  /** Commit a producer batch before attempting its ordered consumer delivery. */
+  creditBatch(items: readonly { material: Material; amount: number; sourceId?: string }[]): MaterialGrant[] {
+    this.prepareCredit()
+    if (items.length + this.receiptState.pending.length > MAX_PENDING_MATERIAL_DELIVERIES) throw new Error('Material receipt outbox capacity')
+    const committedAtMs = Math.floor(this.now())
+    if (!Number.isSafeInteger(committedAtMs) || committedAtMs < 0 ||
+      !Number.isSafeInteger(this.receiptState.sequence + items.length)) throw new Error('Invalid material grant epoch or sequence')
+    for (const { material, amount, sourceId } of items) {
+      if (!receiptId(material.id) || !Number.isSafeInteger(amount) || amount <= 0 ||
+        (sourceId !== undefined && !receiptId(sourceId))) throw new Error('Invalid material grant')
+    }
+    const stacks = this.getAll()
+    const checkpoint = this.receiptSnapshot()
+    const grants: MaterialGrant[] = []
+    try {
+      for (const { material, amount, sourceId } of items) {
+        const sequence = this.receiptState.sequence + 1
+        const source = sourceId ?? `inventory:${this.receiptState.runId}:${sequence}`
+        const overflow = amount - this.canAcceptAmount(material, amount)
+        if (!Number.isSafeInteger(overflow) || overflow < 0) throw new Error('Invalid material grant capacity')
+        const delivered = amount - overflow
+        const receipt: MaterialReceipt | null = delivered > 0 ? {
+          version: 2, producer: 'inventory', sequence, eventId: `inventory:${this.receiptState.runId}:${sequence}`,
+          playerId: this.receiptState.playerId, runId: this.receiptState.runId, sourceId: source, committedAtMs, units: delivered,
+          payload: { kind: 'material_delivered', materialId: material.id, delivered },
+        } : null
+        const grant = { sequence, playerId: this.receiptState.playerId, runId: this.receiptState.runId,
+          sourceId: source, materialId: material.id, requested: amount, overflow, receipt }
+        this.add(material, amount)
+        this.receiptState.sequence = sequence
+        this.receiptState.pending.push(grant)
+        grants.push(grant)
+      }
+    } catch (error) {
+      this.restoreStacks(stacks)
+      this.replaceReceiptCheckpoint(checkpoint)
+      throw error
+    }
+    // Inventory committed. A failed consumer leaves a durable outbox, and the
+    // next producer is blocked by prepareCredit before making another debit.
+    if (this.acquisitionDepth === 0) {
+      try { this.flushDeliveries() } catch { /* Pending facts remain owned here. */ }
+    }
+    return structuredClone(grants)
+  }
+
+  isRetiredReceipt(receipt: MaterialReceipt): boolean {
+    return receipt.playerId === this.receiptState.playerId && receipt.runId === this.receiptState.runId &&
+      Number.isSafeInteger(receipt.sequence) && receipt.sequence > 0 && receipt.sequence <= this.receiptState.acknowledgedThrough
+  }
+
+  ownsReceipt(receipt: MaterialReceipt): boolean {
+    const own = this.receiptState.pending.find((grant) => grant.sequence === receipt.sequence)?.receipt
+    return own !== undefined && own !== null && sameMaterialReceipt(own, receipt)
+  }
+
+  receiptSnapshot(): MaterialReceiptState { return structuredClone(this.receiptState) }
+
+  validateReceiptRestore(input: unknown): MaterialReceiptState {
+    const next = parseMaterialReceiptState(input)
+    if (!next) throw new Error('Malformed material receipt state')
+    if (this.receiptState.sequence > 0 && (next.playerId !== this.receiptState.playerId || next.runId !== this.receiptState.runId ||
+      next.sequence < this.receiptState.sequence || next.acknowledgedThrough < this.receiptState.acknowledgedThrough)) throw new Error('Foreign or stale material receipt state')
+    return next
+  }
+  restoreReceiptState(input: unknown): void { this.replaceReceiptCheckpoint(this.validateReceiptRestore(input)) }
+  startReceiptBaseline(): void {
+    this.replaceReceiptCheckpoint({ version: 2, playerId: crypto.randomUUID(), runId: crypto.randomUUID(), sequence: 0, acknowledgedThrough: 0, pending: [] })
+  }
+  /** Whole-save replacement or atomic rollback; callers validate the paired state first. */
+  replaceReceiptCheckpoint(state: MaterialReceiptState): void { this.receiptState = structuredClone(state) }
+
   private readonly materials =
     new Map<string, MaterialStack>()
 

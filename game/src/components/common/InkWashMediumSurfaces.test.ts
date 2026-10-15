@@ -51,7 +51,7 @@ describe('ink-wash medium surfaces', () => {
     expect(container.querySelector('[data-hk-slice="frame-s-slot"]')).not.toBeNull()
   })
 
-  it('renders the teleported tooltip inside the approved paper surface and ink frame', async () => {
+  it('renders the teleported tooltip inside the shared dark nine-slice card', async () => {
     const owner = document.createElement('button')
     const container = document.createElement('div')
     document.body.append(owner, container)
@@ -68,7 +68,11 @@ describe('ink-wash medium surfaces', () => {
 
     const tooltip = document.querySelector<HTMLElement>('#global-tooltip')
     expect(tooltip).not.toBeNull()
-    expect(tooltip?.querySelector('[data-hk-slice="frame-xs-tooltip"]')).not.toBeNull()
+    expect(tooltip?.getAttribute('role')).toBe('tooltip')
+    const frame = tooltip?.querySelector<HTMLElement>('.tooltip__content.game-card > .game-card__frame')
+    expect(frame).not.toBeNull()
+    expect(frame?.style.borderImageSource).toContain('character-card-nine-slice-v2.png')
+    expect(tooltip?.querySelector('.game-card__fill')).not.toBeNull()
     expect(tooltip?.textContent).toContain('Linh thạch')
     expect(tooltip?.style.pointerEvents).not.toBe('auto')
   })

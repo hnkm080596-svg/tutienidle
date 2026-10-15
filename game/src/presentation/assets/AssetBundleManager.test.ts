@@ -403,8 +403,12 @@ describe('W4 dom-audio lane', () => {
       const manager = new AssetBundleManager({ loaderScene, domImageLoader, domAudioLoader })
       await manager.ensureLoaded(['audio-core'])
       await manager.ensureLoaded(['audio-core'])
-      expect(domAudioLoader).toHaveBeenCalledTimes(1)
-      expect(attach).toHaveBeenCalledWith('assets/audio/ui/click.ogg', bytes)
+      const callsForSrc = vi.mocked(domAudioLoader).mock.calls.filter(
+        ([urls]) => urls.includes('assets/audio/ui/click.ogg'),
+      )
+      expect(callsForSrc).toEqual([[['assets/audio/ui/click.ogg']]])
+      expect(attach.mock.calls.filter(([src]) => src === 'assets/audio/ui/click.ogg'))
+        .toEqual([['assets/audio/ui/click.ogg', bytes]])
       expect(manager.isResourceLoaded('assets/audio/ui/click.ogg')).toBe(true)
     } finally {
       attach.mockRestore()
@@ -414,19 +418,24 @@ describe('W4 dom-audio lane', () => {
 
   it('a fetch failure marks the key missing and resolves (never rejects)', async () => {
     const restore = injectCue('combat.hit', 'assets/audio/sfx/missing.ogg')
-    const domAudioLoader: DomAudioLoader = vi.fn(async () => {
-      throw new Error('404')
+    const domAudioLoader: DomAudioLoader = vi.fn(async (urls: readonly string[]) => {
+      if (urls.includes('assets/audio/sfx/missing.ogg')) throw new Error('404')
+      return new ArrayBuffer(4)
     })
+    const callsForMissingSrc = () => vi.mocked(domAudioLoader).mock.calls.filter(
+      ([urls]) => urls.includes('assets/audio/sfx/missing.ogg'),
+    )
     try {
       const manager = new AssetBundleManager({ loaderScene, domImageLoader, domAudioLoader })
       await expect(manager.ensureLoaded(['audio-combat'])).resolves.toBeUndefined()
       expect(manager.isResourceLoaded('assets/audio/sfx/missing.ogg')).toBe(false)
+      expect(callsForMissingSrc()).toHaveLength(1)
       // bounded retry: second ensure re-fetches once (transient failures
       // must not silence a src forever), third+ resolves without fetching
       await manager.ensureLoaded(['audio-combat'])
-      expect(domAudioLoader).toHaveBeenCalledTimes(2)
+      expect(callsForMissingSrc()).toHaveLength(2)
       await manager.ensureLoaded(['audio-combat'])
-      expect(domAudioLoader).toHaveBeenCalledTimes(2)
+      expect(callsForMissingSrc()).toHaveLength(2)
     } finally {
       restore()
     }
@@ -442,8 +451,11 @@ describe('W4 dom-audio lane', () => {
     try {
       const manager = new AssetBundleManager({ loaderScene, domImageLoader, domAudioLoader })
       await manager.ensureLoaded(['audio-core'])
-      expect(domAudioLoader).toHaveBeenCalledTimes(1)
-      expect(attach).toHaveBeenCalledWith('shared.ogg', expect.any(ArrayBuffer))
+      await manager.ensureLoaded(['audio-core'])
+      expect(vi.mocked(domAudioLoader).mock.calls.filter(([urls]) => urls.includes('shared.ogg')))
+        .toEqual([[['shared.ogg']]])
+      expect(attach.mock.calls.filter(([src]) => src === 'shared.ogg'))
+        .toEqual([['shared.ogg', expect.any(ArrayBuffer)]])
     } finally {
       attach.mockRestore()
       restore()

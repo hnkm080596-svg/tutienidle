@@ -74,10 +74,8 @@ function mountPanel(
   const container = document.createElement('div')
   document.body.appendChild(container)
 
-  // QA fixpoint 2026-10-10: .skill-respec renders master-only by ruling
-  // (SkillFidelityScene v-if=isMaster) - mount as admin so the respec
-  // contract these tests pin is reachable.
-  recordSessionLoginId('admin')
+  // Reset is available to ordinary accounts through confirmation.
+  recordSessionLoginId('ordinary-player')
 
   const app = createApp({ render: () => h(SkillPathPanel) })
   const pinia = createPinia()
@@ -99,11 +97,11 @@ function mountPanel(
     container,
     scene: () => container.querySelector('.skill-paper-scene'),
     nodes: () => container.querySelectorAll('.skill-node'),
-    heading: () => container.querySelector('.skill-head p')?.textContent ?? null,
+    title: () => container.querySelector('.game-panel__title')?.textContent ?? null,
     holdHint: () => container.querySelector<HTMLElement>('.skill-hold-hint'),
     holdCircle: (id: string) =>
       container.querySelector<SVGCircleElement>(`.skill-node[data-node-id="${id}"] .skill-node-hold circle`),
-    respecButton: () => container.querySelector<HTMLButtonElement>('.skill-respec'),
+    respecButton: () => container.querySelector<HTMLButtonElement>('.skill-foot button'),
     selectNode: (id: string) =>
       container.querySelector<HTMLButtonElement>(`.skill-node[data-node-id="${id}"]`),
     unmount: () => { app.unmount(); container.remove() },
@@ -111,24 +109,22 @@ function mountPanel(
 }
 
 describe('SkillPathPanel (scene 07 fidelity)', () => {
-  it('a way-less mortal sees the Phan Nhan identity, an empty graph and no respec entry', async () => {
-    // Minh ruling (2026-10-07): respec is a master-only dev tool - the
-    // button is v-if=isMaster, so a non-master mortal sees no entry at
-    // all (there is no disabled state to pin).
-    const view = mountPanel(() => {})
+  it('a way-less player sees an empty graph and cannot reset an empty tree', async () => {
+    const view = mountPanel(() => {}, mockGameManager({ respecPreview: null }))
 
     await nextTick()
 
     expect(view.scene()).not.toBeNull()
-    expect(view.heading()).toBe(i18n.global.t('panels.skillPath.mortalName'))
+    expect(view.title()).toBe(i18n.global.t('skill.title'))
     expect(view.nodes().length).toBe(0)
-    expect(view.respecButton()).toBeNull()
+    expect(view.respecButton()).not.toBeNull()
+    expect(view.respecButton()!.disabled).toBe(true)
     expect(view.container.textContent).toContain(i18n.global.t('panels.skillPath.nodeInspector.empty'))
 
     view.unmount()
   })
 
-  it('a committed sword way renders identity + its pathway nodes only', async () => {
+  it('a committed sword way renders its pathway nodes only', async () => {
     const nodes = [
       treeNode({ id: 'kiem_root', name: 'Kiếm Gốc', prerequisites: [] }),
       treeNode({ id: 'kiem_child', name: 'Kiếm Chi', prerequisites: [{ kind: 'node', nodeId: 'kiem_root' }] }),
@@ -142,7 +138,7 @@ describe('SkillPathPanel (scene 07 fidelity)', () => {
 
     await nextTick()
 
-    expect(view.heading()).toBe('Kiếm Tu — Ngự Kiếm Tâm Kinh')
+    expect(view.title()).toBe(i18n.global.t('skill.title'))
     expect(view.nodes().length).toBe(2)
 
     view.unmount()
@@ -189,11 +185,7 @@ describe('SkillPathPanel (scene 07 fidelity)', () => {
     view.unmount()
   })
 
-  it('respec opens the canonical confirm and commits respecNodeTree', async () => {
-    // The respec button exists for master accounts only - mount with an
-    // allowlisted loginId, then release the session id afterwards so it
-    // cannot leak into sibling tests.
-    recordSessionLoginId('admin')
+  it('an ordinary account must confirm before committing respecNodeTree', async () => {
     const respecNodeTree = vi.fn(() => 5)
     const view = mountPanel((player) => {
       player.$state.cultivationPath = 'sword'
@@ -210,6 +202,7 @@ describe('SkillPathPanel (scene 07 fidelity)', () => {
     respec.click()
     await nextTick()
 
+    expect(respecNodeTree).not.toHaveBeenCalled()
     // ConfirmModal teleports to body.
     expect(document.body.textContent).toContain(i18n.global.t('panels.nodeTree.respec.title'))
     const confirm = document.body.querySelector<HTMLButtonElement>('.confirm-modal__confirm')

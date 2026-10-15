@@ -52,7 +52,6 @@ const COMING_SOON_LABEL = 'Sắp ra mắt'
 const ULTIMATE_LABEL = 'Tuyệt Kỹ'
 
 const ELEMENT_TABS = '.skill-elements button'
-const FIVE_ELEMENTS = ['Hỏa', 'Thủy', 'Mộc', 'Kim', 'Thổ']
 
 // ---------------------------------------------------------------------------
 // Drivers
@@ -218,7 +217,7 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     // scope-hidden realm names and coming-soon chips never render.
     const scene = page.locator('.realm-paper-scene')
     await expect(scene).toBeVisible({ timeout: 15_000 })
-    await expect(scene.locator('.realm-marker')).toHaveCount(18)
+    await expect(scene.locator('.realm-milestone')).toHaveCount(18)
     await expect(page.getByText(COMING_SOON_LABEL)).toHaveCount(0)
     for (const label of SCOPE_HIDDEN_REALM_LABELS) {
       await expect(
@@ -291,24 +290,50 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     ).toMatchObject({ ok: true })
 
     await openStandalone(page, 'skill')
-    const tabs = page.locator(ELEMENT_TABS)
-    await expect(tabs.first()).toBeVisible({ timeout: 10_000 })
+    const scene = page.locator('.skill-paper-scene')
+    await expect(scene).toBeVisible({ timeout: 10_000 })
 
     // Contract: after committing fire, the four non-committed element
-    // branches are scope-hidden - the panel renders ONLY the fire tab,
-    // derived from the betaSkillTreeFor node states.
-    const rendered = await tabs.allTextContents()
-    expect(
-      rendered.length,
-      `element tabs rendered ${JSON.stringify(rendered)} - only the committed element may render`,
-    ).toBe(1)
-    expect(rendered).toEqual([FIVE_ELEMENTS[0]])
+    // branches are scope-hidden - the panel renders ONLY the committed
+    // fire branch (hoa_linh_ngo), with no element tab bar and no sibling
+    // element roots.
+    await expect(scene.locator(ELEMENT_TABS)).toHaveCount(0)
+    await expect(scene.locator('[data-node-id="hoa_linh_ngo"]')).toBeVisible({ timeout: 10_000 })
+    for (const rootId of ['thuy_linh_ngo', 'moc_linh_ngo', 'kim_linh_ngo', 'tho_linh_ngo']) {
+      await expect(
+        scene.locator(`[data-node-id="${rootId}"]`),
+        `non-committed element root ${rootId} must be scope-hidden`,
+      ).toHaveCount(0)
+    }
+
+    // Slice 1.6 (V4c): selecting a purchasable node renders localized
+    // levelEffects rows without raw effect-key leakage.
+    await scene.locator('[data-node-id="hoa_diem_uy"]').click()
+    const effects = scene.locator('.skill-detail-card .skill-effect')
+    await expect(effects.first()).toBeVisible({ timeout: 5_000 })
+    const effectTexts = (await effects.allTextContents()).join('\n')
+    expect(effectTexts).not.toMatch(/flat:|ailmentPotencyPercent/)
   })
 
   test('standalone + left-panel deep links to scope-hidden surfaces fail closed', async ({
     page,
   }) => {
     await bootFreshMortal(page)
+    if (await page.locator('.home-navigation-toggle').isVisible()) {
+      await page.locator('.home-navigation-toggle').click()
+    }
+    const techniqueBtn = page.locator('.home-independent-navigation button', { hasText: 'Tâm Pháp' })
+    await expect(techniqueBtn).toBeDisabled()
+
+    await page.keyboard.press('Shift+Tab')
+    const outlineStyle = await page.evaluate(() => {
+      const active = document.activeElement as HTMLElement | null
+      if (!active) return null
+      const cs = getComputedStyle(active)
+      return { style: cs.outlineStyle, width: cs.outlineWidth }
+    })
+    expect(outlineStyle).toEqual({ style: 'solid', width: '2px' })
+
     const outcome = await page.evaluate(async (url) => {
       const { useUiStore } = await import(/* @vite-ignore */ url)
       const ui = useUiStore()

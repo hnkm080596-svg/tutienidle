@@ -504,8 +504,7 @@ describe('r33 AUT - F: restore cap clamps stay in-domain at restoreNow = 2^52 - 
       { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 }, nextCycleAt: DOMAIN_TOP + 1, started: true },
       DOMAIN_TOP - 1,
     )
-    expect(decompose.getSaveState().nextCycleAt).toBe(0)
-    expect(decompose.getSaveState().started).toBe(false)
+    expect(decompose.getSaveState()).toEqual({})
   })
 
   it('TribulationDirector.restoreRuntime: cooldownUntil clamps to 2^52-1, never past it', () => {

@@ -11,12 +11,12 @@ import { computeCycleSeconds } from './ProductionBalance'
  */
 export const REWARD_TABLE_VERSION = 1
 
-let cycleCounter = 0
+let fallbackCycleCounter = 0
 
-function nextCycleId(siteId: string): string {
-  cycleCounter += 1
-
-  return `cycle_${siteId}_${Date.now().toString(36)}_${cycleCounter}`
+function nextFallbackCycleId(siteId: string, nowMs: number): string {
+  fallbackCycleCounter += 1
+  const stamp = Number.isFinite(nowMs) ? Math.floor(Math.max(0, nowMs)).toString(36) : '0'
+  return `cycle_${siteId}_${stamp}_${fallbackCycleCounter}`
 }
 
 export function buildProductionCycle(
@@ -26,11 +26,12 @@ export function buildProductionCycle(
   baseSeconds: number,
   nowMs: number,
   rng?: () => number,
+  issueIdentity?: () => { cycleId: string; receiptOrdinal: number },
 ): ProductionCycle {
   const seconds = computeCycleSeconds(baseSeconds, siteLevelAtStart)
 
   return {
-    cycleId: nextCycleId(siteId),
+    ...(issueIdentity?.() ?? { cycleId: nextFallbackCycleId(siteId, nowMs) }),
     siteId,
     collectionRealmId,
     siteLevelAtStart,

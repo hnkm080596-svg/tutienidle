@@ -98,20 +98,22 @@ describe('beta scope v2 - feature flags and lock classes', () => {
       'formation',
       'artifact',
       'manualWorkforce',
-      'equipmentOreDecompose',
       'dailyQuest',
     ]) {
       expect(isBetaFeature(name)).toBe(false)
     }
   })
 
-  it('admits exactly the authored live set (wash/refine only)', () => {
+  it('admits the approved wash/refine and instant decomposition features', () => {
     expect(
       Object.entries(BETA_FEATURES)
         .filter(([, enabled]) => enabled)
         .map(([name]) => name)
         .sort(),
-    ).toEqual(['equipmentRefine', 'equipmentWash'])
+    ).toEqual(['equipmentOreDecompose', 'equipmentRefine', 'equipmentWash'])
+    expect(isBetaFeature('equipmentOreDecompose')).toBe(true)
+    expect(betaSurfaceVerdict('equipmentOreDecompose')).toBe('available')
+    expect(betaSurfaceVisible('equipmentOreDecompose')).toBe(true)
     expect(isBetaFeature('equipmentWash')).toBe(true)
     expect(isBetaFeature('equipmentRefine')).toBe(true)
   })
@@ -125,7 +127,6 @@ describe('beta scope v2 - feature flags and lock classes', () => {
       'dailyQuest',
       'swordPath',
       'bodyPath',
-      'equipmentOreDecompose',
       'manualWorkforce',
       '',
       'nonexistent_feature',
@@ -303,7 +304,8 @@ describe('beta scope v2 - equipment tabs and quest policy', () => {
     for (const tab of ['enhance', 'wash', 'refine', 'dissolve']) {
       expect(isBetaEquipmentTab(tab)).toBe(true)
     }
-    for (const tab of ['decompose', '', 'ENHANCE']) {
+    expect(isBetaEquipmentTab('decompose')).toBe(true)
+    for (const tab of ['ore_decompose', '', 'ENHANCE']) {
       expect(isBetaEquipmentTab(tab)).toBe(false)
     }
   })
@@ -314,11 +316,12 @@ describe('beta scope v2 - equipment tabs and quest policy', () => {
     const expectedByTab = {
       wash: { flag: 'equipmentWash', admitted: true },
       refine: { flag: 'equipmentRefine', admitted: true },
-      decompose: { flag: 'equipmentOreDecompose', admitted: false },
+      decompose: { flag: 'equipmentOreDecompose', admitted: true },
     } as const
     for (const [tab, expected] of Object.entries(expectedByTab)) {
       expect(BETA_FEATURES[expected.flag]).toBe(expected.admitted)
-      expect(BETA_EQUIPMENT_TABS.includes(tab as never)).toBe(expected.admitted)
+      // The equipment rail is distinct from generic material decomposition.
+      expect(BETA_EQUIPMENT_TABS.includes(tab as never)).toBe(tab !== 'decompose')
       expect(isBetaEquipmentTab(tab)).toBe(expected.admitted)
     }
   })
