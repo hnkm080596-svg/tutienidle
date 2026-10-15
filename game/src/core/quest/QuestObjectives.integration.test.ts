@@ -74,4 +74,47 @@ describe('S1 production boundary integration', () => {
       { ...bags, enemyName: () => undefined }).claim.available).toBe(true)
     expect(JSON.stringify(manager.getState())).toBe(before)
   })
+
+  it('surfaces top-level turnIn shortfall on allOf quests when a collect objective item leaves the bag', () => {
+    const allOfCollectQuest: Quest = {
+      id: 'allof-collect',
+      name: 'AllOf Collect',
+      description: '',
+      cadence: 'once',
+      condition: {
+        kind: 'allOf',
+        objectives: [
+          { id: 'gather', kind: 'collect', materialId: 'linh_thao_ha_pham', amount: 3 },
+          { id: 'hunt', kind: 'kill', enemyId: 'mortal_wild_boar', amount: 1 },
+        ],
+      },
+      reward: {},
+    }
+    const registry = new QuestRegistry()
+    registry.register(allOfCollectQuest)
+    const manager = new QuestManager()
+    const system = new QuestSystem()
+    const player = createDefaultPlayer()
+    system.reconcileActiveQuests(registry, manager, player)
+    system.onMaterialCollected(registry, manager, 'linh_thao_ha_pham', 3)
+    system.onEnemyDefeated(registry, manager, 'mortal_wild_boar', undefined)
+
+    const bags = {
+      materialBag: new MaterialBag(),
+      materialRegistry: new MaterialRegistry(),
+      pillBag: new PillBag(),
+      pillRegistry: new PillRegistry(),
+    }
+    const surface = betaQuestSurfaceFor(allOfCollectQuest, manager.getProgress(allOfCollectQuest.id)!, player, {
+      ...bags,
+      enemyName: () => undefined,
+    })
+    expect(surface.claim.available).toBe(false)
+    expect(surface.claim.disabledReason).toBe('missing-turnin-items')
+    expect(surface.turnIn).toEqual({
+      materialId: 'linh_thao_ha_pham',
+      required: 3,
+      owned: 0,
+    })
+  })
 })

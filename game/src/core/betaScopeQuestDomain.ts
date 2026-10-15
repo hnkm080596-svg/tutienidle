@@ -287,13 +287,8 @@ export function betaQuestSurfaceFor(
     rewards: rewardsFor(quest, deps, player.realmId),
     claim: claimFor(quest, progress, deps),
     turnIn:
-      condition.kind === 'collect'
-        ? {
-            materialId: condition.materialId,
-            required: condition.amount,
-            owned: deps.materialBag.getAmount(condition.materialId),
-          }
-        : undefined,
+      objectives.find((leaf) => leaf.turnIn && leaf.turnIn.owned < leaf.turnIn.required)?.turnIn ??
+      objectives.find((leaf) => leaf.turnIn !== undefined)?.turnIn,
     chainId: quest.chainId,
     group,
   }

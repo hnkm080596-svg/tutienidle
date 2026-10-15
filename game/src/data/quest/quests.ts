@@ -261,7 +261,7 @@ export const QUESTS: Quest[] = [
     requiredRealmId: 'foundation_establishment',
   },
   // ---------------------------------------------------------------
-  // DAY (Nhiệm Vụ Hằng Ngày) - cadence: 'daily', chainId: 'day'
+  // DAY (Nhiem Vu Hang Ngay) - cadence: 'daily', chainId: 'day'
   // ---------------------------------------------------------------
   {
     id: 'daily_san_yeu_thu_10',
@@ -301,7 +301,7 @@ export const QUESTS: Quest[] = [
     chainId: 'day',
   },
   // ---------------------------------------------------------------
-  // WEEKLY (Nhiệm Vụ Hằng Tuần) - cadence: 'weekly', chainId: 'weekly'
+  // WEEKLY (Nhiem Vu Hang Tuan) - cadence: 'weekly', chainId: 'weekly'
   // ---------------------------------------------------------------
   {
     id: 'weekly_thanh_ly_son_yeu_50',
@@ -338,7 +338,7 @@ export const QUESTS: Quest[] = [
     chainId: 'weekly',
   },
   // ---------------------------------------------------------------
-  // ACHIEVEMENT (Thành Tựu) - cadence: 'once', chainId: 'achievement'
+  // ACHIEVEMENT (Thanh Tuu) - cadence: 'once', chainId: 'achievement'
   // ---------------------------------------------------------------
   {
     id: 'ach_buoc_vao_luyen_khi',
@@ -379,7 +379,7 @@ export const QUESTS: Quest[] = [
     chainId: 'achievement',
   },
   // ---------------------------------------------------------------
-  // EXPEDITION (Thám Hiểm) - cadence: 'once', chainId: 'expedition'
+  // EXPEDITION (Tham Hiem) - cadence: 'once', chainId: 'expedition'
   // ---------------------------------------------------------------
   {
     id: 'exp_kham_pha_cua_hang',

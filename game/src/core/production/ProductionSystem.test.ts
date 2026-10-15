@@ -233,6 +233,14 @@ describe('ProductionSystem - autonomous site cycles', () => {
     expect(view.cycleRemainingMs).toBe(100_000)
   })
 
+  it('getSiteView reports nominal cycleTotalMs and baseOutputPerSecond before any cycle has spawned', () => {
+    const system = createSystem()
+    const view = system.getSiteView('thanh_van_lam', 1_000)!
+    expect(view.cycleTotalMs).toBe(100_000)
+    expect(view.cycleRemainingMs).toBeUndefined()
+    expect(view.baseOutputPerSecond).toEqual({ min: 0.01, max: 0.03 })
+  })
+
   it('restoreStates drops a stale activeCycle key - tolerated, whitelisted out, never migrated', () => {
     const system = createSystem()
     const stale = {

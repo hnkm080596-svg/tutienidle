@@ -27,7 +27,7 @@ import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import { ITEM_GRADE_ORDER, composeItemGradeNameSegments } from '@/core/item/ItemGrade'
 import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
 import type { ItemQuality } from '@/core/item/ItemQuality'
-import { BASE_PILL_QUALITY } from '@/core/pill/PillQuality'
+import { BASE_PILL_QUALITY, pillQualityUplift } from '@/core/pill/PillQuality'
 import { realmFromGrade } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
 import { gradeLabel, realmLabel } from '@/core/presentation/labels'
@@ -75,11 +75,16 @@ const { gridRef, pageSize, gridStyle } = useBagGridLayout()
 // dung chung Pill/Talisman/Formation, xem useTooltip.ts) -- build TU
 // DUNG PillEffect[] that, khong bia so. Them 4 effect nghe (2026-08-24,
 // resource-professions-rework S5).
-function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
+function buildTooltip(
+  pill: Pill,
+  owned: number,
+  quality: ItemQuality = BASE_PILL_QUALITY,
+): GradedItemTooltipContent {
+  const uplift = pillQualityUplift(quality)
   const rows = pill.effects.map((effect) => {
     switch (effect.type) {
       case 'heal':
-        return { label: 'Hồi Khí Huyết', value: `+${formatStat('maxHp', effect.value ?? 0)}` }
+        return { label: 'Hồi Khí Huyết', value: `+${formatStat('maxHp', (effect.value ?? 0) * uplift)}` }
 
       case 'cultivation':
         // Pill nghe dung % yeu cau tang; legacy dung flat.
@@ -88,28 +93,32 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
         return effect.cultivationPercent !== undefined
           ? {
               label: 'Tu Vi',
-              value: `+${formatStat('cultivationPercent', effect.cultivationPercent)} yêu cầu tầng`,
+              value: `+${formatStat('cultivationPercent', effect.cultivationPercent * uplift)} yêu cầu tầng`,
             }
-          : { label: 'Tu Vi', value: `+${effect.value ?? 0}` }
+          : { label: 'Tu Vi', value: `+${(effect.value ?? 0) * uplift}` }
 
-      case 'permanent_stat':
+      case 'permanent_stat': {
+        const statGrant = Math.round((effect.value ?? 0) * uplift)
         return {
           label: `${effect.stat ? statLabel(effect.stat) : '?'} (vĩnh viễn)`,
-          value: `+${effect.stat ? formatStat(effect.stat, effect.value ?? 0) : effect.value}`,
+          value: `+${effect.stat ? formatStat(effect.stat, statGrant) : statGrant}`,
         }
+      }
 
-      case 'random_main_stat':
-        return { label: 'Main Stat ngẫu nhiên', value: '+1 (một trong 5 chỉ số chưa đạt trần)' }
+      case 'random_main_stat': {
+        const randomPoints = Math.max(1, Math.round(uplift))
+        return { label: 'Main Stat ngẫu nhiên', value: `+${randomPoints} (một trong 5 chỉ số chưa đạt trần)` }
+      }
 
       case 'regen':
         return {
           label: 'Hồi phục theo giây',
 
-          value: `+${effect.hpPerSecond ?? 0} HP/s, +${effect.mpPerSecond ?? 0} MP/s trong ${effect.durationSeconds ?? 0}s`,
+          value: `+${(effect.hpPerSecond ?? 0) * uplift} HP/s, +${(effect.mpPerSecond ?? 0) * uplift} MP/s trong ${effect.durationSeconds ?? 0}s`,
         }
 
       case 'skill_insight':
-        return { label: 'Cảm Ngộ', value: `+${effect.value ?? 0}` }
+        return { label: 'Cảm Ngộ', value: `+${Math.round((effect.value ?? 0) * uplift)}` }
 
       case 'buff': {
         const buff = effect.buff
@@ -144,11 +153,10 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
     sections.push({ label: t('bag.pill.useHint'), rows: [] })
   }
 
-  // Same naming model as equipment (2026-09-14): the title is the FULL
-  // composed "{Chat} - {Name}" string; the single display color rides
-  // the payload (spec section 2 - Pham ramp when the pill carries
-  // professionGrade, Chat --grade-* fallback otherwise).
-  const displayName = composeItemGradeNameSegments(pill.name, pill.grade)
+  // Same naming model as equipment (2026-09-14) + M-PILL-GRADE (2026-10-11):
+  // the title and rarity axis follow the stack's rolled quality so the
+  // tooltip header and effect numbers match the cell and drink potency.
+  const displayName = composeItemGradeNameSegments(pill.name, quality)
     .map((segment) => segment.text)
     .join(' ')
   const phamRank = pill.professionGrade !== undefined
@@ -160,12 +168,12 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 
     name: displayName,
 
-    nameColorVar: phamRank !== undefined ? `--rank-color-${phamRank}` : `--grade-${pill.grade}`,
+    nameColorVar: phamRank !== undefined ? `--rank-color-${phamRank}` : `--grade-${quality}`,
 
-    nameTone: pill.grade === 'tien' ? 'tien' : undefined,
+    nameTone: quality === 'tien' ? 'tien' : undefined,
 
     // Static SlotView header (spec section 3): the same signal set the
-    // bag cell binds - Pham seal (professionGrade), Chat edge (grade),
+    // bag cell binds - Pham seal (professionGrade), Chat edge (quality),
     // grade word in aria (professionGrade is optional on Pill).
     slotPreview: {
       icon: pill.icon,
@@ -174,7 +182,7 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
         ? `${displayName}, ${gradeLabel(pill.professionGrade)}`
         : displayName,
       equipmentQualityRank: phamRank,
-      rarityRank: ITEM_GRADE_ORDER.indexOf(pill.grade) + 1,
+      rarityRank: ITEM_QUALITY_ORDER.indexOf(quality) + 1,
     },
 
     imagePath: pill.icon,
@@ -183,7 +191,7 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
       ? `Cảnh giới: ${gradeLabel(pill.professionGrade)} (${realmLabel(realmFromGrade(pill.professionGrade))})`
       : undefined,
 
-    gradeKey: pill.grade,
+    gradeKey: quality,
 
     // Spec: "So huu: N" renders only when the player owns at least one.
     ownedCount: owned > 0 ? owned : undefined,
@@ -418,7 +426,7 @@ const entries = computed<PillEntry[]>(() => {
 
         amount: stack.amount,
 
-        tooltip: buildTooltip(stack.pill, stack.amount),
+        tooltip: buildTooltip(stack.pill, stack.amount, quality),
 
         icon: stack.pill.icon,
 

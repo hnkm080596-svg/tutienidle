@@ -802,11 +802,21 @@ export class ProductionSystem {
       }
     }
 
+    const fallbackRealmId = this.deps.territory.realmIds[0] ?? 'mortal'
     if (earliest) {
       view.cycleTotalMs = Math.max(1, earliest.completesAtMs - earliest.startedAtMs)
       view.cycleRemainingMs = Math.max(0, earliest.completesAtMs - nowMs)
-      const profile = getTierWeightProfile(earliest.collectionRealmId, this.deps.territory.realmIds)
-      const reached = getRealmIndex(earliest.collectionRealmId)
+    } else {
+      const baseSeconds = productionBaseSeconds(definition.kind, fallbackRealmId)
+      if (baseSeconds) {
+        view.cycleTotalMs = computeCycleSeconds(baseSeconds, state.level) * 1000
+      }
+    }
+
+    if (view.cycleTotalMs && view.cycleTotalMs > 0) {
+      const rateRealmId = earliest?.collectionRealmId ?? fallbackRealmId
+      const profile = getTierWeightProfile(rateRealmId, this.deps.territory.realmIds)
+      const reached = getRealmIndex(rateRealmId)
       const realms = this.deps.territory.realmIds.filter((realm, index) =>
         (profile[index] ?? 0) > 0 && getRealmIndex(realm) <= reached,
       )

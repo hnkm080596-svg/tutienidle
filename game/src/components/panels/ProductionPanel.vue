@@ -82,9 +82,9 @@ const rows = computed<SiteRow[]>(() => {
   const ids = TERRITORY_THANH_VAN.productionSiteIds
   const order = [ids.mine, ids.forest, ids.grotto]
   return gameManager.buildingOps.getProductionViews(nowMs.value).filter(view => order.includes(view.definition.siteId)).sort((a,b) => order.indexOf(a.definition.siteId) - order.indexOf(b.definition.siteId)).map((view) => {
-    const cycleRemainingMs = view.cycleRemainingMs ?? 0
-
     const totalMs = view.cycleTotalMs ?? 1
+
+    const cycleRemainingMs = view.cycleRemainingMs ?? totalMs
 
     const remainingSeconds = Math.ceil(cycleRemainingMs / 1000)
 

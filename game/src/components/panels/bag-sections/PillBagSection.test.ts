@@ -11,6 +11,7 @@ import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
+import { useTooltip, type GradedItemTooltipContent } from '@/composables/useTooltip'
 import type { Pill } from '@/core/pill/Pill'
 import type { PillEffectType } from '@/core/pill/PillEffect'
 
@@ -118,6 +119,34 @@ describe('PillBagSection - filter bar', () => {
     expect(filledSlots(mounted.container)).toHaveLength(2)
     expect(countText(mounted.container)).toBe('2/100')
 
+    mounted.unmount()
+  })
+
+  it('tooltip reflects stack rolled quality and uplifted effect values (QA-INV-01)', () => {
+    const mounted = mountSection((manager) => {
+      const pill: Pill = {
+        id: 'tu_khi_dan_qi_refining',
+        name: 'Tụ Khí Đan',
+        type: 'cultivation',
+        grade: 'hoang',
+        effects: [{ type: 'cultivation', cultivationPercent: 0.03 }],
+      }
+      manager.pillBag.add(pill, 2, 'tien')
+    })
+
+    const slot = filledSlots(mounted.container)[0]!
+    slot.dispatchEvent(new Event('pointerenter', { bubbles: true }))
+
+    const content = useTooltip().content.value as GradedItemTooltipContent | null
+    expect(content?.kind).toBe('pill')
+    expect(content?.gradeKey).toBe('tien')
+    expect(content?.nameTone).toBe('tien')
+    expect(content?.name).toContain('Tiên')
+    expect(content?.name).toContain('Tụ Khí Đan')
+    expect(content?.slotPreview?.rarityRank).toBe(5)
+    expect(content?.sections[0]?.rows[0]?.value).toContain('+6')
+
+    useTooltip().dismissTooltip()
     mounted.unmount()
   })
 })
