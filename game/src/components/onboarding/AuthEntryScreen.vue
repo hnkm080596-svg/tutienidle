@@ -41,8 +41,12 @@ function confirmExit() {
   exited.value = true
 }
 
+const allowSelfSignup =
+  !import.meta.env.PROD || import.meta.env.VITE_ALLOW_SELF_SIGNUP === 'true'
+
 function revealAuthentication(nextMode: 'login' | 'register') {
   if (submitting.value) return
+  if (!allowSelfSignup && nextMode === 'register') return
   mode.value = nextMode
   error.value = ''
   drawer.value = 'auth'
@@ -172,7 +176,7 @@ function startGuest() {
 function playOrContinue() {
   if (!resumeReady.value || submitting.value) return
   if (resume.value) void continueSaved()
-  else startGuest()
+  else if (allowSelfSignup) startGuest()
 }
 
 // Master gate (Minh 2026-10-10): the one-key "cua sau". A correct key

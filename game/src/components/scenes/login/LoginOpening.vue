@@ -5,6 +5,8 @@ import LoginLogoBlock from './LoginLogoBlock.vue'
 defineProps<{ resumeAvailable: boolean; ready: boolean; busy: boolean; error: string }>()
 const emit = defineEmits<{ authenticate: [mode: 'login' | 'register']; play: []; settings: []; exit: [] }>()
 const { t } = useI18n()
+const allowSelfSignup =
+  !import.meta.env.PROD || import.meta.env.VITE_ALLOW_SELF_SIGNUP === 'true'
 </script>
 
 <template>
@@ -12,8 +14,8 @@ const { t } = useI18n()
     <LoginLogoBlock />
     <nav class="login-opening__actions" :aria-label="t('onboarding.auth.eyebrow')">
       <PcPaperButton variant="secondary" data-testid="opening-login-button" :disabled="busy" @click="emit('authenticate', 'login')">{{ t('onboarding.auth.tabs.login') }}</PcPaperButton>
-      <PcPaperButton variant="secondary" data-testid="opening-register-button" :disabled="busy" @click="emit('authenticate', 'register')">{{ t('onboarding.auth.createAccount') }}</PcPaperButton>
-      <PcPaperButton variant="secondary" :data-testid="resumeAvailable ? 'auth-continue-button' : 'auth-guest-button'" :disabled="busy || !ready" :aria-busy="busy" @click="emit('play')">{{ resumeAvailable ? t('onboarding.auth.continueNoName') : t('onboarding.auth.guest.button') }}</PcPaperButton>
+      <PcPaperButton v-if="allowSelfSignup" variant="secondary" data-testid="opening-register-button" :disabled="busy" @click="emit('authenticate', 'register')">{{ t('onboarding.auth.createAccount') }}</PcPaperButton>
+      <PcPaperButton v-if="resumeAvailable || allowSelfSignup" variant="secondary" :data-testid="resumeAvailable ? 'auth-continue-button' : 'auth-guest-button'" :disabled="busy || !ready" :aria-busy="busy" @click="emit('play')">{{ resumeAvailable ? t('onboarding.auth.continueNoName') : t('onboarding.auth.guest.button') }}</PcPaperButton>
       <PcPaperButton variant="secondary" data-testid="opening-settings-button" :disabled="busy" @click="emit('settings')">{{ t('paperNav.settings') }}</PcPaperButton>
       <PcPaperButton variant="secondary" data-testid="opening-exit-button" :disabled="busy" @click="emit('exit')">{{ t('onboarding.auth.exit.title') }}</PcPaperButton>
       <p v-if="error" class="login-opening__error" role="alert">{{ error }}</p>
