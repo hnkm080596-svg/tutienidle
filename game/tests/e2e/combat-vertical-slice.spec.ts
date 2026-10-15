@@ -354,8 +354,8 @@ test.describe('P3 — production combat vertical slice', () => {
     // most runs; a defeat is still legitimate - retry once and require a
     // victory across the two attempts (also exercises the defeat->retry
     // teardown organically).
-    const victory = page.locator('.combat-victory-panel')
-    const defeat = page.locator('.combat-defeat-panel')
+    const victory = page.locator('.result-ceremony--victory')
+    const defeat = page.locator('.result-ceremony--defeat')
     const result = victory.or(defeat)
 
     let won = false
@@ -364,7 +364,8 @@ test.describe('P3 — production combat vertical slice', () => {
       if (await victory.isVisible()) {
         won = true
       } else {
-        await page.locator('.combat-defeat-panel__retry').click()
+        await expect(page.locator('.result-ceremony')).toHaveAttribute('data-complete', 'true')
+    await page.locator('.combat-defeat-panel__retry').click()
         await expect(result).toBeHidden({ timeout: 15_000 })
       }
     }
@@ -399,6 +400,7 @@ test.describe('P3 — production combat vertical slice', () => {
       const manager = game?.registry.get('gameManager') as GameManagerHandle | undefined
       w.__vsWinningBattle = manager?.getTurnBattle() ?? null
     })
+    await expect(page.locator('.result-ceremony')).toHaveAttribute('data-complete', 'true')
     await page.locator('.combat-victory-panel__retry').click()
     await expect(result).toBeHidden({ timeout: 15_000 })
     await expect
@@ -539,8 +541,8 @@ test.describe('P3 — production combat vertical slice', () => {
       })
       .toBe(true)
 
-    const victory = page.locator('.combat-victory-panel')
-    const defeat = page.locator('.combat-defeat-panel')
+    const victory = page.locator('.result-ceremony--victory')
+    const defeat = page.locator('.result-ceremony--defeat')
     await expect(victory.or(defeat)).toBeVisible({ timeout: 180_000 })
     expect(await isBattleInProgress(page)).toBe(false)
 

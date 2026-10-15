@@ -15,6 +15,7 @@ export function useDialogFocus(
   let lastTrigger: HTMLElement | null = null
   let keydownHandler: ((event: KeyboardEvent) => void) | null = null
   let mousedownHandler: ((event: MouseEvent) => void) | null = null
+  let disposed = false
 
   function focusables(): HTMLElement[] {
     const el = toValue(cardRef)
@@ -31,7 +32,7 @@ export function useDialogFocus(
         lastTrigger = activeElement instanceof HTMLElement ? activeElement : null
       }
       await nextTick()
-      if (!toValue(open)) return
+      if (disposed || !toValue(open)) return
       const items = focusables()
       ;(items[0] ?? toValue(cardRef))?.focus()
       keydownHandler = (event: KeyboardEvent) => {
@@ -90,6 +91,7 @@ export function useDialogFocus(
   }, { immediate: true })
 
   onBeforeUnmount(() => {
+    disposed = true
     stopWatch()
     if (keydownHandler) toValue(cardRef)?.removeEventListener('keydown', keydownHandler)
     if (mousedownHandler) {

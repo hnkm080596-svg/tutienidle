@@ -42,13 +42,13 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .realm-paper-scene { position:absolute; inset:0;  font-family:var(--font-display,Georgia,serif); color:#392c1d; }.realm-paper-scene :deep(*) { box-sizing:border-box; }
 .realm-preview-label { position:absolute; left:372px; top:706px; font-size:10px; color:#7d6c48; }
 .realm-timeline { position:absolute; left:372px; top:192px; width:1011px; height:378px; isolation:isolate; overflow:clip; }
-.realm-earned { position:absolute; left:372px; top:574px; width:1011px; height:120px; border-top:1px solid #a98a4b; padding-top:6px; }
-.realm-earned h3 { margin:0 0 5px; font-size:16px; font-weight:500; }
-.realm-earned ul { margin:0; padding:0; list-style:none; display:grid; grid-template-columns:repeat(4,1fr); gap:3px 18px; max-height:84px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#7f714c transparent; }
+.realm-earned { position:absolute; left:372px; top:574px; width:1011px; height:120px; border-top:1px solid #a98a4b; padding:6px 10px 4px; background:linear-gradient(180deg, rgba(244, 233, 208, 0.82), rgba(244, 233, 208, 0.92)); border-radius:4px; text-shadow:0 1px 0 rgba(255, 250, 238, 0.75); }
+.realm-earned h3 { margin:0 0 5px; font-size:16px; font-weight:600; color:#2f2213; }
+.realm-earned ul { margin:0; padding:0; list-style:none; display:grid; grid-template-columns:repeat(4,1fr); gap:4px 18px; max-height:84px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#7f714c transparent; }
 .realm-earned li { display:flex; align-items:baseline; gap:8px; font-size:13px; }
-.realm-earned li strong { font-weight:500; white-space:nowrap; }
-.realm-earned li small { color:#6b5f42; }
-.realm-earned-empty { margin:6px 0 0; font-size:13px; color:#7a6a4d; font-style:italic; }
+.realm-earned li strong { font-weight:600; color:#2b1f11; white-space:nowrap; }
+.realm-earned li small { color:#4f4128; font-weight:500; }
+.realm-earned-empty { margin:6px 0 0; font-size:13px; color:#5a4b32; font-style:italic; }
 
 /* Layout instances are relative to the owning panel content. */
 .realm-paper-scene :deep(.game-panel__content .realm-timeline) { left: 0; top: 0; width: 100%; height: calc(100% - 124px); }

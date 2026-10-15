@@ -187,7 +187,7 @@ function buildFire(): ProgressionNode[] {
   return [
     // Hoa The gate (Minh ruling 2026-10-04): the The loop does NOT come
     // with the element - this node unlocks it. Level = the chance a
-    // landed Ly Hoa cast mints +1 The (10%/level, lv4 = 40%).
+    // landed Ly Hoa cast mints +1 The (15%/level, lv4 = 60%).
     // The mechanic is read straight off player.nodeLevels at kit build
     // (CultivationPathRegistry), like the evolution/cascade markers --
     // statModifiers stay empty so nothing double-counts the chance.
@@ -195,7 +195,7 @@ function buildFire(): ProgressionNode[] {
       id: 'hoa_the',
       name: 'Tích Diễm',
       description:
-        'Mở khóa Hỏa Thế — mỗi cấp +10% tỉ lệ tích 1 tầng Hỏa Thế khi đòn Ly Hỏa trúng. Đủ 5 tầng Hỏa Thế, đòn kế mang Pháp Thế.',
+        'Mở khóa Hỏa Thế — mỗi cấp +15% tỉ lệ tích 1 tầng Hỏa Thế khi đòn Ly Hỏa trúng. Đủ 5 tầng Hỏa Thế, đòn kế mang Pháp Thế.',
       type: 'minor',
       role: 'growth',
       insightCost: 600,
@@ -297,7 +297,7 @@ function buildFire(): ProgressionNode[] {
       'Đòn Ly Hỏa +4% tỉ lệ bỏ qua hoàn toàn kháng phép mỗi cấp.',
       'fire',
       [{ stat: 'chanceToIgnoreResistance', perLevel: 0.04 }],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_hoa_nhan' },
+      { maxLevel: 4, prereqNodeId: 'hoa_hoa_nhan' },
     ),
     castScopedNode(
       'hoa_bao_diem',
@@ -305,7 +305,7 @@ function buildFire(): ProgressionNode[] {
       'Đòn Ly Hỏa +4% tỉ lệ chí mạng mỗi cấp.',
       'fire',
       [{ stat: 'criticalRate', perLevel: 0.04 }],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_pha_giap_diem' },
+      { maxLevel: 4, prereqNodeId: 'hoa_pha_giap_diem' },
     ),
     castScopedNode(
       'hoa_phe_diem',
@@ -313,7 +313,7 @@ function buildFire(): ProgressionNode[] {
       'Đòn Ly Hỏa +25% sát thương chí mạng mỗi cấp.',
       'fire',
       [{ stat: 'criticalDamage', perLevel: 0.25 }],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_bao_diem' },
+      { maxLevel: 4, prereqNodeId: 'hoa_bao_diem' },
     ),
 
     // Ngu Hoa - tempering the Trang cast: each level shaves half a turn
@@ -410,7 +410,7 @@ function buildFire(): ProgressionNode[] {
     {
       id: 'nguyen_kinh',
       name: 'Nguyên Kính',
-      description: 'Dày hóa tấm kính nguyên lực — Linh Lực Hộ Thể gánh thêm +5% sát thương nhận vào mỗi cấp.',
+      description: 'Dày hóa tấm kính nguyên lực — Linh Thuẫn Hóa Thương chuyển hóa thêm +5% sát thương nhận vào sang tiêu hao Linh Lực mỗi cấp.',
       type: 'minor',
       role: 'growth',
       insightCost: GROWTH_TC.base,

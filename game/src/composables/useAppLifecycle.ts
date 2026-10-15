@@ -205,7 +205,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   // PhaserSceneAdapter gameGeneration.
   let lifecycleGeneration = 0
 
-  const AUTOSAVE_INTERVAL_MS = 15_000
+  const AUTOSAVE_INTERVAL_MS = 30_000
 
   // --- Event-bus handlers: dang ky mot lan, go symmetric khi teardown ---
 

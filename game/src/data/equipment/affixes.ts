@@ -58,14 +58,14 @@ export const affixes: Affix[] = [
 
   {
     id: 'suffix_attack_speed',
-    name: 'Nhanh Nhẹn',
+    name: 'Thần Tốc',
     stat: 'speed',
     kind: 'suffix',
     pool: 'basic',
     tiers: [
-      { tier: 1, min: 0.01, max: 0.02 },
-      { tier: 2, min: 0.03, max: 0.04 },
-      { tier: 3, min: 0.05, max: 0.07 },
+      { tier: 1, min: 1, max: 2 },
+      { tier: 2, min: 3, max: 4 },
+      { tier: 3, min: 5, max: 7 },
     ],
   },
 
@@ -273,9 +273,9 @@ export const affixes: Affix[] = [
     kind: 'suffix',
     pool: 'specialized',
     tiers: [
-      { tier: 1, min: 0.02, max: 0.04 },
-      { tier: 2, min: 0.05, max: 0.08 },
-      { tier: 3, min: 0.09, max: 0.13 },
+      { tier: 1, min: 2, max: 4 },
+      { tier: 2, min: 5, max: 8 },
+      { tier: 3, min: 9, max: 13 },
     ],
   },
 

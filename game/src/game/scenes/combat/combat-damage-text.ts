@@ -1,4 +1,4 @@
-﻿// combat-damage-text (ui-discoverability-refactor-plan.md sec3.2) - tach tu
+// combat-damage-text (ui-discoverability-refactor-plan.md sec3.2) - tach tu
 // CombatScene.ts: NAY SO damage/crit/DoT gom 3 lan/giay. Module nhan
 // dependency tuong minh qua `scene` (moi cross-call deu di qua scene
 // delegate de giu nguyen seam test - showDotDamageNumber bI stub trong
@@ -74,8 +74,11 @@ export class CombatDamageText {
   /** Flush cac bucket da den han - MOI KHOA dung 1 text (sec7.2). */
   flushDueDotTexts() {
     this.scene.dotAccumulators ??= new Map()
+    if (this.scene.dotAccumulators.size === 0) {
+      return
+    }
 
-    for (const [key, bucket] of [...this.scene.dotAccumulators]) {
+    for (const [key, bucket] of this.scene.dotAccumulators) {
       if (this.scene.time.now < bucket.nextFlushAt) {
         continue
       }

@@ -45,12 +45,12 @@ function makeGameManager(): MockGameManager {
   }
 }
 
-function mountPanel(gm: MockGameManager, battleRunMode: 'manual' | 'repeat' = 'manual') {
+function mountPanel(gm: MockGameManager, battleRunMode: 'manual' | 'repeat' = 'manual', variant: 'classic' | 'ceremony' = 'classic') {
   const container = document.createElement('div')
 
   document.body.appendChild(container)
 
-  const app = createApp({ render: () => h(CombatDefeatPanel) })
+  const app = createApp({ render: () => h(CombatDefeatPanel, { variant }) })
 
   const pinia = createPinia()
 
@@ -80,6 +80,49 @@ function mountPanel(gm: MockGameManager, battleRunMode: 'manual' | 'repeat' = 'm
 
 beforeEach(() => {
   vi.clearAllMocks()
+})
+
+describe('ceremony defeat admission', () => {
+  it('refused manual retry preserves the original ten-second return deadline', async () => {
+    vi.useFakeTimers()
+    const gm = makeGameManager()
+    gm.catalogOps.getStage.mockReturnValue({ id: 'mortal_dong_1' })
+    const panel = mountPanel(gm, 'manual', 'ceremony')
+    panel.ui.selectedStageId = 'mortal_dong_1'
+    await vi.advanceTimersByTimeAsync(2500)
+    panel.container.querySelector<HTMLButtonElement>('.combat-defeat-panel__retry')!.click()
+    await vi.advanceTimersByTimeAsync(7500)
+    expect(gm.eventBus.emit).toHaveBeenCalledWith('combat_scene_exit', undefined)
+    panel.unmount()
+  })
+  it('repeat presentation is complete before 1.5s', async () => {
+    vi.useFakeTimers()
+    const panel = mountPanel(makeGameManager(), 'repeat', 'ceremony')
+    await vi.advanceTimersByTimeAsync(1500)
+    expect(panel.container.querySelector('.result-ceremony')?.getAttribute('data-complete')).toBe('true')
+    panel.unmount()
+  })
+
+  it('repeated clicks during pending admission cannot start another request or disarm repeat', async () => {
+    vi.useFakeTimers()
+    const gm = makeGameManager()
+    gm.catalogOps.getStage.mockReturnValue({ id: 'mortal_dong_1' })
+    let finish!: (accepted: boolean) => void
+    gm.turnBattleOps.startStage.mockImplementationOnce(() => new Promise<boolean>(resolve => { finish = resolve })).mockReturnValue(false)
+    const panel = mountPanel(gm, 'repeat', 'ceremony')
+    panel.ui.selectedStageId = 'mortal_dong_1'
+    await vi.advanceTimersByTimeAsync(2300)
+    const retry = panel.container.querySelector<HTMLButtonElement>('.combat-defeat-panel__retry')!
+    retry.click()
+    await vi.advanceTimersByTimeAsync(16)
+    retry.click()
+    await nextTick()
+    expect(gm.turnBattleOps.startStage).toHaveBeenCalledOnce()
+    expect(panel.ui.battleRunMode).toBe('repeat')
+    finish(true)
+    await nextTick()
+    panel.unmount()
+  })
 })
 
 afterEach(() => {

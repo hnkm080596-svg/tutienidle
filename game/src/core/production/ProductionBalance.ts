@@ -105,8 +105,8 @@ export const MATERIAL_AGE_WEIGHTS: Record<HerbAge, number> = {
 
 /** So Go/Khoang nhan duoc theo tuoi (balance data sec13.2). */
 export const MATERIAL_AGE_AMOUNTS: Record<HerbAge, number> = {
-  decade: 3,
-  century: 2,
+  decade: 4,
+  century: 3,
   millennium: 2,
   myriad_year: 1,
   thuong_co: 1,
@@ -138,7 +138,7 @@ export const HERB_AGE_BASE_SUCCESS_PERCENT: Record<HerbAge, number> = {
 }
 
 /** So thao nhan duoc moi cycle Dong Thien (balance data). */
-export const GROTTO_HERB_AMOUNT = 1
+export const GROTTO_HERB_AMOUNT = 2
 
 // =========================
 // Offline (sec4.3): settle tuan tu trong cap; moi auto-cycle seed rieng.

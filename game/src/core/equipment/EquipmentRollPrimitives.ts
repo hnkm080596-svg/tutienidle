@@ -40,9 +40,13 @@ export function normalizeRolledAffixValue(value: number, min: number, max: numbe
   if (value >= min && value <= max) return value
 
   // Du lieu cu tung luu percent theo diem nguyen hoac bi randomInt ep thanh
-  // 1. Uu tien phuc hoi theo /100, sau do moi clamp vao tier hien tai.
+  // 1, hoac luu speed theo thang thap phan 0.01-0.13 truoc khi chuyen sang
+  // thang 100 turn-based. Uu tien phuc hoi theo /100 hoac *100, sau do moi
+  // clamp vao tier hien tai.
   const legacyPercent = value / 100
   if (legacyPercent >= min && legacyPercent <= max) return legacyPercent
+  const legacyScaledFlat = value * 100
+  if (legacyScaledFlat >= min && legacyScaledFlat <= max) return legacyScaledFlat
   return Math.min(max, Math.max(min, legacyPercent))
 }
 

@@ -32,6 +32,7 @@ import {
 import { CULTIVATION_PATH_MODULES, declaresElementAxis, type CultivationPathId, type CultivationWayId } from '../../player/CultivationPathKit'
 import type { ElementType } from '../../element/ElementType'
 import { canUseItemGrade } from '../../equipment/canUseItem'
+import { PROFESSION_GRADE_ORDER } from '../../profession/ProfessionGrade'
 import { ITEM_QUALITY_ORDER } from '../../item/ItemQuality'
 import {
   applyCreationProfile,
@@ -604,7 +605,9 @@ export class EarlyGameSession {
   equipAll(): number {
     const bag = this.gameManager.equipmentBag.getAll()
     const rank = (item: (typeof bag)[number]): number =>
-      ITEM_QUALITY_ORDER.indexOf(item.quality) * 1000 + (item.realmLevel ?? 0)
+      PROFESSION_GRADE_ORDER.indexOf(item.grade) * 1_000_000 +
+      ITEM_QUALITY_ORDER.indexOf(item.quality) * 1000 +
+      (item.realmLevel ?? 0)
     const bestPerSlot = new Map<string, (typeof bag)[number]>()
     for (const item of bag) {
       if (item.equipped) continue

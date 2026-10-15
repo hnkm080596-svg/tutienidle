@@ -28,6 +28,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write --experimental-cli src/",
     "assets:route": "node scripts/route-assets.mjs",
+    "assets:optimize": "node scripts/assets/optimize.mjs",
+    "assets:upload-r2": "node scripts/assets/upload-r2.mjs",
     "assets:ink-ui": "node scripts/build-ink-wash-assets.mjs",
     "assets:ink-ui:check": "node scripts/build-ink-wash-assets.mjs --check",
     "electron:dev": "cross-env ELECTRON=1 vite",

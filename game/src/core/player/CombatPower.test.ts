@@ -18,7 +18,7 @@ describe('CombatPower (Ruling D6)', () => {
         stats.maxMp * 0.05 +
         stats.criticalRate * 500 +
         stats.criticalDamage * 300 +
-        stats.speed * 200,
+        stats.speed * 2,
     )
 
     expect(computeCombatPower(stats)).toBe(expected)

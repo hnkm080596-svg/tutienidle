@@ -50,6 +50,7 @@ function stat(
     sourceType: 'talent',
     stat,
     percent,
+    stacks: 0,
     maxStacks,
   }
 }
@@ -67,70 +68,71 @@ function flatStat(
     sourceType: 'talent',
     stat,
     flat,
+    stacks: 0,
     maxStacks,
   }
 }
 
 export const TALENT_PASSIVE_SKILLS: Skill[] = [
-  // 1. Kiem Quang - chi mang: moi crit +1% crit (max 10) -> Kiem Vuc 8s.
+  // 1. Kiem Quang - chi mang: moi crit +1% crit (max 10) -> Kiem Vuc.
   talentPassive(
     'talent_passive_kiem_quang',
     'Kiếm Quang',
-    'Nội tại Kiếm Quang của thiên phú — tích Kiếm Mạch bằng chí mạng.',
+    'Nội tại Kiếm Quang của thiên phú — tích Kiếm Mạch bằng đòn bạo kích.',
     'critical',
-    [stat('criticalRate', 0.01, 10)],
+    [flatStat('criticalRate', 0.01, 10)],
     { passiveConvertsTo: { buffId: 'kiem_vuc' } },
   ),
-  // 2. Pha Giap - xuyen giap: moi hit +2% xuyen (max 5). M1: trong tran.
+  // 2. Pha Giap - xuyen khang: moi hit +2 diem xuyen (max 5). M1: trong tran.
   talentPassive(
     'talent_passive_pha_giap',
     'Phá Giáp',
     'Nội tại Phá Giáp của thiên phú — tích Mổ Tạc bằng mỗi đòn trúng.',
     'hit',
-    [flatStat('metalPenetration', 0.02, 5)],
+    [flatStat('metalPenetration', 2, 5)],
   ),
-  // 3. Tat Phong - toc danh: moi kill +2% attackSpeed, stack vo han
+  // 3. Tat Phong - toc do: moi kill +2% speed, stack vo han
   // trong tran, bi trung don reset (reset thuc thi o consumer event
   // 'damage' target=player - passiveModifiers stacks = 0).
   talentPassive(
     'talent_passive_tat_phong',
     'Tật Phong',
-    'Nội tại Tật Phong của thiên phú — tích tốc đánh bằng mỗi lần diệt địch.',
+    'Nội tại Tật Phong của thiên phú — tích Tốc Độ bằng mỗi lần diệt địch.',
     'kill',
     [stat('speed', 0.02)],
   ),
   // 4. Trong Kich - sat thuong chi mang: crit damage +2% moi crit
-  // (stack vo han trong tran, nguong bung +30% finalDamagePercent 8s
+  // (stack vo han trong tran, nguong bung +18% finalDamagePercent
   // qua buff - moi 3 crit cham nguong 3 tang converter).
   talentPassive(
     'talent_passive_trong_kich',
     'Trọng Kích',
-    'Nội tại Trọng Kích của thiên phú — chí mạng càng nhiều đòn càng trọng.',
+    'Nội tại Trọng Kích của thiên phú — bạo kích càng nhiều đòn càng trọng.',
     'critical',
     [stat('criticalDamage', 0.02, 3)],
     { passiveConvertsTo: { buffId: 'trong_kich_burst' } },
   ),
-  // 5. Hap Linh - hut mau: chi hieu luc khi HP < 50% nhung x2.5 hieu
+  // 5. Hap Linh - hap huyet: chi hieu luc khi HP < 50% nhung x2.5 hieu
   // luc - passiveCondition chan tich, modifier leechPercent lon.
   talentPassive(
     'talent_passive_hap_linh',
     'Hấp Linh',
-    'Nội tại Hấp Linh của thiên phú — hút máu bùng phát khi thân thương.',
+    'Nội tại Hấp Linh của thiên phú — hấp huyết bùng phát khi trọng thương.',
     'per_second',
     [stat('leechPercent', 0.03)],
     { passiveCondition: { kind: 'hpBelow', percent: 0.5 } },
   ),
   // 6. Thach Giap - phong thu: block thanh cong +2% defense (max 10)
-  // -> Thach Nham 5s (E1).
+  // -> Thach Nham (E1).
   talentPassive(
     'talent_passive_thach_giap',
     'Thạch Giáp',
-    'Nội tại Thạch Giáp của thiên phú — tích phòng thủ bằng mỗi lần chặn đòn.',
+    'Nội tại Thạch Giáp của thiên phú — tích phòng ngự bằng mỗi lần chặn đòn.',
     'block',
     [stat('defense', 0.02, 10)],
     { passiveConvertsTo: { buffId: 'thach_nham' } },
   ),
-  // 7. Vo Anh - ne: dodge +1 tang (max 5, +2%/tang) -> Sat Na 6s (E1).
+  // 7. Vo Anh - ne: dodge +1 tang (max 5, +2%/tang) -> Sat Na (E1).
   talentPassive(
     'talent_passive_vo_anh',
     'Vô Ảnh',
@@ -139,15 +141,15 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     [stat('evasionRate', 0.02, 5)],
     { passiveConvertsTo: { buffId: 'sat_na' } },
   ),
-  // 8. Can Than - endurance: duoi nguong HP nhan -10% (finalDamage
-  // ReductionPercent), tren nguong nhan +5% - dao doi sinh tu: 2
-  // passive trai dau theo condition.
+  // 8. Can Than - duoi nguong HP nhan +10% (finalDamageReductionPercent),
+  // tren nguong nhan -2% - dao doi sinh tu: 2 passive trai dau theo
+  // condition, maxStacks = 1 de khong cong don vo han theo giay.
   talentPassive(
     'talent_passive_can_than',
     'Cẩn Thận',
     'Nội tại Cẩn Thận của thiên phú — lạnh lòng khi sát tử đường.',
     'per_second',
-    [flatStat('finalDamageReductionPercent', 0.1)],
+    [flatStat('finalDamageReductionPercent', 0.1, 1)],
     { passiveCondition: { kind: 'hpBelow', percent: 0.35 } },
   ),
   talentPassive(
@@ -155,7 +157,7 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'Cẩn Thận (phản)',
     'Nội tại Cẩn Thận của thiên phú — chủ quan khi an toàn.',
     'per_second',
-    [flatStat('finalDamageReductionPercent', -0.02)],
+    [flatStat('finalDamageReductionPercent', -0.02, 1)],
     // CP-01 - downside leg chi ap TREN nguong; khong condition thi no
     // luon active va triet tieu mot nua leg 'hpBelow' phia tren.
     { passiveCondition: { kind: 'hpNotBelow', percent: 0.35 } },
@@ -166,30 +168,28 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
   talentPassive(
     'talent_passive_ho_the',
     'Hộ Thể',
-    'Nội tại Hộ Thể của thiên phú — khiên vỡ càng lâu càng mau hồi.',
+    'Nội tại Hộ Thể của thiên phú — hộ thuẫn vỡ càng lâu càng mau hồi.',
     'damage_taken',
     [stat('wardRegenPerTurn', 0.02, 5)],
   ),
-  // 10. Thu Phat - gai: moi don an vao +1 tang Han Thu (max 5,
-  // +5% Khien No/tang), decay khi khong bi danh 3s (decay thuc thi
-  // consumer tick). The Tu Reimagined (spec 2026-09-15 T12):
-  // generic thorns stat retired - retaliation rides wardBreakDamagePercent
-  // (Khien No phan theo dung luong khien khi khien vo).
+  // 10. Thu Phat - phan chan: moi don an vao +1 tang Han Thu (max 5,
+  // +5% Pha Thuan Phan Chan/tang). Dung flatStat vi wardBreakDamagePercent
+  // co base = 0.
   talentPassive(
     'talent_passive_thu_phat',
     'Thứ Phạt',
-    'Nội tại Thứ Phạt của thiên phú — mỗi đòn ăn vào nuôi gai sắc.',
+    'Nội tại Thứ Phạt của thiên phú — mỗi đòn ăn vào nuôi phản chấn.',
     'damage_taken',
-    [stat('wardBreakDamagePercent', 0.05, 5)],
+    [flatStat('wardBreakDamagePercent', 0.05, 5)],
   ),
   // 11. Bat Tu The - phan passive bo sung cho guard hien co: sau khi
-  // guard cuu song, Tu Sinh Ngo 10s ap truc tiep (CombatSystem, Task 4)
+  // guard cuu song, Tu Sinh Ngo ap truc tiep (CombatSystem, Task 4)
   // - passive nay khong tich stack, chi la anchor data cho grant/revoke
   // don gian hoa wiring (moi talent combat deu co 1 passive).
   talentPassive(
     'talent_passive_bat_tu_the',
     'Bất Tử Thể',
-    'Nội tại Bất Tử Th thể của thiên phú — tráo đổi tử kỳ lấy đạo cơ.',
+    'Nội tại Bất Tử Thể của thiên phú — tráo đổi tử kỳ lấy đạo cơ.',
     'damage_taken',
     [stat('criticalAvoidance', 0)],
   ),

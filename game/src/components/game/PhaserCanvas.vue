@@ -88,10 +88,10 @@ function seedRegion(registry: GateRegistry): () => void {
 
   // 9.4 - Kiem bar reader (Kiem The / Kiem Y tam) dang ky tu day (co
   // gameManager + player store) vao registry; CombatScene poll moi frame.
-  registerKiemBarReader(registry, makeKiemBarReader(gameManager, () => usePlayerStore()))
+  registerKiemBarReader(registry, makeKiemBarReader(gameManager, () => player))
 
   // Task 16 - The bar reader (Phap Tu) - cung bridge pattern.
-  registerTheBarReader(registry, makeTheBarReader(gameManager, () => usePlayerStore()))
+  registerTheBarReader(registry, makeTheBarReader(gameManager, () => player))
 
   // Phap Tu Reimagine (F13) -- Ho The DR reader for status tooltips.
   registerHoTheReader(registry, makeHoTheReader(gameManager))

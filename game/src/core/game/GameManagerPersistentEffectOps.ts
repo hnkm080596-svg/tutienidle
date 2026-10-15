@@ -18,6 +18,7 @@ import {
 } from '../player/CultivationPathSystem'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
+import { isBetaFeature } from '../betaScope'
 import { betaNodeWriteAdmitted, betaTechniqueAdmitted } from '../betaScopeSkillDomain'
 import type { ResolvedModifierChannel } from './CombatBuild'
 import type { SkillSystem } from '../skill/SkillSystem'
@@ -185,12 +186,30 @@ export class GameManagerPersistentEffectOps {
    * step). Task 3 (D17): MP-pool modifiers carry domain:'spell' so the
    * Task-7 gate accepts them once maxMp/manaRegenPerTurn are gated.
    */
+  private cachedNodeModSig?: string
+  private cachedNodeMods: StatModifier[] = []
+
   /** Node-level modifiers restricted to scope-admitted nodes. */
   private admittedNodeModifiers(player: PlayerData): StatModifier[] {
-    return aggregateNodeStatModifiers(
-      { getAll: () => this.deps.nodeRegistry.getAll().filter(betaNodeWriteAdmitted) },
+    const levels = player.nodeLevels
+    if (!levels) return []
+    let levelSig = ''
+    for (const [k, v] of Object.entries(levels)) {
+      if (v > 0) levelSig += `${k}:${v},`
+    }
+    if (levelSig === '') return []
+    const allNodes = this.deps.nodeRegistry.getAll()
+    const scopeFlags = `${isBetaFeature('hiddenContent') ? 1 : 0}:${isBetaFeature('swordPath') ? 1 : 0}`
+    const sig = `${allNodes.length}:${allNodes[0]?.id ?? ''}:${allNodes[allNodes.length - 1]?.id ?? ''}:${scopeFlags}|${player.cultivationPath ?? ''}|${player.cultivationWay ?? ''}|${player.spellPath?.element ?? ''}|${levelSig}`
+    if (sig === this.cachedNodeModSig) {
+      return [...this.cachedNodeMods]
+    }
+    this.cachedNodeModSig = sig
+    this.cachedNodeMods = aggregateNodeStatModifiers(
+      { getAll: () => allNodes.filter(betaNodeWriteAdmitted) },
       player,
     )
+    return [...this.cachedNodeMods]
   }
 
   private getTechniqueTierModifiers(player: PlayerData): StatModifier[] {
@@ -430,9 +449,13 @@ export class GameManagerPersistentEffectOps {
 
   /** Drops expired effects - returns the count dropped (debug/test). */
   tickTimedEffects(player: PlayerData, now = this.nowMs()): number {
-    const before = player.persistentTimedEffects.length
+    const effects = player.persistentTimedEffects
+    const before = effects.length
+    if (before === 0 || !effects.some((effect) => effect.expiresAtMs <= now)) {
+      return 0
+    }
 
-    player.persistentTimedEffects = player.persistentTimedEffects.filter(
+    player.persistentTimedEffects = effects.filter(
       (effect) => effect.expiresAtMs > now,
     )
 

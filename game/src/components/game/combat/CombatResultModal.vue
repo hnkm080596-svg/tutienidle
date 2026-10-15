@@ -30,9 +30,9 @@ const outcome = computed(() => {
 
 <template>
   <div v-if="outcome" class="combat-result-modal">
-    <CombatVictoryPanel v-if="outcome === 'victory'" />
+    <CombatVictoryPanel v-if="outcome === 'victory'" variant="ceremony" />
 
-    <CombatDefeatPanel v-else />
+    <CombatDefeatPanel v-else variant="ceremony" />
   </div>
 </template>
 
@@ -45,7 +45,7 @@ const outcome = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--scrim);
+  background: radial-gradient(ellipse at 50% 32%, #0b1115b0, #05090ee8 85%);
   pointer-events: auto;
   box-sizing: border-box;
   padding: 24px;
@@ -62,4 +62,11 @@ const outcome = computed(() => {
   overflow-y: auto;
   flex-shrink: 1;
 }
+
+#app .combat-result-modal > .result-ceremony.result-ceremony {
+  width: min(720px, 100%);
+  max-height: 100%;
+  overflow: visible;
+}
+.ceremony-auto-countdown { margin: 12px 0; color: #e2cd9a; font-variant-numeric: tabular-nums; }
 </style>

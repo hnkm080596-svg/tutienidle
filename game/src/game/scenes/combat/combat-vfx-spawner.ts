@@ -247,6 +247,8 @@ export class CombatVfxSpawner {
     this.statusTooltip?.hideFor(event.statusInstanceId)
   }
 
+  private readonly statusesByTarget = new Map<string, { temp: StatusEntry[]; perm: StatusEntry[] }>()
+
   /**
    * Buff bar (2026-09-02) - vi tri icon THEO ROW moi frame (flexible rule:
    * tinh tu sprite/viewport hien hanh, khong hardcode man hinh dev).
@@ -255,16 +257,29 @@ export class CombatVfxSpawner {
    * cao hon). >8 icon: icon cuoi mang counter "+N", icon du an.
    */
   updateStatusIconPositions() {
-    const byTarget = new Map<string, StatusEntry[]>()
-
-    for (const status of (this.scene.statuses as Map<string, StatusEntry>).values()) {
-      const list = byTarget.get(status.targetId) ?? []
-
-      list.push(status)
-      byTarget.set(status.targetId, list)
+    const statuses = this.scene.statuses as Map<string, StatusEntry>
+    if (statuses.size === 0) {
+      return
     }
 
-    for (const [targetId, entries] of byTarget) {
+    const byTarget = this.statusesByTarget
+    byTarget.clear()
+
+    for (const status of statuses.values()) {
+      let group = byTarget.get(status.targetId)
+      if (!group) {
+        group = { temp: [], perm: [] }
+        byTarget.set(status.targetId, group)
+      }
+
+      if (status.permanent) {
+        group.perm.push(status)
+      } else {
+        group.temp.push(status)
+      }
+    }
+
+    for (const [targetId, group] of byTarget) {
       const sprite = this.scene.spriteFor(targetId)
 
       if (!sprite) {
@@ -273,18 +288,8 @@ export class CombatVfxSpawner {
 
       const isPlayer = targetId === PLAYER_ID
 
-      this.layoutStatusRow(
-        entries.filter((entry) => !entry.permanent),
-        isPlayer,
-        sprite,
-        0,
-      )
-      this.layoutStatusRow(
-        entries.filter((entry) => entry.permanent),
-        isPlayer,
-        sprite,
-        1,
-      )
+      this.layoutStatusRow(group.temp, isPlayer, sprite, 0)
+      this.layoutStatusRow(group.perm, isPlayer, sprite, 1)
     }
   }
 

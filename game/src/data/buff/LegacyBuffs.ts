@@ -27,7 +27,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     polarity: 'buff',
     instanceScope: 'per_source',
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
+    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'fixed' },
     statModifiers: [{ stat: 'wardMax', flat: 40 }],
     dispellable: false,
   },

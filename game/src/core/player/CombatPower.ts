@@ -14,7 +14,7 @@ export const COMBAT_POWER_TERMS: readonly CombatPowerTerm[] = [
   { stat: 'maxMp', weight: 0.05 },
   { stat: 'criticalRate', weight: 500 },
   { stat: 'criticalDamage', weight: 300 },
-  { stat: 'speed', weight: 200 },
+  { stat: 'speed', weight: 2 },
 ]
 
 export function computeCombatPowerTermContribution(

@@ -17,12 +17,12 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
   {
     id: 'thanh_tuyen',
     name: 'Thanh Tuyền',
-    description: 'Suối thiêng Thanh Tuyền nuôi linh khí — Pháp Lực hồi nhanh hơn.',
+    description: 'Suối thiêng Thanh Tuyền nuôi linh khí — Linh Lực hồi nhanh hơn.',
     kind: 'buff',
     polarity: 'buff',
     instanceScope: 'per_source',
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
+    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'fixed' },
     // Task 3 (D17): the bespoke manaRegenPercent stat retired - the +10%
     // is now a percent modifier on the live manaRegenPerTurn stat, and
     // both MP-pool grants carry domain:'spell' for the Task-7 gate.
@@ -44,7 +44,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     polarity: 'buff',
     instanceScope: 'per_source',
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
+    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'fixed' },
     statModifiers: [{ stat: 'defense', percent: 0.15 }],
     dispellable: false,
   },
@@ -59,7 +59,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     polarity: 'buff',
     instanceScope: 'per_source',
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
+    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'fixed' },
     statModifiers: [
       { stat: 'wardMax', flat: 60 },
       { stat: 'wardRegenPerTurn', flat: 6 },

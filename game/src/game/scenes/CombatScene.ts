@@ -626,6 +626,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   private phapTheGlyph?: Phaser.GameObjects.Image
   private hoaTheSeal?: Phaser.GameObjects.Sprite
   private hoaTheSealMs = 0
+  private lastHoaTheSealFrame = -1
 
   private get hoaCauPresentation(): HoaCauFireballPresentation {
     if (!this._hoaCauPresentation) {
@@ -1145,7 +1146,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     const seal = this.hoaTheSeal
     if (seal?.visible) {
       this.hoaTheSealMs += playbackDelta
-      seal.setFrame(`frame_${this.hoaTheSealFrame()}`)
+      const nextFrame = this.hoaTheSealFrame()
+      if (nextFrame !== this.lastHoaTheSealFrame) {
+        this.lastHoaTheSealFrame = nextFrame
+        seal.setFrame(`frame_${nextFrame}`)
+      }
     }
 
     // Task 9 - party countdown telegraph chases its snapshot target on
@@ -1160,6 +1165,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // (chi noi co gameManager - xem kiemBarBridge.ts). null = an bar.
   // registry thieu (stub/scene chua init) coi nhu "khong co reader".
   private pollKiemBar(): void {
+    if (!this._playerHud) {
+      return
+    }
     const kiem = this.registry ? readKiemBar(this.registry) : null
 
     if (kiem) {
@@ -1749,6 +1757,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.debugAnchorGraphics?.destroy()
 
     this.debugAnchorGraphics = undefined
+
+    this.phapTheGlyph?.destroy()
+    this.phapTheGlyph = undefined
+    this.hoaTheSeal?.destroy()
+    this.hoaTheSeal = undefined
+    this.lastHoaTheSealFrame = -1
 
     this.lastKnownScreenPositions.clear()
     this.lastKnownGridPositions.clear()

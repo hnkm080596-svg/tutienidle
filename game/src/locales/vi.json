@@ -1199,6 +1199,12 @@
     "formationHint": "Gán đồng đội vào ô trận tại panel Trận Pháp (bánh lệnh → Trận)."
   },
   "combat": {
+    "ceremony": {
+      "skip": "Chạm để hiện toàn bộ kết quả",
+      "settled": "Chiến quả đã ghi nhận",
+      "noRewards": "Trận này chưa có chiến lợi phẩm",
+      "nextBattle": "Trận tiếp theo sau {duration}"
+    },
     "victory": {
       "title": "★ THẮNG ★",
       "retry": "Đánh Lại",
@@ -1329,7 +1335,7 @@
     },
     "partyCard": {
       "stats": "Chỉ Số Hiện Tại",
-      "might": "Sát Thương",
+      "might": "Uy Lực",
       "defense": "Phòng Ngự",
       "speed": "Tốc Độ",
       "empty": "Vị Trí Trống",
@@ -1466,7 +1472,7 @@
     },
     "hoaTheDecayReductionPercent": {
       "label": "Giảm Suy Hỏa Thế",
-      "description": "Giảm % tốc độ Hỏa Thế tự tiêu tán theo thời gian."
+      "description": "Giảm % tốc độ Hỏa Thế tự tiêu tán qua mỗi lượt."
     },
     "thuyThePercent": {
       "label": "Thủy Thế",
@@ -1474,7 +1480,7 @@
     },
     "waterReactionExtensionSeconds": {
       "label": "Duy Trì Thủy",
-      "description": "Khi Thủy kích hoạt Phản Ứng, gia hạn thêm số giây này thay vì tiêu hao Thủy trên mục tiêu."
+      "description": "Khi Thủy kích hoạt Phản Ứng, gia hạn thêm số lượt này thay vì tiêu hao Thủy trên mục tiêu."
     },
     "poisonRootPercentPerStack": {
       "label": "Mộc Thế/Tầng",
@@ -1514,11 +1520,11 @@
     },
     "kimTheDotDamagePercentPerStack": {
       "label": "Kim Thế/Tầng",
-      "description": "Mỗi tầng Kim Thế cộng thêm % sát thương DoT Kim."
+      "description": "Mỗi tầng Kim Thế cộng thêm % sát thương duy trì hệ Kim."
     },
     "kimTheDotResistancePenetrationPercentPerStack": {
-      "label": "Xuyên Kháng DoT/Tầng",
-      "description": "Stat nền dự phòng cho cơ chế Xuyên Kháng DoT tương lai."
+      "label": "Xuyên Kháng Duy Trì/Tầng",
+      "description": "Stat nền dự phòng cho cơ chế Xuyên Kháng sát thương duy trì tương lai."
     },
     "kimTheMaxStacksBonus": {
       "label": "Trần Kim Thế",
@@ -1526,7 +1532,7 @@
     },
     "metalAilmentPotencyPercent": {
       "label": "Sát Thương Xuất Huyết",
-      "description": "Tăng % sát thương/giây của DoT Kim (Xuất Huyết)."
+      "description": "Tăng % sát thương mỗi lượt của Xuất Huyết (Liệt Thương)."
     },
     "huyetPhaGainPerProc": {
       "label": "Huyết Phá Tích/Lần",
@@ -1958,35 +1964,35 @@
     "steps": {
       "1": {
         "title": "Chào mừng Đạo Hữu",
-        "body": "Con đường tu tiên bắt đầu từ đây. Bấm vào nhân vật đang tu luyện (hoặc phím Tab) bất cứ lúc nào để mở Bảng Lệnh — nơi mở mọi khu vực của Động Phủ."
+        "body": "Con đường tu tiên bắt đầu từ đây. Dùng Thanh Điều Hướng bên trái hoặc bấm trực tiếp vào các đảo nổi trên Động Phủ để mở các khu vực tu luyện."
       },
       "2": {
         "title": "Động Phủ",
-        "body": "Nhân vật tự tu luyện theo thời gian, kể cả khi đang đi vắng. Mở Bảng Lệnh → Nhân Vật để xem cảnh giới và tốc độ tích lũy tu vi."
+        "body": "Nhân vật tự tu luyện theo thời gian, kể cả khi đang đi vắng. Mở mục Tu Sĩ hoặc Cảnh Giới ở Thanh Điều Hướng bên trái để xem căn cơ và tốc độ tích lũy tu vi."
       },
       "3": {
         "title": "Đột Phá",
-        "body": "Khi tu vi đã đủ, chức năng Đột Phá mở ra trong mục Nhân Vật — đột phá thành công sẽ tăng cảnh giới và sức mạnh tu luyện."
+        "body": "Khi tu vi đã viên mãn, hãy mở mục Cảnh Giới (hoặc bấm trực tiếp thanh Tu Vi trên Động Phủ) để Đột Phá — tăng cảnh giới, mở khóa thiên phú và giới hạn sức mạnh mới."
       },
       "4": {
-        "title": "Khí Đường",
-        "body": "Mở Bảng Lệnh → Khí Đường để chế tạo và cường hóa trang bị từ nguyên liệu thu thập được."
+        "title": "Khí Đường & Trang Bị",
+        "body": "Mở mục Trang Bị ở Thanh Điều Hướng bên trái để mặc pháp bảo, cường hóa, tẩy luyện và tinh luyện trang bị thu thập được."
       },
       "5": {
-        "title": "Trang Bị",
-        "body": "Trang bị trong mục Nhân Vật tăng sức chiến đấu — hãy mặc món tốt nhất trước khi xuất chiến."
+        "title": "Luyện Thể & Công Pháp",
+        "body": "Đừng quên rèn luyện nhục thân tại mục Luyện Thể và lĩnh ngộ kỹ năng tại mục Công Pháp để chuẩn bị trước khi xuất chiến."
       },
       "6": {
-        "title": "Thám Hiểm",
-        "body": "Công trình Sản Xuất (Bảng Lệnh → Sản Xuất, hoặc bấm trực tiếp công trình trên bản đồ) thu thập nguyên liệu theo thời gian — quay lại thu hoạch khi hoàn thành."
+        "title": "Khai Vật Đường",
+        "body": "Bấm vào đảo Sản Xuất trên Động Phủ để khai thác Linh Mộc, Linh Khoáng, Linh Thảo và Linh Thạch theo thời gian."
       },
       "7": {
-        "title": "Chiến Đấu",
-        "body": "Mở Bảng Lệnh → Truyền Tống Trận (hoặc bấm công trình trên bản đồ) để chọn địa giới chiến đấu — nhân vật tự động tấn công đến khi trận kết thúc."
+        "title": "Xuất Chinh & Chiến Đấu",
+        "body": "Bấm vào đảo Xuất Chinh trên Động Phủ để chọn ải khiêu chiến hoặc bật Tự Động Cày Ải — nhân vật sẽ giao chiến theo lượt và tích lũy Cảm Ngộ mỗi ngày."
       },
       "8": {
         "title": "Chiến Lợi Phẩm",
-        "body": "Đánh bại yêu thú để nhận linh thạch, nguyên liệu và đôi khi là trang bị quý."
+        "body": "Đánh bại yêu thú và vượt ải để nhận Linh Thạch, nguyên liệu, Tâm Pháp và pháp bảo quý giá."
       },
       "9": {
         "title": "Bắt Đầu Thôi",
@@ -2328,7 +2334,7 @@
     "turnUnit": "hiệp",
     "statCost": "Tiêu Hao",
     "damageTypePhysical": "Vật Lý",
-    "damageTypePrimordial": "Nguyên Tổ",
+    "damageTypePrimordial": "Nguyên Tố",
     "effects": "Hiệu Ứng",
     "conditions": "Điều Kiện",
     "noConditions": "Không có điều kiện bổ sung.",
@@ -2402,6 +2408,7 @@
     "navigation": "Chức năng",
     "previewStamp": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
     "summary": "Chỉ Số Trang Bị",
+    "emptySummary": "Chưa mặc trang bị nào.",
     "bag": "Túi Trang Bị",
     "sort": "Sắp Xếp",
     "filter": "Lọc",

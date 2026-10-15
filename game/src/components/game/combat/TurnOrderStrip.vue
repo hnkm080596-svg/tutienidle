@@ -30,16 +30,35 @@ function animateTrack(time: number) {
     displayedBattle = current
     displayed.value = {}
   }
-  if (!isBattleFighting.value) displayed.value = {}
-  else if (!manager.getFreezeReasons().some(reason => reason !== 'turn-in-flight')) {
+  if (!isBattleFighting.value) {
+    if (Object.keys(displayed.value).length > 0) displayed.value = {}
+  } else if (!manager.getFreezeReasons().some(reason => reason !== 'turn-in-flight')) {
+    const prev = displayed.value
     const next: Record<string, InitiativeDisplayCycle> = {}
+    let changed = false
     for (const actor of [...(current?.players ?? []), ...(current?.enemies ?? [])]) {
       if (!actor.entity.alive) continue
       const target = isInitiativeReadyRequested(actor.id) ? 100 : actor.actionGauge / GAUGE_MAX * 100
-      next[actor.id] = advanceInitiativeCycle(displayed.value[actor.id], target, delta * getCombatPlaybackSpeed())
-      reportInitiativeTravel(actor.id, next[actor.id]!.percent)
+      const prevCycle = prev[actor.id]
+      const rawCycle = advanceInitiativeCycle(prevCycle, target, delta * getCombatPlaybackSpeed())
+      const cycle: InitiativeDisplayCycle = {
+        ...rawCycle,
+        percent: Math.round(rawCycle.percent * 10) / 10,
+      }
+      next[actor.id] = cycle
+      reportInitiativeTravel(actor.id, cycle.percent)
+      if (
+        !prevCycle ||
+        prevCycle.percent !== cycle.percent ||
+        prevCycle.finishing !== cycle.finishing ||
+        prevCycle.previousTarget !== cycle.previousTarget
+      ) {
+        changed = true
+      }
     }
-    displayed.value = next
+    if (changed || Object.keys(prev).length !== Object.keys(next).length) {
+      displayed.value = next
+    }
   }
   frameId = requestAnimationFrame(animateTrack)
 }

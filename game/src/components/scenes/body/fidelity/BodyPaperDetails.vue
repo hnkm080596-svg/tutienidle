@@ -299,8 +299,8 @@ function startPour(spec: BodyPaperPour) {
              ONE big tier - model.totalRows is the chapter's accumulated
              grants, domain-computed including the in-progress share. -->
         <dl class="body-stat-list">
-          <div v-for="row in model.totalRows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
-          <p v-if="!model.totalRows.length" class="body-empty-row">{{ t('body.noGains') }}</p>
+          <div v-for="row in (model.totalRows.length ? model.totalRows : unit.rows)" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+          <p v-if="!model.totalRows.length && !unit.rows.length" class="body-empty-row">{{ t('body.noGains') }}</p>
         </dl>
         <p v-for="(gate, i) in unit.gates" :key="i" class="body-gate">{{ gate }}</p>
         <div v-if="model.extra" class="body-extra" :class="{ done: model.extra.done }">

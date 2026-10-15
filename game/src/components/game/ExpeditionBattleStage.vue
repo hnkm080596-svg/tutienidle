@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -15,8 +15,25 @@ const manager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
 const pulse = ref(0)
 let timer: ReturnType<typeof setInterval> | undefined
-onMounted(() => { timer = setInterval(() => { pulse.value++ }, 100) })
-onBeforeUnmount(() => { if (timer) clearInterval(timer) })
+function stopTimer() {
+  if (timer !== undefined) {
+    clearInterval(timer)
+    timer = undefined
+  }
+}
+watch(
+  () => Boolean(player.autoFarmStage),
+  (active) => {
+    stopTimer()
+    if (active) {
+      timer = setInterval(() => {
+        if (typeof document === 'undefined' || !document.hidden) pulse.value++
+      }, 200)
+    }
+  },
+  { immediate: true },
+)
+onBeforeUnmount(stopTimer)
 const view = computed(() => {
   stateVersion.value
   pulse.value

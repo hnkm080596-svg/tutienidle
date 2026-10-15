@@ -18,7 +18,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'kiem_quang',
     name: 'Kiếm Quang',
-    description: 'Kiếm tâm sáng như sao chiều. Mỗi đòn chí mạng tích 1 tầng Kiếm Mạch (+1% chí mạng, tối đa 10 tầng); đủ 10 tầng hóa Kiếm Vực 8 giây — mọi đòn đều chí mạng. Ngược lại: ngoài Kiếm Vực không được cộng chí mạng nào khác từ thiên phú.',
+    description: 'Kiếm tâm sáng như sao chiều. Mỗi đòn bạo kích tích 1 tầng Kiếm Mạch (+1% bạo kích, tối đa 10 tầng); đủ 10 tầng hóa Kiếm Vực 8 lượt — mọi đòn đều bạo kích. Ngược lại: ngoài Kiếm Vực không được cộng bạo kích nào khác từ thiên phú.',
     rarity: 'thien',
     weight: 4,
     tags: ['combat', 'skill'],
@@ -27,7 +27,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'pha_giap',
     name: 'Phá Giáp',
-    description: 'Giáp địch chỉ là lớp vỏ chờ kiếm gọt. Mỗi đòn trúng tích 1 tầng Mổ Tạc (+2% xuyên giáp, tối đa 5 tầng trong trận); hết trận giữ lại một nửa tầng mang sang trận sau — đổi cảnh giới thì vết kiếm cũ tan đi. Ngược lại: chỉ số xuyên không được cộng từ nguồn thiên phú nào khác.',
+    description: 'Giáp địch chỉ là lớp vỏ chờ kiếm gọt. Mỗi đòn trúng tích 1 tầng Mổ Tạc (+2 xuyên kháng, tối đa 5 tầng trong trận); hết trận giữ lại một nửa tầng mang sang trận sau — đổi cảnh giới thì vết kiếm cũ tan đi. Ngược lại: chỉ số xuyên không được cộng từ nguồn thiên phú nào khác.',
     rarity: 'dia',
     weight: 12,
     tags: ['combat'],
@@ -41,7 +41,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'tat_phong',
     name: 'Tật Phong',
-    description: 'Gió theo sát từng đường kiếm. Mỗi lần diệt địch +2% tốc đánh, cộng dồn không giới hạn trong trận. Ngược lại: bị trúng MỘT đòn là mất sạch toàn bộ tầng đã tích.',
+    description: 'Gió theo sát từng đường kiếm. Mỗi lần diệt địch +2% Tốc Độ, cộng dồn không giới hạn trong trận. Ngược lại: bị trúng MỘT đòn là mất sạch toàn bộ tầng đã tích.',
     rarity: 'linh',
     weight: 28,
     tags: ['combat', 'risk_reward'],
@@ -50,7 +50,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'trong_kich',
     name: 'Trọng Kích',
-    description: 'Kiếm nặng mạch chậm, trúng là trúng thật. Mỗi chí mạng +2% sát thương chí mạng (tối đa 3 tầng); đủ 3 tầng bùng +18% sát thương cuối trong 8 giây rồi tích lại. Ngược lại: chỉ số này không cộng thêm từ nguồn thiên phú nào khác.',
+    description: 'Kiếm nặng mạch chậm, trúng là trúng thật. Mỗi bạo kích +2% Uy Lực Bạo Kích (tối đa 3 tầng); đủ 3 tầng bùng +18% Sát Thương Cuối trong 8 lượt rồi tích lại. Ngược lại: chỉ số này không cộng thêm từ nguồn thiên phú nào khác.',
     rarity: 'linh',
     weight: 28,
     tags: ['combat'],
@@ -59,7 +59,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'hap_linh',
     name: 'Hấp Linh',
-    description: 'Máu địch là thuốc của ngươi. Hút máu hiệu lực gấp 2.5 lần người thường — nhưng chỉ khi sinh lực dưới 50%. Trên ngưỡng đó, huyết mạch im lặng hoàn toàn.',
+    description: 'Máu địch là thuốc của ngươi. Hấp Huyết hiệu lực gấp 2.5 lần người thường — nhưng chỉ khi Khí Huyết dưới 50%. Trên ngưỡng đó, huyết mạch im lặng hoàn toàn.',
     rarity: 'pham',
     weight: 55,
     tags: ['combat', 'risk_reward'],
@@ -69,7 +69,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'thach_giap',
     name: 'Thạch Giáp',
-    description: 'Thân thể như núi đá. Mỗi lần chặn đòn thành công +2% phòng thủ (tối đa 10 tầng); đủ 10 tầng hóa Thạch Nham 5 giây — giảm 50% sát thương nhận vào. Ngược lại: ngoài Thạch Nham, phòng thủ không cộng từ nguồn thiên phú nào khác.',
+    description: 'Thân thể như núi đá. Mỗi lần chặn đòn thành công +2% Phòng Ngự (tối đa 10 tầng); đủ 10 tầng hóa Thạch Nham 5 lượt — giảm 50% sát thương nhận vào. Ngược lại: ngoài Thạch Nham, Phòng Ngự không cộng từ nguồn thiên phú nào khác.',
     rarity: 'pham',
     weight: 55,
     tags: ['defense'],
@@ -78,7 +78,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'vo_anh',
     name: 'Vô Ảnh',
-    description: 'Thân pháp vô ảnh. Mỗi lần né đòn +2% né (tối đa 5 tầng); đủ 5 tầng hóa Sát Na 6 giây — +30% chí mạng, +20% tốc đánh. Ngược lại: chỉ số né không cộng từ nguồn thiên phú nào khác.',
+    description: 'Thân pháp vô ảnh. Mỗi lần né đòn +2% Né Tránh (tối đa 5 tầng); đủ 5 tầng hóa Sát Na 6 lượt — +30% Tỉ Lệ Bạo Kích, +20% Tốc Độ. Ngược lại: chỉ số Né Tránh không cộng từ nguồn thiên phú nào khác.',
     rarity: 'linh',
     weight: 28,
     tags: ['defense', 'mechanic'],
@@ -87,7 +87,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'can_than',
     name: 'Cẩn Thận',
-    description: 'Sát tử đường mới lạnh lòng. Khi sinh lực dưới 35%: mọi sát thương nhận vào giảm 10%. Khi an toàn trên ngưỡng: ngược lại dễ chủ quan, nhận thêm 2% sát thương — lưỡi kiếm hai cạnh.',
+    description: 'Sát tử đường mới lạnh lòng. Khi Khí Huyết dưới 35%: mọi sát thương nhận vào giảm 10%. Khi an toàn trên ngưỡng: ngược lại dễ chủ quan, nhận thêm 2% sát thương — lưỡi kiếm hai cạnh.',
     rarity: 'linh',
     weight: 28,
     tags: ['defense', 'risk_reward'],
@@ -99,7 +99,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'ho_the',
     name: 'Hộ Thể',
-    description: 'Khiên này vỡ, khiên khác sinh. Khi Hộ Thuẫn vỡ hẳn: nổ sát thương quanh mình bằng 30% dung lượng khiên đã mất và Hộ Thuẫn hồi nhanh gấp nhiều lần trong 5 giây. Ngược lại: ngoài cữ bùng phát, tốc hồi khiên không đổi.',
+    description: 'Khiên này vỡ, khiên khác sinh. Khi Hộ Thuẫn vỡ hẳn: nổ sát thương quanh mình bằng 30% dung lượng khiên đã mất và Hộ Thuẫn hồi nhanh hơn qua mỗi lần chịu đòn. Ngược lại: ngoài cữ bùng phát, tốc hồi khiên không đổi.',
     rarity: 'dia',
     weight: 12,
     tags: ['defense', 'mechanic'],
@@ -108,7 +108,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'thu_phat',
     name: 'Thứ Phạt',
-    description: 'Đòn nào ăn vào, gai đó sắc thêm. Bị đánh +30% gai phản; mỗi lần phản tích 1 tầng Hận Thứ (tối đa 5, mỗi tầng +5% phản). Không bị đánh 3 giây liên tiếp — gai lụi dần từng tầng.',
+    description: 'Đòn nào ăn vào, gai đó sắc thêm. Bị đánh tích 1 tầng Hận Thứ (tối đa 5, mỗi tầng +5% Phá Thuẫn Phản Chấn). Ngược lại: chỉ phản chấn khi Hộ Thuẫn vỡ.',
     rarity: 'pham',
     weight: 55,
     tags: ['defense'],
@@ -118,7 +118,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'bat_tu_the',
     name: 'Bất Tử Thể',
-    description: 'Trời sinh mệnh cứng, một chân đã bước qua cửa tử. Mỗi trận, lần đầu nhận đòn chí mạng sẽ không chết, giữ lại 1 điểm sinh lực, tẩy mọi debuff và hóa Tử Sinh Ngộ 10 giây (+30% sát thương cuối, +20% né chí mạng). Độ Kiếp là nghi lễ thật — thiên phú này không áp dụng.',
+    description: 'Trời sinh mệnh cứng, một chân đã bước qua cửa tử. Mỗi trận, lần đầu nhận đòn chí mạng sẽ không chết, giữ lại 1 điểm Khí Huyết, tẩy mọi dị thường và hóa Tử Sinh Ngộ 10 lượt (+30% Sát Thương Cuối, +20% Kháng Bạo Kích). Độ Kiếp là nghi lễ thật — thiên phú này không áp dụng.',
     rarity: 'dia',
     weight: 12,
     tags: ['defense', 'mechanic'],

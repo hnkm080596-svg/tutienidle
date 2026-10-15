@@ -615,11 +615,11 @@ describe('TrucCoJourney - ordered journey', () => {
       // collector channel; intrinsic baseStats stay byte-unchanged.
       expect(s.player.baseStats).toEqual(intrinsicBaseStats)
       const authoredDeltas = collectBodyBaseStatDeltas(s.player)
-      expect(authoredDeltas.defense).toBe(4)
-      expect(authoredDeltas.might).toBe(5)
-      expect(authoredDeltas.maxHp).toBe(100)
-      expect(authoredDeltas.hpRegenPerTurn).toBe(3.5)
-      expect(authoredDeltas.vitality).toBe(2)
+      expect(authoredDeltas.defense).toBe(8)
+      expect(authoredDeltas.might).toBe(10)
+      expect(authoredDeltas.maxHp).toBe(250)
+      expect(authoredDeltas.hpRegenPerTurn).toBe(8)
+      expect(authoredDeltas.vitality).toBe(4)
 
       // (c) Leg H (inline): zhou_tian rejects after refinement commits
       // but before the first meridian opens - no Phap debit.

@@ -79,9 +79,10 @@ export class GameManagerTickOps {
    */
   private questRealmReconcileNeeded = false
 
-  /** R8.1 (AR-09) - realm-transition writers call this; cheap flag set. */
+  /** R8.1 (AR-09) - realm-transition writers call this; reconciles immediately when activePlayer is bound, or defers to the next tick. */
   markQuestRealmTransition(): void {
     this.questRealmReconcileNeeded = true
+    this.reconcileQuestLifecycle()
   }
 
   /**

@@ -1199,6 +1199,12 @@
     "formationHint": "Assign companions to formation slots in the Formation panel (command wheel → Tran)."
   },
   "combat": {
+    "ceremony": {
+      "skip": "Tap to reveal all results",
+      "settled": "Battle gains recorded",
+      "noRewards": "No spoils from this battle",
+      "nextBattle": "Next battle in {duration}"
+    },
     "victory": {
       "title": "★ VICTORY ★",
       "retry": "Refight",
@@ -2402,6 +2408,7 @@
     "navigation": "Functions",
     "previewStamp": "UI PREVIEW · Sample data, not wired to gameplay",
     "summary": "Equipment Stats",
+    "emptySummary": "No equipment worn yet.",
     "bag": "Gear Stash",
     "sort": "Sort",
     "filter": "Filter",

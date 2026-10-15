@@ -66,7 +66,6 @@ import { HUYEN_KIM_CHROME } from '@/ui/huyenKimChrome'
 import { PC_PAPER_ICON_PATHS } from './PcPaperIcons'
 import {
   THANH_VAN_SEASONS,
-  THANH_VAN_TIMES,
 } from '@/presentation/background/BackgroundVariant'
 import {
   DONG_FU_BUILDING_ART,
@@ -780,6 +779,8 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/currency/skill_insight.png',
   '/assets/currency/duyen_phan.png',
   '/assets/currency/technique_mastery.png',
+  // ExpeditionBattleStage background literal.
+  '/assets/backgrounds/thanh-van/spring/morning/03-battle-ground.png',
 ] as const
 
 /**
@@ -842,11 +843,9 @@ export function getUiChromeDescriptors(): readonly AssetResourceDescriptor[] {
 
 /**
  * 'ui-scenes' - every panel/backdrop/icon reachable mid-session that is
- * not in a Phaser bundle: parallax stacks, per-scene hero art, ALL Dong Fu
- * backdrop variants (the variant rotates after each battle, so warming
- * only the boot preset reopens the gap), building sprites and the full
- * item-icon catalogs. Too large for a transition deadline -
- * artWarmWiring prefetches it on committed game routes.
+ * not in a Phaser bundle: parallax stacks, per-scene hero art, building
+ * sprites and the full item-icon catalogs. Too large for a transition
+ * deadline - artWarmWiring prefetches it on committed game routes.
  */
 export function getUiSceneDescriptors(): readonly AssetResourceDescriptor[] {
   const urls: string[] = []
@@ -865,24 +864,6 @@ export function getUiSceneDescriptors(): readonly AssetResourceDescriptor[] {
   urls.push(stableSceneArtUrl('equipment-paperdoll-base', '@2x'))
 
   urls.push(...UI_SCENE_SINGLE_URLS, ...PC_PAPER_ICON_PATHS)
-
-  // Dong Fu modular backdrop: every season/time file is reachable once
-  // the variant rotates (selectNextThanhVanVariant after each battle),
-  // so enumerate the full matrix, not just the current variant.
-  for (const season of THANH_VAN_SEASONS) {
-    for (const time of THANH_VAN_TIMES) {
-      for (const layer of dongFuLayerList({ season, time })) urls.push(layer.url)
-    }
-  }
-
-  // Thanh Van modular backdrop (combat/victory/defeat): the variant also
-  // rotates after each battle, so the full season/time matrix is reachable
-  // - warming only the boot preset reopens the lazy-fetch gap mid-session.
-  for (const season of THANH_VAN_SEASONS) {
-    for (const time of THANH_VAN_TIMES) {
-      for (const layer of thanhVanLoadList({ season, time })) urls.push(layer.url)
-    }
-  }
 
   // Dong Fu building sprites + shared season overlay sheets.
   for (const entry of DONG_FU_BUILDING_ART) {

@@ -27,7 +27,54 @@ const OUT = path.resolve(get('--out', 'cdn-assets'))
 const WEBP = args.includes('--webp')
 const MIN_KB = Number(get('--min-kb', '0'))
 
-const COPY_EXTENSIONS = new Set(['.json', '.ogg', '.mp3', '.svg', '.webm', '.txt'])
+const COPY_EXTENSIONS = new Set([
+  '.json',
+  '.ogg',
+  '.mp3',
+  '.wav',
+  '.svg',
+  '.webm',
+  '.txt',
+  '.ttf',
+  '.otf',
+  '.woff',
+  '.woff2',
+  '.glb',
+])
+
+const USED_VFX_SPRITESHEET_FILES = new Set([
+  'Slash_21.png',
+  'Slash_21.json',
+  'SFFXEP 09.png',
+  'SFFXEP 09.json',
+  '火 (20).png',
+  '火 (20).json',
+  '火 (9).png',
+  '火 (9).json',
+])
+
+const IGNORED_REL_PREFIXES = [
+  'backgrounds/thanh-van/modular/previews/',
+  'backgrounds/dong-fu/modular/previews/',
+  'buildings/dong-fu/separated-v1/preview-cells/',
+  'buildings/dong-fu/v2/previews/',
+  'buildings/dong-fu/master-v1-crops/',
+  'buildings/dong-fu/master-v1-masks/',
+  'ui/huyen-kim/_source/',
+  'ui/huyen-kim/preview/',
+  'ui/tien-hiep-2026-10/drafts/',
+]
+
+function shouldSkipAsset(relPosix) {
+  for (const prefix of IGNORED_REL_PREFIXES) {
+    if (relPosix.startsWith(prefix)) return true
+  }
+  if (relPosix.startsWith('vfx/spritesheets/')) {
+    const base = path.posix.basename(relPosix)
+    if (!USED_VFX_SPRITESHEET_FILES.has(base)) return true
+  }
+  return false
+}
 
 const walk = function* (dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -40,14 +87,20 @@ const walk = function* (dir) {
   }
 }
 
-const stats = { files: 0, optimized: 0, copied: 0, skippedSmall: 0, srcBytes: 0, outBytes: 0 }
+const stats = { files: 0, optimized: 0, copied: 0, skippedSmall: 0, pruned: 0, prunedBytes: 0, srcBytes: 0, outBytes: 0 }
 const failures = []
 
 for (const file of walk(SRC)) {
   const rel = path.relative(SRC, file)
+  const relPosix = rel.split(path.sep).join('/')
+  const srcSize = statSync(file).size
+  if (shouldSkipAsset(relPosix)) {
+    stats.pruned += 1
+    stats.prunedBytes += srcSize
+    continue
+  }
   const dest = path.join(OUT, rel)
   mkdirSync(path.dirname(dest), { recursive: true })
-  const srcSize = statSync(file).size
   stats.files += 1
   stats.srcBytes += srcSize
 

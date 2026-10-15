@@ -689,6 +689,8 @@ export class GameManagerTurnBattleOps {
     } else if (battle.state === 'fighting') {
       this.drainBoundaryQueueIfIdle()
 
+      const hadPendingSpawns = (battle.wave?.pendingEnemySpawns.length ?? 0) > 0
+
       // tickPacing NEVER resolves a turn any more, in ANY mode. Resolution is
       // the pipeline's job; leaving `resolve = !isPresentationActive()` here
       // would give turn-end a second owner, which is the defect this spec
@@ -725,42 +727,54 @@ export class GameManagerTurnBattleOps {
         this.beginTurnPipeline(readyActor, 'ready')
       }
 
-      // Combat Art Pipeline - emit the LIVE entity snapshot every step during
-      // 'fighting'. Read through the field: a headless turn can resolve inside
-      // beginTurnPipeline above and auto-repeat can replace the battle.
+      // Combat Art Pipeline - emit the LIVE entity snapshot when an actor
+      // acted, wave spawns are pending/materialized, battle state changed, or
+      // on the first post-mint step of a battle instance. Pure intermediate
+      // ATB gauge steps with no state/spawn/status changes skip the clone+diff.
       if (this.turnBattle) {
-        emitTurnBattleEntitySnapshot(this.deps.eventBus, this.turnBattle)
-        // Phase A6 (9.5 #7) -- status-icon feed. `before` is the LAST-EMITTED
-        // snapshot for this battle instance (empty on first observation:
-        // buffs applied at construction/intro/countdown attach then). A
-        // replaced battle (auto-repeat) resets to empty -- the scene clears
-        // stale icons itself on battle transition, and emitting removed
-        // events for a dead battle would be noise.
-        const statusBefore =
-          this.statusVfxBattle === this.turnBattle
-            ? this.statusVfxSnapshot
-            : new Map<string, TurnStatusSnapshotEntry>()
-        // buff2 M4 -- status reads bind the minted authority + battle
-        // registry; before-mint steps (intro/countdown) have neither, so
-        // the diff waits for the first post-mint step exactly like the
-        // legacy pools' own construction-time emptiness.
-        if (this.turnRuntime !== undefined && this.battleBuffRegistry !== undefined) {
-          this.statusVfxSnapshot = diffAndEmitTurnStatusVfx(
-            this.deps.eventBus,
-            this.turnBattle,
-            statusBefore,
-            this.turnRuntime.buffs,
-            this.battleBuffRegistry,
-          )
-        }
-        this.statusVfxBattle = this.turnBattle
+        const hasPendingSpawns = (this.turnBattle.wave?.pendingEnemySpawns.length ?? 0) > 0
+        const isFirstPostMintStep = this.statusVfxBattle !== this.turnBattle
+        const stateChanged = this.turnBattle.state !== 'fighting'
+        const shouldSyncSnapshot =
+          readyActor !== null || hadPendingSpawns || hasPendingSpawns || isFirstPostMintStep || stateChanged
 
-        // Canonical-seals S5.3 -- reaction_resolved/reaction_skipped
-        // reach the UI through the same post-step boundary as the
-        // status feed: drain the journal's NEW reaction events and
-        // re-emit them on the eventBus. Observational only. W6 extends
-        // the drain to proc executions (reflect/on-hit).
-        this.drainPresentationEvents()
+        if (shouldSyncSnapshot) {
+          emitTurnBattleEntitySnapshot(this.deps.eventBus, this.turnBattle)
+        }
+
+        if (readyActor !== null || isFirstPostMintStep || stateChanged) {
+          // Phase A6 (9.5 #7) -- status-icon feed. `before` is the LAST-EMITTED
+          // snapshot for this battle instance (empty on first observation:
+          // buffs applied at construction/intro/countdown attach then). A
+          // replaced battle (auto-repeat) resets to empty -- the scene clears
+          // stale icons itself on battle transition, and emitting removed
+          // events for a dead battle would be noise.
+          const statusBefore =
+            this.statusVfxBattle === this.turnBattle
+              ? this.statusVfxSnapshot
+              : new Map<string, TurnStatusSnapshotEntry>()
+          // buff2 M4 -- status reads bind the minted authority + battle
+          // registry; before-mint steps (intro/countdown) have neither, so
+          // the diff waits for the first post-mint step exactly like the
+          // legacy pools' own construction-time emptiness.
+          if (this.turnRuntime !== undefined && this.battleBuffRegistry !== undefined) {
+            this.statusVfxSnapshot = diffAndEmitTurnStatusVfx(
+              this.deps.eventBus,
+              this.turnBattle,
+              statusBefore,
+              this.turnRuntime.buffs,
+              this.battleBuffRegistry,
+            )
+          }
+          this.statusVfxBattle = this.turnBattle
+
+          // Canonical-seals S5.3 -- reaction_resolved/reaction_skipped
+          // reach the UI through the same post-step boundary as the
+          // status feed: drain the journal's NEW reaction events and
+          // re-emit them on the eventBus. Observational only. W6 extends
+          // the drain to proc executions (reflect/on-hit).
+          this.drainPresentationEvents()
+        }
       }
     }
 

@@ -182,6 +182,7 @@ function playOrContinue() {
 const gateKey = ref('')
 const gateDenied = ref(false)
 const gateUnlocked = computed(() => isMasterSession())
+const showMasterGate = !import.meta.env.PROD || import.meta.env.VITE_ALLOW_PROD_MASTER === 'true'
 
 function submitGate() {
   if (!unlockMasterGate(gateKey.value)) {
@@ -217,8 +218,8 @@ function submitGate() {
       />
       <LoginUpgradeSection :resume-ready="resumeReady" :stored-guest-session="storedGuestSession" />
       <LoginLocaleChips />
-      <!-- Master gate: one discreet key row under the credential form. -->
-      <form class="master-gate" data-testid="master-gate" @submit.prevent="submitGate">
+      <!-- Master gate: one discreet key row under the credential form (non-prod only unless explicitly enabled). -->
+      <form v-if="showMasterGate" class="master-gate" data-testid="master-gate" @submit.prevent="submitGate">
         <label class="master-gate__label" for="master-gate-key">{{ t('onboarding.auth.masterGate.label') }}</label>
         <input
           id="master-gate-key"

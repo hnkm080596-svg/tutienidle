@@ -381,7 +381,7 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
       )
       .toBe('victory')
 
-    const victory = page.locator('.combat-victory-panel')
+    const victory = page.locator('.result-ceremony--victory')
     await expect(victory).toBeVisible({ timeout: 30_000 })
     await waitForPresentationIdle(page)
     await shot(page, '15-victory')
@@ -425,7 +425,7 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
       )
       .toBe('defeat')
 
-    const defeat = page.locator('.combat-defeat-panel')
+    const defeat = page.locator('.result-ceremony--defeat')
     // The panel auto-returns home - capture immediately on mount.
     await expect(defeat).toBeVisible({ timeout: 30_000 })
     await shot(page, '16-defeat')

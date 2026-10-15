@@ -1,4 +1,4 @@
-﻿# =========================
+# =========================
 # Local secrets
 # =========================
 APIKey
@@ -71,3 +71,7 @@ game/.playwright-cli/
 
 # C2C bridge state (local session artifacts)
 .c2c/
+
+# Archived unused assets moved out of game/public/
+unused-assets-archive/
+

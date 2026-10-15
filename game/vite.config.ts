@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url'
 import { execFileSync } from 'node:child_process'
+import { cpSync, existsSync, readdirSync, rmSync } from 'node:fs'
 import path from 'node:path'
 
 import { defineConfig, type Plugin } from 'vite'
@@ -62,7 +63,7 @@ const PRODUCTION_CSP = [
   "style-src 'self' 'unsafe-inline'",
   withAssetOrigin("img-src 'self' data: blob:"),
   withAssetOrigin("media-src 'self' data: blob:"),
-  "font-src 'self' data:",
+  withAssetOrigin("font-src 'self' data:"),
   withAssetOrigin("connect-src 'self' https://*.supabase.co wss://*.supabase.co"),
   "worker-src 'self' blob:",
   "object-src 'none'",
@@ -109,6 +110,62 @@ function buildIdentityManifestPlugin(): Plugin {
   }
 }
 
+const USED_VFX_SPRITESHEET_FILES = new Set([
+  'Slash_21.png',
+  'Slash_21.json',
+  'SFFXEP 09.png',
+  'SFFXEP 09.json',
+  '火 (20).png',
+  '火 (20).json',
+  '火 (9).png',
+  '火 (9).json',
+])
+
+// Prunes raw/staging/preview assets copied from public/ into outDir so web
+// and Cloudflare deployments do not carry ~1.65 GB of unreferenced files.
+function pruneUnusedPublicAssetsPlugin(): Plugin {
+  let resolvedOutDir = path.join(gameRoot, 'dist')
+  return {
+    name: 'tutien-prune-unused-public-assets',
+    apply: 'build',
+    configResolved(config) {
+      resolvedOutDir = path.resolve(gameRoot, config.build.outDir)
+    },
+    closeBundle() {
+      const dirsToRemove = [
+        path.join(resolvedOutDir, 'NEWSPRITE'),
+        path.join(resolvedOutDir, 'assets', 'backgrounds', 'thanh-van', 'modular', 'previews'),
+        path.join(resolvedOutDir, 'assets', 'backgrounds', 'dong-fu', 'modular', 'previews'),
+        path.join(resolvedOutDir, 'assets', 'buildings', 'dong-fu', 'separated-v1', 'preview-cells'),
+        path.join(resolvedOutDir, 'assets', 'buildings', 'dong-fu', 'v2', 'previews'),
+        path.join(resolvedOutDir, 'assets', 'buildings', 'dong-fu', 'master-v1-crops'),
+        path.join(resolvedOutDir, 'assets', 'buildings', 'dong-fu', 'master-v1-masks'),
+        path.join(resolvedOutDir, 'assets', 'ui', 'huyen-kim', '_source'),
+        path.join(resolvedOutDir, 'assets', 'ui', 'huyen-kim', 'preview'),
+        path.join(resolvedOutDir, 'assets', 'ui', 'tien-hiep-2026-10', 'drafts'),
+      ]
+      for (const dir of dirsToRemove) {
+        if (existsSync(dir)) {
+          rmSync(dir, { recursive: true, force: true })
+        }
+      }
+      const vfxSpritesheetsDir = path.join(resolvedOutDir, 'assets', 'vfx', 'spritesheets')
+      if (existsSync(vfxSpritesheetsDir)) {
+        for (const entry of readdirSync(vfxSpritesheetsDir)) {
+          if (!USED_VFX_SPRITESHEET_FILES.has(entry)) {
+            rmSync(path.join(vfxSpritesheetsDir, entry), { recursive: true, force: true })
+          }
+        }
+      }
+      const cdnAssetsDir = path.join(gameRoot, 'cdn-assets')
+      const outAssetsDir = path.join(resolvedOutDir, 'assets')
+      if (existsSync(cdnAssetsDir) && existsSync(outAssetsDir)) {
+        cpSync(cdnAssetsDir, outAssetsDir, { recursive: true, force: true })
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   server: {
@@ -134,6 +191,7 @@ export default defineConfig({
     vueDevTools(),
     buildIdentityManifestPlugin(),
     productionCspPlugin(),
+    pruneUnusedPublicAssetsPlugin(),
     ...(isElectron
       ? [
           electron({
@@ -178,10 +236,20 @@ export default defineConfig({
             ) {
               return 'vendor'
             }
+            if (
+              /[\\/]node_modules[\\/](tone|standardized-audio-context|automation-events|tslib)[\\/]/.test(
+                id,
+              )
+            ) {
+              return 'audio-vendor'
+            }
             return undefined
           }
-          if (/[\\/]src[\\/]data[\\/]/.test(id)) {
+          if (/[\\/]src[\\/](data|locales)[\\/]/.test(id)) {
             return 'game-data'
+          }
+          if (/[\\/]src[\\/]core[\\/](battle|skilldef|combat|reaction|buff2)[\\/]/.test(id)) {
+            return 'combat-core'
           }
           return undefined
         },

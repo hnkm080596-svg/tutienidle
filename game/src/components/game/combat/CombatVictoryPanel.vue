@@ -4,7 +4,7 @@
 // renders the decomposed scroll in components/scenes/victory/*.
 // Presentation restructure only - same countdown contract (manual:
 // retry+continue; auto: locked retry with countdown).
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
@@ -14,6 +14,11 @@ import { usePlayerStore } from '@/stores/player'
 import { formatDuration } from '@/core/format/formatDuration'
 import { resolveNextProgressStage } from '@/core/stage/ProgressStageResolver'
 import VictoryScene from '@/components/scenes/victory/VictoryScene.vue'
+import CombatResultCeremony from '@/components/scenes/combat/result-ceremony/CombatResultCeremony.vue'
+import { useVictorySceneModel } from '@/components/scenes/victory/useVictorySceneModel'
+import GameButton from '@/components/common/GameButton.vue'
+
+withDefaults(defineProps<{ variant?: 'classic' | 'ceremony' }>(), { variant: 'classic' })
 
 // Combat UI Redesign muc 14-19 -- thang thi hien reward tich luy ca
 // tran (xem GameManager.getBattleRewardSummary()). Auto Battle OFF:
@@ -38,6 +43,12 @@ const summary = computed(() => {
   stateVersion.value
 
   return gameManager.getBattleRewardSummary()
+})
+
+const ceremonyModel = useVictorySceneModel(summary)
+let disposed = false
+onBeforeUnmount(() => {
+  disposed = true
 })
 
 async function refight(): Promise<boolean> {
@@ -91,7 +102,9 @@ const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryC
       const previousStageId = ui.selectedStageId
       ui.selectedStageId = nextStageId
 
-      if (!(await refight())) {
+      const started = await refight()
+      if (disposed) return
+      if (!started) {
         ui.selectedStageId = previousStageId
         ui.battleRunMode = 'manual'
       }
@@ -107,7 +120,9 @@ const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryC
     }
   }
 
-  if (!(await refight())) {
+  const started = await refight()
+  if (disposed) return
+  if (!started) {
     ui.battleRunMode = 'manual'
   }
 })
@@ -123,7 +138,25 @@ onMounted(() => {
 </script>
 
 <template>
+  <CombatResultCeremony
+    v-if="variant === 'ceremony'"
+    class="combat-victory-ceremony"
+    outcome="victory"
+    :stage-name="ceremonyModel.stageName.value"
+    :slots="ceremonyModel.slots.value"
+    :growth="ceremonyModel.growth.value"
+    :fast="ui.battleRunMode !== 'manual'"
+  >
+    <template #actions>
+      <template v-if="ui.battleRunMode === 'manual'">
+        <GameButton class="combat-victory-panel__retry" variant="secondary" @click="retryNow">{{ t('combat.victory.retry') }}</GameButton>
+        <GameButton class="combat-victory-panel__continue" @click="continueToStageSelect">{{ t('combat.victory.continue') }}</GameButton>
+      </template>
+      <p v-else class="ceremony-auto-countdown" role="status">{{ t('combat.ceremony.nextBattle', { duration: countdownLabel }) }}</p>
+    </template>
+  </CombatResultCeremony>
   <VictoryScene
+    v-else
     class="combat-victory-panel"
     :summary="summary"
     :run-mode="ui.battleRunMode"

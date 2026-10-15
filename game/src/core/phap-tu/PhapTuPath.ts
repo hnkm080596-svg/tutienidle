@@ -135,10 +135,10 @@ export const SPELL_PATH_MAX_THE = 5
  * empowerment and the The cap come online with the same purchase.
  */
 export const HOA_THE_NODE_ID = 'hoa_the'
-// Minh tune 2026-10-07: 0.35 -> 0.10 per level (max lv4 = 40% per
-// landed cast) - the The loop stays a slow-burn engine, not a
-// reliable per-fight trigger.
-export const THE_GAIN_CHANCE_PER_LEVEL = 0.10
+// Retuned 2026-10-16: 0.10 -> 0.15 per level (max lv4 = 60% per
+// landed cast) - restrained at low levels while triggering ~1 time per
+// boss fight at lv4.
+export const THE_GAIN_CHANCE_PER_LEVEL = 0.15
 
 /** Battle-scoped The-cap authority (reads onto entity.maxThe at
     participant build via CombatBuild -> runtime.resolveMaxThe).

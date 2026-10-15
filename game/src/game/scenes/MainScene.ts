@@ -386,6 +386,8 @@ export class MainScene extends Phaser.Scene {
 
     if (key && this.anims.exists(key) && this.player.sprite.anims.currentAnim?.key !== key) {
       this.player.sprite.play(key)
+      // DongFuStage DOM overlay covers MainScene completely; pause frame stepping to save CPU/GPU while keeping currentAnim key intact for tests.
+      this.player.sprite.anims.pause?.()
     }
   }
 

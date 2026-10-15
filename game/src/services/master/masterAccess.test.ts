@@ -46,6 +46,23 @@ describe('master gate (VITE_MASTER_GATE_KEY)', () => {
     master.recordSessionLoginId('someone-else')
     expect(master.isMasterSession()).toBe(false)
   })
+
+  it('locks out both gate key and admin loginId in production unless VITE_ALLOW_PROD_MASTER is set', async () => {
+    vi.resetModules()
+    vi.unstubAllEnvs()
+    vi.stubEnv('PROD', true)
+    vi.stubEnv('VITE_MASTER_GATE_KEY', 'gate-key-123')
+    const masterProdLocked = await import('./masterAccess')
+    expect(masterProdLocked.unlockMasterGate('gate-key-123')).toBe(false)
+    masterProdLocked.recordSessionLoginId('admin')
+    expect(masterProdLocked.isMasterSession()).toBe(false)
+
+    vi.resetModules()
+    vi.stubEnv('VITE_ALLOW_PROD_MASTER', 'true')
+    const masterProdOptIn = await import('./masterAccess')
+    expect(masterProdOptIn.unlockMasterGate('gate-key-123')).toBe(true)
+    expect(masterProdOptIn.isMasterSession()).toBe(true)
+  })
 })
 
 describe('masterToleratedSaveResult', () => {

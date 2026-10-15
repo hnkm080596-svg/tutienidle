@@ -58,7 +58,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     name: 'Luyện Bì',
     description: 'Rèn luyện lớp da và khả năng chịu đựng bên ngoài.',
     cap: 50,
-    baseGains: { defense: 4 }, // P7-M-F PLACEHOLDER - pending dedicated balance phase
+    baseGains: { defense: 8 },
     requiredRealmLevel: 2,
   },
   {
@@ -66,7 +66,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     name: 'Luyện Nhục',
     description: 'Rèn cơ nhục.',
     cap: 175,
-    baseGains: { might: 5 }, // P7-M-F PLACEHOLDER - pending dedicated balance phase
+    baseGains: { might: 10 },
     requiredRealmLevel: 4,
   },
   {
@@ -74,7 +74,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     name: 'Luyện Cốt',
     description: 'Rèn xương và nền tảng thân thể.',
     cap: 615,
-    baseGains: { maxHp: 40 }, // P7-M-F PLACEHOLDER - pending dedicated balance phase
+    baseGains: { maxHp: 100 },
     requiredRealmLevel: 6,
   },
   {
@@ -82,7 +82,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     name: 'Luyện Huyết',
     description: 'Rèn khí huyết.',
     cap: 2150,
-    baseGains: { hpRegenPerTurn: 1.5 }, // P7-M-F PLACEHOLDER - pending dedicated balance phase
+    baseGains: { hpRegenPerTurn: 3 },
     requiredRealmLevel: 8,
   },
   {
@@ -94,7 +94,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     // vitality (The Chat, tang Attribute goc) thay vi 1 stat mitigation
     // truc tiep: di qua dung pipeline deriveAttributeModifiers() san co
     // (StatCalculator.ts), tu dan ra maxHp/hpRegen/enduranceThreshold.
-    baseGains: { vitality: 2 }, // P7-M-F PLACEHOLDER - pending dedicated balance phase
+    baseGains: { vitality: 4 },
     requiredRealmLevel: 10,
   },
   {
@@ -102,7 +102,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     name: 'Luyện Mạch',
     description: 'Khai thông kinh mạch — chuẩn bị Nhập Đạo.',
     cap: 8000,
-    baseGains: { maxHp: 60, hpRegenPerTurn: 2 }, // P7-M-F PLACEHOLDER - pending dedicated balance phase
+    baseGains: { maxHp: 150, hpRegenPerTurn: 5 },
     requiredRealmLevel: 12,
   },
 ]

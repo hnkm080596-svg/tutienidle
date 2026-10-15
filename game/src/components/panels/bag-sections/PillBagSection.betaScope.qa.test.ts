@@ -108,7 +108,7 @@ describe('PillBagSection - active-effects chip scope', () => {
     expect(rows[0]!.querySelector('.pill-active__name')?.textContent?.trim())
       .toBe('Tụ Linh Đan')
     expect(rows[0]!.querySelector('.pill-active__value')?.textContent?.trim())
-      .toBe('+5 HP/s, +3 MP/s')
+      .toBe('+5 Khí Huyết/lượt, +3 Linh Lực/lượt')
     unmount()
   })
 

@@ -43,17 +43,28 @@ function roleLabel(role: TurnSkillSlotRole): string {
 // Bang 9.5 #5 - nhan hien thi do CombatSkillSlot tu resolve qua
 // displayLabel prop (skillName -> fallback emptyLabel). Bar chi truyen
 // metadata; tooltip qua tooltipFor() ben duoi.
+const tooltipCache = new Map<string, TooltipContent>()
+
 function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefined {
+  if (!entry.skillId && !entry.skillName) return undefined
   const template = gameManager.catalogOps.getSkillTemplate(entry.skillId)
   const name = template?.name ?? entry.skillName
   if (!name) return undefined
   const level = gameManager.progressionOps.getSkillLevel(entry.skillId, player.$state)
   const cap = gameManager.progressionOps.getSkillCoreMaxLevel(entry.skillId)
-  return { kind: 'technique', name, imagePath: entry.skillIcon,
+  const cacheKey = `${entry.skillId}|${level}|${cap}|${name}|${entry.skillIcon ?? ''}|${entry.skillDescription ?? ''}`
+  const cached = tooltipCache.get(cacheKey)
+  if (cached) return cached
+  const built: TooltipContent = {
+    kind: 'technique',
+    name,
+    imagePath: entry.skillIcon,
     levelLabel: `${t('skill.level')}: ${level} / ${cap}`,
     description: template?.description ?? entry.skillDescription,
     sections: [{ label: t('skill.stats'), rows: projectSkillStatRows(template, key => t(key)) }],
   }
+  tooltipCache.set(cacheKey, built)
+  return built
 }
 
 const props = defineProps<{ card?: boolean }>()
@@ -132,7 +143,7 @@ function entryAt(index: number): TurnSkillPresentationEntry {
 // role slot drops out of the row.
 const visibleSlots = computed(() =>
   roleRail.value
-    .map((entry, index) => ({ role: entry.role, index, state: entry.state }))
+    .map((entry, index) => ({ role: entry.role, index, state: entry.state, entry: entryAt(index) }))
     .filter(
       (slot) =>
         (props.card || slot.state !== 'scope-hidden') && !(slot.role === 'basic' && showOrbPicker.value),
@@ -211,29 +222,29 @@ function onDynamicBasicClick(defId: string): void {
         <button
           type="button"
           class="turn-combat-skill-bar__slot-button"
-          :class="{ 'is-tappable': slot.state !== 'scope-hidden' && isTappable(entryAt(slot.index)) }"
-          :disabled="!card && (slot.state === 'scope-hidden' || !isTappable(entryAt(slot.index)))"
-          :aria-disabled="slot.state === 'scope-hidden' || !isTappable(entryAt(slot.index))"
+          :class="{ 'is-tappable': slot.state !== 'scope-hidden' && isTappable(slot.entry) }"
+          :disabled="!card && (slot.state === 'scope-hidden' || !isTappable(slot.entry))"
+          :aria-disabled="slot.state === 'scope-hidden' || !isTappable(slot.entry)"
           :aria-label="slot.state === 'scope-hidden' ? t('combat.overlay.skillBar.empty') : t('combat.overlay.skillBar.use', { name: roleLabel(slot.role) })"
-          @click="slot.state !== 'scope-hidden' && isTappable(entryAt(slot.index)) && tapSlot(slot.role)"
+          @click="slot.state !== 'scope-hidden' && isTappable(slot.entry) && tapSlot(slot.role)"
         >
           <CombatSkillSlot :show-caption="!card"
             variant="circle"
             :circle-frame-src="card ? cardOrbFrameUrl : undefined"
-            :is-locked="slot.state === 'scope-hidden' || entryAt(slot.index).state === 'locked' || entryAt(slot.index).state === 'empty'"
-            :has-skill="!!entryAt(slot.index).skillId"
-            :auto-active="slot.role === 'basic' && !!entryAt(slot.index).skillId && entryAt(slot.index).state !== 'locked' && entryAt(slot.index).state !== 'empty'"
+            :is-locked="slot.state === 'scope-hidden' || slot.entry.state === 'locked' || slot.entry.state === 'empty'"
+            :has-skill="!!slot.entry.skillId"
+            :auto-active="slot.role === 'basic' && !!slot.entry.skillId && slot.entry.state !== 'locked' && slot.entry.state !== 'empty'"
             :empty-label="slot.state === 'scope-hidden' ? t('combat.overlay.skillBar.empty') : roleLabel(slot.role)"
-            :display-label="slot.state === 'scope-hidden' ? t('combat.overlay.skillBar.empty') : card ? roleLabel(slot.role) : entryAt(slot.index).skillName"
-            :display-icon="slot.state === 'scope-hidden' ? undefined : entryAt(slot.index).skillIcon"
-            :remaining="entryAt(slot.index).cooldownRemaining"
-            :total="entryAt(slot.index).cooldownTotal"
-            :is-masked="entryAt(slot.index).state === 'cooldown'"
-            :resource-cost="entryAt(slot.index).resourceCost"
-            :is-insufficient-resource="entryAt(slot.index).state === 'blocked_resource'"
-            :tooltip-override="slot.state === 'scope-hidden' ? undefined : tooltipFor(entryAt(slot.index))"
+            :display-label="slot.state === 'scope-hidden' ? t('combat.overlay.skillBar.empty') : card ? roleLabel(slot.role) : slot.entry.skillName"
+            :display-icon="slot.state === 'scope-hidden' ? undefined : slot.entry.skillIcon"
+            :remaining="slot.entry.cooldownRemaining"
+            :total="slot.entry.cooldownTotal"
+            :is-masked="slot.entry.state === 'cooldown'"
+            :resource-cost="slot.entry.resourceCost"
+            :is-insufficient-resource="slot.entry.state === 'blocked_resource'"
+            :tooltip-override="slot.state === 'scope-hidden' ? undefined : tooltipFor(slot.entry)"
           />
-          <img v-if="!card" class="turn-combat-skill-bar__orb-frame" :src="entryAt(slot.index).state === 'ready' ? skillOrbFrameUrl : inactiveOrbFrameUrl" alt="" aria-hidden="true" />
+          <img v-if="!card" class="turn-combat-skill-bar__orb-frame" :src="slot.entry.state === 'ready' ? skillOrbFrameUrl : inactiveOrbFrameUrl" alt="" aria-hidden="true" />
         </button>
       </template>
 

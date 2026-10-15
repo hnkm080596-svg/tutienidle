@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
@@ -14,6 +14,11 @@ import { useVictorySceneModel } from '@/components/scenes/victory/useVictoryScen
 import type { VictorySlotView } from '@/components/scenes/victory/victorySceneModel'
 import VictorySectionPlaque from '@/components/scenes/victory/VictorySectionPlaque.vue'
 import VictoryRewardSlots from '@/components/scenes/victory/VictoryRewardSlots.vue'
+import CombatResultCeremony from '@/components/scenes/combat/result-ceremony/CombatResultCeremony.vue'
+import GameButton from '@/components/common/GameButton.vue'
+import { formatDuration } from '@/core/format/formatDuration'
+
+withDefaults(defineProps<{ variant?: 'classic' | 'ceremony' }>(), { variant: 'classic' })
 
 // Combat UI Redesign muc 18/23, mo rong 2026-08-22 -- truoc day CHI 1
 // nut "Ve Dong Phu" (khong danh lai). Gio them "Tai Chien" (LUON danh
@@ -87,9 +92,16 @@ const isCultivationGap = computed(() => {
   return stage?.requiredRealmLevel !== undefined && player.realmLevel <= stage.requiredRealmLevel
 })
 
-const isAutoRetrying = ref(false)
+const isAutoRetrying = ref(ui.battleRunMode === 'repeat')
+let retryPending = false
+let disposed = false
+
+onBeforeUnmount(() => {
+  disposed = true
+})
 
 async function refight(): Promise<void> {
+  if (retryPending || disposed) return
   if (!ui.selectedStageId) {
     isAutoRetrying.value = false
     return
@@ -102,14 +114,18 @@ async function refight(): Promise<void> {
     return
   }
 
-  const started = await startBattle(stage)
-
-  if (!started) {
-    // A refused/failed start must not leave the retry button permanently
-    // disabled (T1-5): re-enable it and disarm auto-retry, same rollback
-    // contract as the victory panel's !refight() branch.
-    isAutoRetrying.value = false
-    ui.battleRunMode = 'manual'
+  retryPending = true
+  try {
+    const started = await startBattle(stage)
+    if (!started && !disposed) {
+      // A refused/failed start must not leave the retry button permanently
+      // disabled (T1-5): re-enable it and disarm auto-retry, same rollback
+      // contract as the victory panel's !refight() branch.
+      isAutoRetrying.value = false
+      ui.battleRunMode = 'manual'
+    }
+  } finally {
+    retryPending = false
   }
 }
 
@@ -124,7 +140,8 @@ function clearTimers() {
 }
 
 function retryNow() {
-  clearTimers()
+  stopAutoRetryCountdown()
+  isAutoRetrying.value = false
   void refight()
 }
 
@@ -147,7 +164,25 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="combat-defeat-panel">
+  <CombatResultCeremony
+    v-if="variant === 'ceremony'"
+    class="combat-defeat-ceremony"
+    outcome="defeat"
+    :stage-name="model.stageName.value"
+    :slots="model.slots.value"
+    :growth="model.growth.value"
+    :fast="isAutoRetrying"
+  >
+    <template #actions>
+      <GameButton class="combat-defeat-panel__retry" variant="danger" @click="retryNow">
+        {{ t('combat.defeat.retry') }}<template v-if="isAutoRetrying"> {{ t('combat.defeat.retryCountdown', { duration: formatDuration(retryCountdown, 'countdown') }) }}</template>
+      </GameButton>
+      <GameButton class="combat-defeat-panel__return" @click="returnHome">
+        {{ t('combat.defeat.returnHome') }} {{ t('combat.defeat.returnCountdown', { duration: formatDuration(returnCountdown, 'countdown') }) }}
+      </GameButton>
+    </template>
+  </CombatResultCeremony>
+  <div v-else class="combat-defeat-panel">
     <header class="combat-defeat-panel__hero" data-hk-region="title">
       <h1 class="combat-defeat-panel__title">
         <img :src="titleUrl" :alt="t('combat.defeat.title')" />

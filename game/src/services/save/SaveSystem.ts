@@ -343,6 +343,7 @@ function detachSaveValue<T>(value: T): T {
 }
 
 export function buildGameSave(player: PlayerData, gameManager: GameManager): GameSave {
+  const receiptSnapshot = gameManager.materialBag.receiptSnapshot()
   return {
     version: CURRENT_SAVE_VERSION,
 
@@ -359,7 +360,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
 
     skills: detachSaveValue(gameManager.skillManager.getAll()),
 
-    materialReceipts: detachSaveValue(gameManager.materialBag.receiptSnapshot()),
+    materialReceipts: detachSaveValue(receiptSnapshot),
 
     materials: detachSaveValue(gameManager.materialBag.getAll().map((stack) => ({
       materialId: stack.material.id,
@@ -405,7 +406,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
     alchemyJobs: detachSaveValue(gameManager.alchemySystem.getJobs()),
 
     quests: detachSaveValue({ ...gameManager.questManager.getState(),
-      materialReceipts: gameManager.questManager.materialReceiptSnapshot(gameManager.materialBag.receiptSnapshot()),
+      materialReceipts: gameManager.questManager.materialReceiptSnapshot(receiptSnapshot),
     }),
 
     // R7 (AR-08) - detached decompose snapshot (getSaveState returns a

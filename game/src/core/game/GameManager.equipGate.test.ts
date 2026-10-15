@@ -48,7 +48,7 @@ describe('GameManager — equipItem() grade gate (rework P5, Task 16)', () => {
     expect(instance.equipped).toBe(false)
   })
 
-  it('item phẩm thấp hơn cảnh giới người chơi 1 bậc → grade_mismatch', () => {
+  it('item phẩm thấp hơn cảnh giới người chơi 1 bậc → equip thành công (giữ trang bị cũ)', () => {
     const { manager, player } = setup()
     player.realmId = 'qi_refining'
 
@@ -60,10 +60,9 @@ describe('GameManager — equipItem() grade gate (rework P5, Task 16)', () => {
     manager.equipmentBag.add(instance)
 
     expect(manager.equipmentOps.equipItem(instance.instanceId, player)).toEqual({
-      ok: false,
-      reason: 'grade_mismatch',
+      ok: true,
     })
-    expect(instance.equipped).toBe(false)
+    expect(instance.equipped).toBe(true)
   })
 
   it('item đang mặc rồi → idempotent ok:true dù cảnh giới người chơi đã đổi khác phẩm item', () => {

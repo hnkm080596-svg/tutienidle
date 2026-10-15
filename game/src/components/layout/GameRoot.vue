@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, inject, onMounted, reactive, watch } from 'vue'
+import { computed, defineAsyncComponent, inject, onBeforeUnmount, onMounted, reactive, watch } from 'vue'
 import type { StandalonePanel } from '@/presentation/contracts/panelIds'
 import MainScene from '../game/MainScene.vue'
 import RouteMount from '../game/RouteMount.vue'
@@ -76,9 +76,14 @@ const isFullSceneActive = computed(
 // first time it is opened, then stays mounted for the session so the close
 // transition and component state behave identically to static imports.
 const mountedStandalone = reactive(new Set<Exclude<StandalonePanel, null>>())
+let unmountStandaloneTimer: number | undefined
 watch(
   () => ui.standalonePanel,
   (panel) => {
+    if (unmountStandaloneTimer !== undefined) {
+      window.clearTimeout(unmountStandaloneTimer)
+      unmountStandaloneTimer = undefined
+    }
     // BETA SCOPE LOCK v2 (Phase-6): the mount seam is the deep-link
     // chokepoint - a scope-hidden panel can never mount even when a
     // caller bypasses ui.openStandalonePanel and assigns the state
@@ -96,9 +101,21 @@ watch(
       }
       mountedStandalone.add(panel)
     }
+    unmountStandaloneTimer = window.setTimeout(() => {
+      unmountStandaloneTimer = undefined
+      const active = ui.standalonePanel
+      for (const mounted of [...mountedStandalone]) {
+        if (mounted !== active) {
+          mountedStandalone.delete(mounted)
+        }
+      }
+    }, 250)
   },
   { immediate: true },
 )
+onBeforeUnmount(() => {
+  if (unmountStandaloneTimer !== undefined) window.clearTimeout(unmountStandaloneTimer)
+})
 
 /** Which route this Vue tree is currently standing in for (mount witness). */
 const mountedGameRoute = computed<'home' | 'combat' | 'tribulation'>(() => {

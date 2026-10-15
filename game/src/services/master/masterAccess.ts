@@ -8,15 +8,20 @@ import type { BetaFeatureName } from '@/core/betaFeatureFlags'
 import { testSandboxActive } from '../dev/testSandbox'
 
 const MASTER_LOGIN_IDS = new Set(['admin'])
+const ALLOW_PROD_MASTER =
+  !import.meta.env.PROD || import.meta.env.VITE_ALLOW_PROD_MASTER === 'true'
 
 // Master gate (Minh 2026-10-10): one key string admits a session as
 // master without needing the 'admin' loginId - Minh's "cua sau" for
 // test-edit privileges. The key value is NOT in the repo (owner ruling
 // 2026-10-10): it comes from VITE_MASTER_GATE_KEY (set it in .env.local,
-// which is gitignored); when unset the gate stays closed for everyone.
+// which is gitignored); when unset (or in production builds without
+// explicit opt-in) the gate stays closed for everyone.
 // The flag persists in sessionStorage so a reload inside the same tab
 // keeps the session master but never leaks to another tab/profile.
-export const MASTER_GATE_KEY: string = import.meta.env.VITE_MASTER_GATE_KEY ?? ''
+export const MASTER_GATE_KEY: string = ALLOW_PROD_MASTER
+  ? (import.meta.env.VITE_MASTER_GATE_KEY ?? '')
+  : ''
 const MASTER_GATE_STORAGE_KEY = 'master-gate-unlocked-v1'
 
 const gateStorage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> =
@@ -115,7 +120,7 @@ export function recordSessionLoginId(loginId: string | undefined) {
 }
 
 function isMasterLoginId(loginId: string | undefined): boolean {
-  return loginId !== undefined && MASTER_LOGIN_IDS.has(loginId)
+  return ALLOW_PROD_MASTER && loginId !== undefined && MASTER_LOGIN_IDS.has(loginId)
 }
 
 /** Sync master check for non-component callers (save/lifecycle seams). A

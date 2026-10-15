@@ -111,7 +111,7 @@ describe('buildEquipmentTooltip', () => {
     expect(tooltip).not.toHaveProperty('gradeLabel')
     expect(tooltip.sections.some(section => section.label === 'Thiên hướng')).toBe(false)
     expect(tooltip.sections.find(section => section.label.startsWith('Chỉ Số Phụ'))?.rows.map(row => row.label))
-      .toEqual(['Tỉ lệ bạo kích', 'Độ chính xác'])
+      .toEqual(['Tỉ Lệ Bạo Kích', 'Chính Xác'])
   })
 
   // Naming rework (2026-09-14): Pham renders as the "Canh gioi" meta
@@ -229,7 +229,7 @@ describe('buildEquipmentTooltip', () => {
 
     const affixSection = content.sections.find(section => section.label.startsWith('Chỉ Số Phụ'))
     const missingRow = affixSection?.rows.find(row => row.tone === 'muted')
-    expect(missingRow?.label).toBe('Khí huyết')
+    expect(missingRow?.label).toBe('Khí Huyết')
     expect(missingRow?.delta).toContain('▼')
     expect(missingRow?.deltaTone).toBe('negative')
   })

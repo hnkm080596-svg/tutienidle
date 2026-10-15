@@ -49,8 +49,8 @@ describe('formatStat', () => {
 
 describe('statLabel', () => {
   it('returns label for format-adopted stat keys', () => {
-    expect(statLabel('skillDamagePercent')).toBe('Sát thương kỹ năng')
-    expect(statLabel('ailmentPotencyPercent')).toBe('Uy lực dị thường')
+    expect(statLabel('skillDamagePercent')).toBe('Uy Lực Chiêu Thức')
+    expect(statLabel('ailmentPotencyPercent')).toBe('Uy Lực Dị Thường')
     expect(statLabel('realmPassivePercent')).toBe('Cộng % Cảnh Giới')
     expect(statLabel('affixDeltaPercent')).toBe('Tăng Trưởng Cường Hóa')
     expect(statLabel('productionSpeedMultiplier')).toBe('Hệ số tốc độ')

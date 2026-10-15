@@ -4125,6 +4125,9 @@ export class TurnBattleSystem {
 
     battle.log = battle.log ?? []
     battle.log.push(logEntry)
+    if (battle.log.length > 200) {
+      battle.log.splice(0, battle.log.length - 200)
+    }
 
     return {
       state: battle.state,

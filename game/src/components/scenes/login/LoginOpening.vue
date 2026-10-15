@@ -22,7 +22,7 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-.login-opening { position: absolute; inset: 0; display: grid; align-content: start; justify-items: start; padding: 62px 96px; }
+.login-opening { position: absolute; inset: 0; display: grid; align-content: start; justify-items: center; padding: 62px 96px; }
 .login-opening :deep(.login-logo) { width: 560px; }
 /* z-index above .login-drawer-layer (10): nav buttons stay clickable while a
    drawer is open, so switching tabs swaps drawer content in place instead of

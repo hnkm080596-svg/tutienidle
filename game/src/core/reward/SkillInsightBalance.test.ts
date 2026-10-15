@@ -69,13 +69,13 @@ describe('settleIdleSkillInsightMint - idle insight daily cap', () => {
     expect(player.idleSkillInsightDaily?.minted).toBe(5)
   })
 
-  it('band caps: qi 30k / foundation 40k; unlisted realms fall back to the top beta quota', () => {
+  it('band caps: qi 30k / foundation 60k; unlisted realms fall back to the top beta quota', () => {
     const qi: { idleSkillInsightDaily?: IdleSkillInsightDaily } = {}
     const tc: { idleSkillInsightDaily?: IdleSkillInsightDaily } = {}
     const mortal: { idleSkillInsightDaily?: IdleSkillInsightDaily } = {}
 
     expect(settleIdleSkillInsightMint(qi, 'qi_refining', 100_000, T0)).toBe(30_000)
-    expect(settleIdleSkillInsightMint(tc, 'foundation_establishment', 100_000, T0)).toBe(40_000)
+    expect(settleIdleSkillInsightMint(tc, 'foundation_establishment', 100_000, T0)).toBe(60_000)
     expect(settleIdleSkillInsightMint(mortal, 'mortal', 100_000, T0)).toBe(
       AUTO_FARM_DAILY_SKILL_INSIGHT_CAP_DEFAULT,
     )

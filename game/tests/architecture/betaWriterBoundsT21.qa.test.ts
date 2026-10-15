@@ -638,10 +638,16 @@ describe('F-SCOPE-EQ-1: equipped grade must be producible at the claimed realm',
     }
   }
 
-  it('a bat_pham weapon equipped at foundation_establishment rejects', () => {
+  it('a luc_pham weapon equipped at foundation_establishment rejects', () => {
+    const { save } = committedSave('foundation_establishment')
+    save.equipment = [equipEntry({ grade: 'luc_pham' })] as never
+    expect(classify(save).shape.ok).toBe(false)
+  })
+
+  it('control: a bat_pham weapon equipped at foundation_establishment validates (legacy gear carry)', () => {
     const { save } = committedSave('foundation_establishment')
     save.equipment = [equipEntry()] as never
-    expect(classify(save).shape.ok).toBe(false)
+    expect(classify(save).shape.ok).toBe(true)
   })
 
   it('a that_pham weapon equipped at qi_refining rejects', () => {

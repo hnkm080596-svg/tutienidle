@@ -266,6 +266,12 @@ export class PassiveSystem {
    * khong mat phan le giua cac tick.
    */
   tick(deltaSeconds: number) {
+    // Out of battle (hpReader wired by GameManager but no active battle entity):
+    // combat per_second passives must not accumulate stacks while idling in town.
+    if (this.hpReader && this.hpReader() === undefined) {
+      return
+    }
+
     for (const skill of this.skillManager.getPassiveSkills()) {
       if (!betaSkillAdmitted(skill.id)) {
         continue
@@ -289,8 +295,15 @@ export class PassiveSystem {
 
       // Talent v4 E2 - per_second chiu cung passiveCondition nhu passive
       // theo event (chan truoc khi tich, phan le accumulator giu nguyen).
+      // Khi dieu kien HP khong con thoa (vd HP hoi len tren nguong hoac
+      // tut xuong duoi nguong), xoa stack cu cua nhanh dieu kien do.
       if (!this.meetsCondition(effective.passiveCondition)) {
-        this.perSecondAccumulator.set(skill.id, accumulated)
+        for (const modifier of effective.passiveModifiers ?? []) {
+          if ((modifier.stacks ?? 0) > 0) {
+            modifier.stacks = 0
+          }
+        }
+        this.perSecondAccumulator.set(skill.id, accumulated - wholeSeconds)
 
         continue
       }

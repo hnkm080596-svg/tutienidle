@@ -162,7 +162,7 @@ const summaryRows = computed(() => {
         <!-- Same row pattern as the Tu Si derived-stats board
              (name + value, hairline separators, tooltip description) -
              minus icons, per owner ruling. -->
-        <ul class="equipment-summary__list">
+        <ul v-if="summaryRows.length" class="equipment-summary__list">
           <li
             v-for="row in summaryRows"
             :key="row.key"
@@ -174,6 +174,7 @@ const summaryRows = computed(() => {
             <span class="equipment-summary__value">{{ row.value }}</span>
           </li>
         </ul>
+        <p v-else class="equipment-summary__empty">{{ t('equipment.emptySummary') }}</p>
       </template>
 
       <!-- Scene-level tab strip per the Codex preview: under the
@@ -312,6 +313,7 @@ const summaryRows = computed(() => {
   cursor: default;
 }
 .equipment-summary__row:last-child { border-bottom: 0; }
+.equipment-summary__empty { margin: 0; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-style: italic; color: #a9956b; }
 .equipment-summary__name {
   font-size: 12px;
   color: #c9b184;

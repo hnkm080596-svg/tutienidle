@@ -47,8 +47,15 @@ const CONTENT_TYPES = {
   '.json': 'application/json',
   '.ogg': 'audio/ogg',
   '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
   '.svg': 'image/svg+xml',
   '.webm': 'video/webm',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.glb': 'model/gltf-binary',
+  '.ico': 'image/x-icon',
 }
 
 function signRequest(method, key, payloadHash, extraHeaders = {}) {

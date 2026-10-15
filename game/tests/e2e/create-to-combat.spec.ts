@@ -58,8 +58,8 @@ test.describe('Create character to combat', () => {
       .toBe(true)
 
     // DOM assertion on the outcome - victory OR defeat, both end the battle.
-    const victory = page.locator('.combat-victory-panel')
-    const defeat = page.locator('.combat-defeat-panel')
+    const victory = page.locator('.result-ceremony--victory')
+    const defeat = page.locator('.result-ceremony--defeat')
     await expect
       .poll(async () => (await victory.isVisible()) || (await defeat.isVisible()), {
         timeout: 10_000,

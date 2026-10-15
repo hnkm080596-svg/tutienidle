@@ -46,9 +46,9 @@ export function getSkillInsightReward(reward: Pick<EnemyReward, 'techniqueMaster
 // authored drop table yet - unlisted realms take the top beta quota.
 export const AUTO_FARM_DAILY_SKILL_INSIGHT_CAP_BY_REALM: Record<string, number> = {
   qi_refining: 30_000,
-  foundation_establishment: 40_000,
+  foundation_establishment: 60_000,
 }
-export const AUTO_FARM_DAILY_SKILL_INSIGHT_CAP_DEFAULT = 40_000
+export const AUTO_FARM_DAILY_SKILL_INSIGHT_CAP_DEFAULT = 60_000
 
 // Canonical UTC day-bucket comes from GameClock.utcDayBucket - shared
 // with QuestSystem.dayBucket so daily resets cannot drift apart.

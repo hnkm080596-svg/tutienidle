@@ -82,14 +82,7 @@ export function defaultDomImageLoader(url: string, signal?: AbortSignal): Promis
 
     image.onload = () => {
       signal?.removeEventListener('abort', onAbort)
-      if (typeof image.decode === 'function') {
-        image
-          .decode()
-          .then(() => resolve())
-          .catch(() => resolve()) // decode error after load resolves anyway
-      } else {
-        resolve()
-      }
+      resolve()
     }
 
     image.onerror = () => {
@@ -249,9 +242,21 @@ export class AssetBundleManager implements AssetPort {
 
     const tasks: Promise<void>[] = []
 
-    // 1. Load DOM images (each deduped per key)
-    for (const domDesc of domDescriptors) {
-      tasks.push(this.loadSingleDomImage(domDesc, signal))
+    // 1. Load DOM images (each deduped per key; cap concurrency to 12 for large warm batches)
+    const MAX_CONCURRENT_DOM_IMAGES = 12
+    if (domDescriptors.length <= MAX_CONCURRENT_DOM_IMAGES) {
+      for (const domDesc of domDescriptors) {
+        tasks.push(this.loadSingleDomImage(domDesc, signal))
+      }
+    } else {
+      let cursor = 0
+      const workers = Array.from({ length: MAX_CONCURRENT_DOM_IMAGES }, async () => {
+        while (cursor < domDescriptors.length) {
+          const domDesc = domDescriptors[cursor++]!
+          await this.loadSingleDomImage(domDesc, signal)
+        }
+      })
+      tasks.push(...workers)
     }
 
     // 1b. Load DOM audio (deduped per key; fail-soft per the optional contract)

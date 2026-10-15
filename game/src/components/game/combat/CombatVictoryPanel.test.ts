@@ -94,6 +94,26 @@ afterEach(() => {
 })
 
 describe('CombatVictoryPanel — B4 failed refight recovery (audit T1-5)', () => {
+  it('a refused retry resolving after disposal cannot overwrite the next scene selection', async () => {
+    vi.useFakeTimers()
+    const gm = makeGameManager()
+    const nextStage = { id: 'next_stage', name: 'Next', description: '', floor: 2, enemyPool: [], totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 0 }
+    gm.catalogOps.getStage.mockReturnValue(nextStage)
+    resolveMock.mockReturnValue({ status: 'ready', stage: nextStage })
+    let finish!: (accepted: boolean) => void
+    gm.turnBattleOps.startStage.mockImplementation(() => new Promise<boolean>(resolve => { finish = resolve }))
+    const panel = mountPanel(gm, 'progress')
+    panel.ui.selectedZoneId = 'mortal'
+    panel.ui.selectedStageId = 'previous_stage'
+    await vi.advanceTimersByTimeAsync(3000)
+    panel.unmount()
+    panel.ui.selectedStageId = 'new_scene_stage'
+    panel.ui.battleRunMode = 'repeat'
+    finish(false)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(panel.ui.selectedStageId).toBe('new_scene_stage')
+    expect(panel.ui.battleRunMode).toBe('repeat')
+  })
   it('repeat mode: countdown refight resolves false → battleRunMode rolls back to manual (Promise truthiness regression)', async () => {
     vi.useFakeTimers()
     const gm = makeGameManager()

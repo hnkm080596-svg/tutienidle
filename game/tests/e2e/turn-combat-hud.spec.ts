@@ -95,8 +95,8 @@ test.describe('Slice 7 — turn combat HUD', () => {
 
     // Battle 1 runs to a result panel (victory OR defeat - stage 1 can
     // legitimately end either way, see note above).
-    const victory = page.locator('.combat-victory-panel')
-    const defeat = page.locator('.combat-defeat-panel')
+    const victory = page.locator('.result-ceremony--victory')
+    const defeat = page.locator('.result-ceremony--defeat')
     await expect(victory.or(defeat)).toBeVisible({ timeout: 180_000 })
 
     // Snapshot events phai chay (engine <-> scene wiring song) - gom ca
@@ -123,6 +123,7 @@ test.describe('Slice 7 — turn combat HUD', () => {
     const retryButton = (await victory.isVisible())
       ? page.locator('.combat-victory-panel__retry')
       : page.locator('.combat-defeat-panel__retry')
+    await expect(page.locator('.result-ceremony')).toHaveAttribute('data-complete', 'true')
     await retryButton.click()
     await expect(victory.or(defeat)).toBeHidden({ timeout: 15_000 })
 

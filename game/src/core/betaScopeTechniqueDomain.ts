@@ -86,19 +86,19 @@ export function buildTechniqueDisplaySections(
 
   if (tierEffect) {
     if (tierEffect.mightFlat !== undefined) {
-      combatRows.push({ label: 'Sức mạnh', value: `+${tierEffect.mightFlat}` })
+      combatRows.push({ label: statLabel('might'), value: `+${tierEffect.mightFlat}` })
     }
 
     if (tierEffect.defenseFlat !== undefined) {
-      combatRows.push({ label: 'Phòng ngự', value: `+${tierEffect.defenseFlat}` })
+      combatRows.push({ label: statLabel('defense'), value: `+${tierEffect.defenseFlat}` })
     }
 
     if (tierEffect.maxMpIncreasePercent !== undefined) {
-      combatRows.push({ label: 'Linh lực tối đa', value: `+${(tierEffect.maxMpIncreasePercent * 100).toFixed(1)}%` })
+      combatRows.push({ label: statLabel('maxMp'), value: `+${(tierEffect.maxMpIncreasePercent * 100).toFixed(1)}%` })
     }
 
     if (tierEffect.manaRegenIncreasePercent !== undefined) {
-      combatRows.push({ label: 'Hồi Linh lực', value: `+${(tierEffect.manaRegenIncreasePercent * 100).toFixed(1)}%` })
+      combatRows.push({ label: statLabel('manaRegenPerTurn'), value: `+${(tierEffect.manaRegenIncreasePercent * 100).toFixed(1)}%` })
     }
   }
 

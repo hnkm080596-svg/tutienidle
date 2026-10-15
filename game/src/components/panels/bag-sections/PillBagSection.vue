@@ -110,12 +110,19 @@ function buildTooltip(
         return { label: 'Main Stat ngẫu nhiên', value: `+${randomPoints} (một trong 5 chỉ số chưa đạt trần)` }
       }
 
-      case 'regen':
+      case 'regen': {
+        const hp = Math.round((effect.hpPerSecond ?? 0) * uplift)
+        const mp = Math.round((effect.mpPerSecond ?? 0) * uplift)
+        const parts: string[] = []
+        if (hp > 0) parts.push(`+${hp} Khí Huyết/lượt`)
+        if (mp > 0) parts.push(`+${mp} Linh Lực/lượt`)
+        const summary = parts.length > 0 ? parts.join(', ') : `+0 Linh Lực/lượt`
         return {
-          label: 'Hồi phục theo giây',
+          label: 'Hồi phục mỗi lượt',
 
-          value: `+${(effect.hpPerSecond ?? 0) * uplift} HP/s, +${(effect.mpPerSecond ?? 0) * uplift} MP/s trong ${effect.durationSeconds ?? 0}s`,
+          value: `${summary} trong ${effect.durationSeconds ?? 0}s`,
         }
+      }
 
       case 'skill_insight':
         return { label: 'Cảm Ngộ', value: `+${Math.round((effect.value ?? 0) * uplift)}` }
@@ -564,7 +571,12 @@ const activeTimedEffects = computed(() => {
           ? gameManager.pillRegistry.get(effect.sourceItemId).name
           : 'Đan dược không rõ',
 
-        value: `+${hp} HP/s, +${mp} MP/s`,
+        value:
+          hp > 0 && mp > 0
+            ? `+${hp} Khí Huyết/lượt, +${mp} Linh Lực/lượt`
+            : mp > 0
+              ? `+${mp} Linh Lực/lượt`
+              : `+${hp} Khí Huyết/lượt`,
 
         remaining: `${minutes}:${String(seconds).padStart(2, '0')}`,
       }

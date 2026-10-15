@@ -1,25 +1,29 @@
 import type { ProfessionGrade } from '../profession/ProfessionGrade'
-import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
+import {
+  PROFESSION_GRADE_ORDER,
+  compareProfessionGrades,
+  getProfessionGradeForRealm,
+} from '../profession/ProfessionGrade'
 import { REALMS } from '../../data/realms/realm'
 
 export function canUseItemGrade(itemGrade: ProfessionGrade, playerRealmId: string): boolean {
-  return getProfessionGradeForRealm(playerRealmId) === itemGrade
+  const playerGrade = getProfessionGradeForRealm(playerRealmId)
+  if (playerGrade === undefined) return false
+  return compareProfessionGrades(itemGrade, playerGrade) <= 0
 }
 
 // F-SCOPE-EQ-1: `equipped:true` is a writer-gated claim - equip()
-// enforces canUseItemGrade and every tribulation transition unequips
-// all gear, so the only producible equipped grades are the current
-// realm's own plus whatever survived the last non-unequip transition.
-// The mortal -> qi_refining initiation is the single authored
-// non-unequip transition: qi_refining may still carry equipped
-// cuu_pham, every other realm admits only its own grade.
+// enforces canUseItemGrade (item grade <= current realm's grade), so
+// the producible equipped grades for a realm are its own grade and any
+// lower realm grade. Higher-grade equipment remains rejected.
 export function producibleEquippedGrades(playerRealmId: string): ReadonlySet<ProfessionGrade> {
   const grades = new Set<ProfessionGrade>()
   const own = getProfessionGradeForRealm(playerRealmId)
-  if (own !== undefined) grades.add(own)
-  if (playerRealmId === 'qi_refining') {
-    const mortalGrade = getProfessionGradeForRealm('mortal')
-    if (mortalGrade !== undefined) grades.add(mortalGrade)
+  if (own === undefined) return grades
+  for (const grade of PROFESSION_GRADE_ORDER) {
+    if (compareProfessionGrades(grade, own) <= 0) {
+      grades.add(grade)
+    }
   }
   return grades
 }

@@ -13,7 +13,7 @@ const MAIN_STATS: Record<EquipmentSlot, readonly EquipmentStatRange[]> = {
   // stat-system-reimagined Task 11 (D1/INV-15): speed competes with
   // two defensive mains -- tempo costs the survivability roll.
   necklace: [
-    { stat: 'speed', min: 0.03, max: 0.08 },
+    { stat: 'speed', min: 3, max: 8 },
     { stat: 'defense', min: 12, max: 20 },
     { stat: 'evasionRate', min: 12, max: 20 },
   ],

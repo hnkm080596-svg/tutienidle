@@ -184,7 +184,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
         { timeout: 180_000, intervals: [250] },
       )
       .toBe('victory')
-    const victory = page.locator('.combat-victory-panel')
+    const victory = page.locator('.result-ceremony--victory')
     await expect(victory).toBeVisible({ timeout: 30_000 })
     await page.waitForTimeout(900)
     await shot(page, '15-victory')
@@ -218,7 +218,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
         { timeout: 180_000, intervals: [500] },
       )
       .toBe('defeat')
-    const defeat = page.locator('.combat-defeat-panel')
+    const defeat = page.locator('.result-ceremony--defeat')
     await expect(defeat).toBeVisible({ timeout: 30_000 })
     await shot(page, '16-defeat')
   })

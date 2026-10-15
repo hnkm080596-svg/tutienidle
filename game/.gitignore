@@ -67,3 +67,7 @@ dist-electron
 
 # Balance-audit lab output (tests/lab writeJson dumps, regenerable)
 .audit-out/
+
+# Generated Cloudflare R2 CDN asset mirror (npm run assets:optimize)
+/cdn-assets
+

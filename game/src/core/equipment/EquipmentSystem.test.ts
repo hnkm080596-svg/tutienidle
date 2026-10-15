@@ -191,7 +191,7 @@ describe('EquipmentSystem — equip() grade gate (rework P5, Task 16)', () => {
     expect(instance.equipped).toBe(false)
   })
 
-  it('phẩm thấp hơn cảnh giới người chơi 1 bậc → grade_mismatch, không equip', () => {
+  it('phẩm thấp hơn cảnh giới người chơi 1 bậc → equip thành công (giữ trang bị cũ)', () => {
     const ctx = setup()
     ctx.player.realmId = 'qi_refining'
     const instance = manualInstance({ grade: 'cuu_pham' })
@@ -206,8 +206,8 @@ describe('EquipmentSystem — equip() grade gate (rework P5, Task 16)', () => {
         ctx.player,
         ctx.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'grade_mismatch' })
-    expect(instance.equipped).toBe(false)
+    ).toEqual({ ok: true })
+    expect(instance.equipped).toBe(true)
   })
 
   it('item không tìm thấy trong túi → not_found', () => {
@@ -350,7 +350,7 @@ describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment
 
   it.each([
     ['ring', 'criticalRate', 0.02, 0.05],
-    ['necklace', 'speed', 0.03, 0.08],
+    ['necklace', 'speed', 3, 8],
   ] as const)('giữ main stat tỉ lệ khác 0 cho slot %s', (slot, stat, min, max) => {
     const { system, affixRegistry, player } = setup()
     const template: Equipment = {
@@ -1252,7 +1252,7 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
       { affixId: affixes[0]!.id, tier: 2, value: 12 },
       { affixId: affixes[1]!.id, tier: 2, value: 40 },
       { affixId: affixes[2]!.id, tier: 2, value: 0.05 },
-      { affixId: affixes[3]!.id, tier: 2, value: 0.04 },
+      { affixId: affixes[3]!.id, tier: 2, value: 4 },
     ]
     const affixesBefore = structuredClone(ctx.instance.affixes)
     const forgeUsesBefore = ctx.instance.forgeUsesRemaining

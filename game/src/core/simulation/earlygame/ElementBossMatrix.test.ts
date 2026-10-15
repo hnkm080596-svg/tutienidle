@@ -54,6 +54,7 @@ import { EarlyGameSession } from './EarlyGameSession'
 import { usePlayerStore } from '../../../stores/player'
 import { SPELL_KIT_IDS } from '../../../data/skill/Skills'
 import { canUseItemGrade } from '../../equipment/canUseItem'
+import { getProfessionGradeForRealm } from '../../profession/ProfessionGrade'
 import { mulberry32 } from '../../battle/SeededRandom'
 import type { ElementType } from '../../element/ElementType'
 
@@ -146,8 +147,9 @@ function gearUp(s: EarlyGameSession, element: ElementType, enhance: number): num
     ['prefix_attack'],
   ]
   let edited = 0
+  const currentGrade = getProfessionGradeForRealm(s.player.realmId)
   for (const item of s.gameManager.equipmentBag.getAll()) {
-    if (!canUseItemGrade(item.grade, s.player.realmId)) continue
+    if (item.grade !== currentGrade || !canUseItemGrade(item.grade, s.player.realmId)) continue
     item.quality = 'dia'
     const ids = plan[Math.min(edited, plan.length - 1)]!
     item.affixes = ids.map((affixId) => ({
