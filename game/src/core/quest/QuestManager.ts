@@ -25,6 +25,13 @@ function createDefaultState(): QuestManagerState {
   }
 }
 
+function incrementBoundedCounter(current: number, amount: number, maximum: number): number {
+  if (!Number.isFinite(current) || current < 0 ||
+      !Number.isFinite(amount) || amount <= 0 ||
+      !Number.isSafeInteger(maximum) || maximum <= 0) return current
+  return Math.min(maximum, current + amount)
+}
+
 /**
  * Quests keep NO state in PlayerData (same as productionSites/
  * alchemyJobs) - they save as a separate slice in GameSave (see
@@ -34,6 +41,32 @@ function createDefaultState(): QuestManagerState {
  */
 export class QuestManager {
   private state: QuestManagerState = createDefaultState()
+  // One manager serializes all quest grants, including callback reentry
+  // into a different quest that may share the same turn-in materials.
+  private claimingQuestId: string | undefined
+
+  isClaiming(): boolean {
+    return this.claimingQuestId !== undefined
+  }
+
+  beginClaim(questId: string): boolean {
+    if (this.isClaiming()) return false
+    this.claimingQuestId = questId
+    return true
+  }
+
+  endClaim(questId: string): void {
+    if (this.claimingQuestId === questId) this.claimingQuestId = undefined
+  }
+
+  private withRuntimeClaimContext(progress: QuestProgress): QuestProgress {
+    // Derived runtime view only: no second mutable flag and no lock in saves.
+    Object.defineProperty(progress, 'claimInProgress', {
+      enumerable: false,
+      get: () => this.isClaiming(),
+    })
+    return progress
+  }
 
   getActive(): QuestProgress[] {
     return this.state.active
@@ -47,6 +80,15 @@ export class QuestManager {
     const existing = this.getProgress(quest.id)
 
     if (existing) {
+      if (quest.condition.kind === 'allOf') {
+        const previous = existing.objectiveVersion === 1 ? existing.objectives : undefined
+        existing.objectiveVersion = 1
+        existing.objectives = Object.fromEntries(quest.condition.objectives.map((leaf) => {
+          const count = previous && Object.hasOwn(previous, leaf.id) ? previous[leaf.id] : 0
+          return [leaf.id, Number.isFinite(count) && (count ?? -1) >= 0
+            ? Math.min(leaf.amount, count ?? 0) : 0]
+        }))
+      }
       return existing
     }
 
@@ -56,9 +98,13 @@ export class QuestManager {
       progress: 0,
 
       claimed: false,
+      ...(quest.condition.kind === 'allOf' ? {
+        objectiveVersion: 1 as const,
+        objectives: Object.fromEntries(quest.condition.objectives.map((leaf) => [leaf.id, 0])),
+      } : {}),
     }
 
-    this.state.active.push(progress)
+    this.state.active.push(this.withRuntimeClaimContext(progress))
 
     return progress
   }
@@ -74,14 +120,16 @@ export class QuestManager {
     this.state.active = this.state.active.filter((progress) => progress.questId !== questId)
   }
 
-  incrementProgress(questId: string, amount: number): void {
+  incrementProgress(questId: string, amount: number, maximum?: number): void {
     const progress = this.getProgress(questId)
 
     if (!progress || progress.claimed) {
       return
     }
 
-    progress.progress += amount
+    progress.progress = maximum === undefined
+      ? progress.progress + amount
+      : incrementBoundedCounter(progress.progress, amount, maximum)
   }
 
   markClaimed(questId: string): void {
@@ -90,6 +138,14 @@ export class QuestManager {
     if (progress) {
       progress.claimed = true
     }
+  }
+
+  incrementObjective(questId: string, objectiveId: string, amount: number, target: number): void {
+    const progress = this.getProgress(questId)
+    if (!progress || progress.claimed || progress.objectiveVersion !== 1 ||
+        !progress.objectives || !Object.hasOwn(progress.objectives, objectiveId)) return
+    progress.objectives[objectiveId] = incrementBoundedCounter(
+      progress.objectives[objectiveId] ?? 0, amount, target)
   }
 
   isCompletedOnce(questId: string): boolean {
@@ -183,10 +239,17 @@ export class QuestManager {
                 ((entry as { progress?: unknown }).progress as number) >= 0 &&
                 typeof (entry as { claimed?: unknown }).claimed === 'boolean',
             )
-            .map((entry) => ({
+            .map((entry) => this.withRuntimeClaimContext({
               questId: entry.questId,
               progress: entry.progress,
               claimed: entry.claimed,
+              ...(entry.objectiveVersion === 1 && typeof entry.objectives === 'object' &&
+                entry.objectives !== null && !Array.isArray(entry.objectives) ? {
+                  objectiveVersion: 1 as const,
+                  objectives: Object.fromEntries(Object.entries(entry.objectives).filter(
+                    ([, count]) => Number.isFinite(count) && count >= 0,
+                  )),
+                } : {}),
             }))
         : [],
 

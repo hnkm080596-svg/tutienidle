@@ -12,6 +12,7 @@ import { PillBag } from '../pill/PillBag'
 import { NotificationQueue } from './NotificationQueue'
 import type { Enemy } from '../enemy/Enemy'
 import type { PlayerData } from '../player/Player'
+import { capturePlayerCheckpoint, restorePlayerCheckpoint } from '../player/PlayerSnapshot'
 import {
   betaQuestSurfaceFor,
   type BetaQuestSurfaceDeps,
@@ -233,7 +234,7 @@ export class GameManagerQuestOps {
 
     const receiver = this.deps.buildPlayerRewardReceiver(player)
 
-    const claimed = this.deps.questSystem.claim(
+    return this.deps.questSystem.claim(
       this.deps.questRegistry,
       this.deps.questManager,
       this.deps.rewardSystem,
@@ -251,25 +252,38 @@ export class GameManagerQuestOps {
         onMaterialGained: (materialId, delivered) =>
           this.notifyMaterialGained(materialId, delivered),
         playerRealmId: player.realmId,
+        onClaimed: (quest) => {
+          this.deps.notifications.push({ kind: 'loot', message: `Hoàn thành: ${quest.name}` })
+          // A successor is admitted only after its prerequisite is committed.
+          this.deps.questSystem.reconcileActiveQuests(
+            this.deps.questRegistry,
+            this.deps.questManager,
+            player,
+          )
+        },
+        withAtomicClaim: (settle) => {
+          // A claim is synchronous. Checkpoint each actual state owner before
+          // invoking any grant, debit, drop or material-discovery callback.
+          // Preserve live player object and nested reactive identities on failure.
+          const savedPlayer = capturePlayerCheckpoint(player)
+          const savedMaterials = this.deps.materialBag.getAll()
+          const savedPills = this.deps.pillBag.getAll()
+          const savedQuests = structuredClone(this.deps.questManager.getState())
+          const savedNotifications = this.deps.notifications.checkpoint()
+          try {
+            return settle()
+          } catch (error) {
+            this.deps.materialBag.restoreStacks(savedMaterials)
+            this.deps.pillBag.restoreStacks(savedPills)
+            this.deps.questManager.restore(savedQuests)
+            this.deps.notifications.restoreCheckpoint(savedNotifications)
+            restorePlayerCheckpoint(savedPlayer)
+            throw error
+          }
+        },
       },
       questId,
     )
 
-    if (claimed) {
-      const quest = this.deps.questRegistry.get(questId)
-      this.deps.notifications.push({ kind: 'loot', message: `Hoàn thành: ${quest.name}` })
-
-      // Mainline chain admission (AR-09): the claim just wrote the
-      // completedOnceIds witness, so a chained successor is eligible
-      // NOW - reconcile inside the same gesture, same lifecycle seam
-      // as every other trigger (idempotent registry scan).
-      this.deps.questSystem.reconcileActiveQuests(
-        this.deps.questRegistry,
-        this.deps.questManager,
-        player,
-      )
-    }
-
-    return claimed
   }
 }

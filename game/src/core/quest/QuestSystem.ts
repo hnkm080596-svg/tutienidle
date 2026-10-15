@@ -1,4 +1,5 @@
-import type { Quest, QuestCondition, QuestItemReward } from './Quest'
+import type { Quest, QuestLeafCondition, QuestItemReward, QuestObjective } from './Quest'
+import { isValidQuestCondition, questObjectives } from './Quest'
 import type { QuestRegistry } from './QuestRegistry'
 import type { QuestManager } from './QuestManager'
 import type { QuestProgress } from './QuestProgress'
@@ -49,6 +50,11 @@ export interface QuestBagDeps {
   // against it - same window+reach rule as grantResolvedDrops. Absent
   // fails closed for domain-scoped rows (release-safe default).
   playerRealmId?: string
+
+  // The caller owns rollback of ALL authoritative state touched by this
+  // synchronous claim, including the receiver and item delivery hooks.
+  withAtomicClaim?: <T>(settle: () => T) => T
+  onClaimed?: (quest: Quest) => void
 }
 
 function isUnlocked(quest: Quest, player: PlayerData, manager: QuestManager): boolean {
@@ -81,7 +87,52 @@ function isUnlocked(quest: Quest, player: PlayerData, manager: QuestManager): bo
 // SCOPE LOCK v2 sec.15) and suppressed token-faucet quests have no live
 // counter left at all.
 function staysLive(quest: Quest): boolean {
-  return isBetaQuestEnabled(quest) && !questIsTokenOnlySource(quest)
+  return isValidQuestCondition(quest.condition) &&
+    questObjectives(quest.condition).every((condition) =>
+      isBetaQuestEnabled({ cadence: quest.cadence, condition })) &&
+    !questIsTokenOnlySource(quest)
+}
+
+export function questObjectiveProgress(
+  quest: Quest, progress: QuestProgress, objective: QuestObjective,
+): number {
+  let count = progress.progress
+  if (quest.condition.kind === 'allOf') {
+    count = 0
+    if (progress.objectiveVersion === 1 && progress.objectives &&
+        Object.hasOwn(progress.objectives, objective.id)) {
+      count = progress.objectives[objective.id] ?? 0
+    }
+  }
+  return typeof count === 'number' && Number.isFinite(count) && count >= 0 ? count : 0
+}
+
+export function questTurnInCosts(quest: Quest): ReadonlyMap<string, number> {
+  const costs = new Map<string, number>()
+  for (const leaf of questObjectives(quest.condition)) {
+    if (leaf.kind === 'collect') {
+      costs.set(leaf.materialId, (costs.get(leaf.materialId) ?? 0) + leaf.amount)
+    }
+  }
+  return costs
+}
+
+export type QuestClaimDisabledReason =
+  | 'already-claimed' | 'incomplete' | 'missing-turnin-items' | 'claim-in-progress'
+
+// Shared owner rule for commit and the pure read model.
+export function questClaimDisabledReason(
+  quest: Quest, progress: QuestProgress, bag: MaterialBag,
+): QuestClaimDisabledReason | null {
+  if (progress.claimed) return 'already-claimed'
+  if (progress.claimInProgress) return 'claim-in-progress'
+  if (!isValidQuestCondition(quest.condition) || questObjectives(quest.condition).some(
+    (leaf) => questObjectiveProgress(quest, progress, leaf) < leaf.amount,
+  )) return 'incomplete'
+  for (const [materialId, amount] of questTurnInCosts(quest)) {
+    if (!Number.isSafeInteger(amount) || !bag.has(materialId, amount)) return 'missing-turnin-items'
+  }
+  return null
 }
 
 /**
@@ -255,6 +306,25 @@ export class QuestSystem {
       manager.ensureActive(quest)
     }
 
+    // Durable state witnesses may predate admission. Event leaves never
+    // infer credit from possession or from opening a projection.
+    for (const progress of manager.getActive()) {
+      if (progress.claimed || !registry.has(progress.questId)) continue
+      const quest = registry.get(progress.questId)
+      if (!staysLive(quest)) continue
+      for (const leaf of questObjectives(quest.condition)) {
+        const attained = leaf.kind === 'realm_reached'
+          ? getRealmIndex(leaf.realmId) >= 0 && getRealmIndex(player.realmId) >= getRealmIndex(leaf.realmId)
+          : leaf.kind === 'stage_clear' && player.completedStageIds?.includes(leaf.stageId)
+        if (!attained) continue
+        if (quest.condition.kind === 'allOf') {
+          manager.incrementObjective(quest.id, leaf.id, 1, 1)
+        } else if (progress.progress < 1) {
+          manager.incrementProgress(quest.id, 1)
+        }
+      }
+    }
+
     // P7-M9 - the inverse pass, narrowed to product retirement
     // (QA-2026-10-03-1): only a quest the product itself no longer
     // offers (scope-hidden or suppressed token faucet) loses its
@@ -295,7 +365,7 @@ export class QuestSystem {
       // BETA SCOPE LOCK v2 sec.15 - scope-hidden quests never render in
       // the active projection even if stale progress exists between
       // reconcile runs (still read-only: no state is touched here).
-      if (!isBetaQuestEnabled(quest)) {
+      if (!staysLive(quest)) {
         continue
       }
 
@@ -324,15 +394,12 @@ export class QuestSystem {
 
     // BETA SCOPE LOCK v2 sec.15 - claim fails closed on a scope-hidden
     // quest even if stale progress sits claimable (pre-flag saves).
-    if (!isBetaQuestEnabled(quest)) {
+    if (!staysLive(quest) || (quest.cadence === 'once' && manager.isCompletedOnce(questId))) {
       return undefined
     }
 
-    if (!progress || progress.claimed || progress.progress < quest.condition.amount) {
-      return undefined
-    }
-
-    if (quest.condition.kind === 'collect' && !bags.materialBag.has(quest.condition.materialId, quest.condition.amount)) {
+    if (!progress || manager.isClaiming() ||
+        questClaimDisabledReason(quest, progress, bags.materialBag) !== null) {
       return undefined
     }
 
@@ -362,103 +429,117 @@ export class QuestSystem {
   ): boolean {
     const quest = this.resolveClaimable(registry, manager, bags, questId)
 
-    if (!quest) {
+    if (!quest || !manager.beginClaim(questId)) {
       return false
     }
 
-    // Mission E Task 3 (audit T1-11) - grant before debit: a throwing
-    // grant must not consume the turn-in cost. The debit cannot fail a
-    // leg that succeeded earlier (resolveClaimable already proved the
-    // bag holds the cost). Drops run last so the debit frees bag space
-    // before reward items land.
-    if (quest.reward.reward) {
-      // 2026-10-05 realm-band scaling - same helper+resolver the beta
-      // surface read-model previews, so previewed amounts equal paid.
-      rewardSystem.give(
-        receiver,
-        scaleQuestRewardByRealm(quest.reward.reward, questRewardBandRealmId(quest, registry)),
-      )
-    }
-
-    if (quest.condition.kind === 'collect') {
-      bags.materialBag.remove(quest.condition.materialId, quest.condition.amount)
-    }
-
-    for (const drop of quest.reward.itemDrops ?? []) {
-      const amount = drop.amount ?? 1
-
-      // sec.4B - ONE admission predicate shared with the quest surface
-      // read-model (release windows, pull-token suppression, domain
-      // scoping, unknown ids) - this loop never re-derives policy.
-      if (!isQuestRewardDropAdmitted(drop, bags, bags.playerRealmId)) {
-        continue
+    try {
+      if (!bags.withAtomicClaim) {
+        throw new Error('Quest claim requires an atomic settlement boundary')
+      }
+      const settle = (): boolean => {
+      // Grant before debit; the claim checkpoint reverses either operation
+      // if a later step fails. Recheck each turn-in debit despite the
+      // earlier eligibility check, since receiver callbacks can mutate bags.
+      // Drops run last so turn-in costs free bag space first.
+      if (quest.reward.reward) {
+        // 2026-10-05 realm-band scaling - same helper+resolver the beta
+        // surface read-model previews, so previewed amounts equal paid.
+        rewardSystem.give(
+          receiver,
+          scaleQuestRewardByRealm(quest.reward.reward, questRewardBandRealmId(quest, registry)),
+        )
       }
 
-      if (drop.kind === 'material' && bags.materialRegistry.has(drop.itemId)) {
-        // 9.8 - tran tui: quest chi tinh delivered; push toast khi co sink.
-        const template: Material = bags.materialRegistry.get(drop.itemId)
+      for (const [materialId, amount] of questTurnInCosts(quest)) {
+        if (!bags.materialBag.remove(materialId, amount)) {
+          throw new Error(`Quest turn-in debit failed: ${materialId}`)
+        }
+      }
 
-        const overflow = bags.materialBag.add(template, amount)
+      for (const drop of quest.reward.itemDrops ?? []) {
+        const amount = drop.amount ?? 1
 
-        const delivered = amount - overflow
-
-        // Item turn-in of this quest also counts as collected material -
-        // progress for other active collect-quests (same hook as every
-        // material-into-bag path). M-F-BODY-PERFECTION: prefer the
-        // caller's funnel so discovery counts the same landing once.
-        if (bags.onMaterialGained) {
-          bags.onMaterialGained(drop.itemId, delivered)
-        } else {
-          this.onMaterialCollected(registry, manager, drop.itemId, delivered)
+        // sec.4B - ONE admission predicate shared with the quest surface
+        // read-model (release windows, pull-token suppression, domain
+        // scoping, unknown ids) - this loop never re-derives policy.
+        if (!isQuestRewardDropAdmitted(drop, bags, bags.playerRealmId)) {
+          continue
         }
 
-        if (overflow > 0 && bags.notifications) {
-          // Event dung inline (fallback message vi - convention core):
-          // chi import TYPE NotificationEvent, khong runtime import.
-          const overflowEvent: NotificationEvent = {
-            kind: 'warning',
+        if (drop.kind === 'material' && bags.materialRegistry.has(drop.itemId)) {
+          // 9.8 - tran tui: quest chi tinh delivered; push toast khi co sink.
+          const template: Material = bags.materialRegistry.get(drop.itemId)
 
-            message: `Túi đầy — mất ${overflow} ${template.name}`,
+          const overflow = bags.materialBag.add(template, amount)
 
-            messageKey: 'bag.overflow',
+          const delivered = amount - overflow
 
-            messageParams: { amount: String(overflow), name: template.name },
+          // Item turn-in of this quest also counts as collected material -
+          // progress for other active collect-quests (same hook as every
+          // material-into-bag path). M-F-BODY-PERFECTION: prefer the
+          // caller's funnel so discovery counts the same landing once.
+          if (bags.onMaterialGained) {
+            bags.onMaterialGained(drop.itemId, delivered)
+          } else {
+            this.onMaterialCollected(registry, manager, drop.itemId, delivered)
           }
 
-          bags.notifications.push(overflowEvent)
-        }
-      }
+          if (overflow > 0 && bags.notifications) {
+            // Event dung inline (fallback message vi - convention core):
+            // chi import TYPE NotificationEvent, khong runtime import.
+            const overflowEvent: NotificationEvent = {
+              kind: 'warning',
 
-      if (drop.kind === 'pill' && bags.pillRegistry.has(drop.itemId)) {
-        // R9 (AR-34) - pill drops surface the delivery receipt too: quest
-        // rewards must not silently lose pills to a full bag.
-        const pillTemplate = bags.pillRegistry.get(drop.itemId)
+              message: `Túi đầy — mất ${overflow} ${template.name}`,
 
-        const pillOverflow = bags.pillBag.add(pillTemplate, amount)
+              messageKey: 'bag.overflow',
 
-        if (pillOverflow > 0 && bags.notifications) {
-          const pillOverflowEvent: NotificationEvent = {
-            kind: 'warning',
+              messageParams: { amount: String(overflow), name: template.name },
+            }
 
-            message: `Túi đan đầy - mất ${pillOverflow} ${pillTemplate.name}`,
-
-            messageKey: 'bag.overflow',
-
-            messageParams: { amount: String(pillOverflow), name: pillTemplate.name },
+            bags.notifications.push(overflowEvent)
           }
+        }
 
-          bags.notifications.push(pillOverflowEvent)
+        if (drop.kind === 'pill' && bags.pillRegistry.has(drop.itemId)) {
+          // R9 (AR-34) - pill drops surface the delivery receipt too: quest
+          // rewards must not silently lose pills to a full bag.
+          const pillTemplate = bags.pillRegistry.get(drop.itemId)
+
+          const pillOverflow = bags.pillBag.add(pillTemplate, amount)
+
+          if (pillOverflow > 0 && bags.notifications) {
+            const pillOverflowEvent: NotificationEvent = {
+              kind: 'warning',
+
+              message: `Túi đan đầy - mất ${pillOverflow} ${pillTemplate.name}`,
+
+              messageKey: 'bag.overflow',
+
+              messageParams: { amount: String(pillOverflow), name: pillTemplate.name },
+            }
+
+            bags.notifications.push(pillOverflowEvent)
+          }
         }
       }
+
+      manager.markClaimed(questId)
+
+      if (quest.cadence === 'once') {
+        manager.markCompletedOnce(questId)
+      }
+
+      // Post-claim observers also belong to the reversible settlement.
+      bags.onClaimed?.(quest)
+      return true
+      }
+
+      return bags.withAtomicClaim(settle)
+    } finally {
+      manager.endClaim(questId)
     }
-
-    manager.markClaimed(questId)
-
-    if (quest.cadence === 'once') {
-      manager.markCompletedOnce(questId)
-    }
-
-    return true
   }
 
   /**
@@ -498,27 +579,10 @@ export class QuestSystem {
     enemyId: string,
     zoneId: string | undefined,
   ): void {
-    for (const progress of manager.getActive()) {
-      if (progress.claimed || !registry.has(progress.questId)) {
-        continue
-      }
-
-      const condition: QuestCondition = registry.get(progress.questId).condition
-
-      if (condition.kind !== 'kill') {
-        continue
-      }
-
-      if (condition.enemyId && condition.enemyId !== enemyId) {
-        continue
-      }
-
-      if (condition.zoneId && condition.zoneId !== zoneId) {
-        continue
-      }
-
-      manager.incrementProgress(progress.questId, 1)
-    }
+    this.incrementMatching(registry, manager, 1, (condition) =>
+      condition.kind === 'kill' &&
+      (!condition.enemyId || condition.enemyId === enemyId) &&
+      (!condition.zoneId || condition.zoneId === zoneId))
   }
 
   /**
@@ -540,23 +604,9 @@ export class QuestSystem {
       return
     }
 
-    for (const progress of manager.getActive()) {
-      if (progress.claimed || !registry.has(progress.questId)) {
-        continue
-      }
-
-      const condition: QuestCondition = registry.get(progress.questId).condition
-
-      if (condition.kind !== 'collect') {
-        continue
-      }
-
-      if (condition.materialId !== materialId) {
-        continue
-      }
-
-      manager.incrementProgress(progress.questId, amount)
-    }
+    this.incrementMatching(registry, manager, amount, (condition) =>
+      (condition.kind === 'collect' || condition.kind === 'acquire') &&
+      condition.materialId === materialId)
   }
 
   /**
@@ -574,22 +624,30 @@ export class QuestSystem {
   ): void {
     manager.markQuestFlag(flagId)
 
+    this.incrementMatching(registry, manager, 1, (condition) =>
+      condition.kind === 'flag' && condition.flagId === flagId)
+  }
+
+  private incrementMatching(
+    registry: QuestRegistry,
+    manager: QuestManager,
+    amount: number,
+    matches: (condition: QuestLeafCondition) => boolean,
+  ): void {
     for (const progress of manager.getActive()) {
-      if (progress.claimed || !registry.has(progress.questId)) {
-        continue
+      if (progress.claimed || !registry.has(progress.questId)) continue
+      const quest = registry.get(progress.questId)
+      if (!staysLive(quest) || (quest.cadence === 'once' && manager.isCompletedOnce(quest.id))) continue
+      for (const leaf of questObjectives(quest.condition)) {
+        if (!matches(leaf)) continue
+        if (quest.condition.kind === 'allOf') {
+          manager.incrementObjective(quest.id, leaf.id, amount, leaf.amount)
+        } else {
+          manager.incrementProgress(quest.id, amount,
+            leaf.kind === 'acquire' ? leaf.amount : undefined)
+        }
       }
-
-      const condition: QuestCondition = registry.get(progress.questId).condition
-
-      if (condition.kind !== 'flag') {
-        continue
-      }
-
-      if (condition.flagId !== flagId) {
-        continue
-      }
-
-      manager.incrementProgress(progress.questId, 1)
     }
   }
+
 }

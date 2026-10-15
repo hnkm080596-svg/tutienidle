@@ -151,13 +151,16 @@ describe('W4 dom-audio lane', () => {
   }
 
   it('audio bundles enumerate only manifest rows with non-empty src', () => {
-    expect(getBundleDescriptors('audio-core')).toEqual([])
-    expect(getBundleDescriptors('audio-combat')).toEqual([])
-    expect(getBundleDescriptors('audio-tribulation')).toEqual([])
+    const core = getBundleDescriptors('audio-core')
+    const combat = getBundleDescriptors('audio-combat')
+    const tribulation = getBundleDescriptors('audio-tribulation')
+    expect(core.some((d) => d.key === '/assets/audio/ui/ui_confirm.wav')).toBe(true)
+    expect(combat.some((d) => d.key === '/assets/audio/ui/combat_exit.wav')).toBe(true)
+    expect(tribulation.some((d) => d.key === '/assets/audio/ui/tribulation_answer_ok.wav')).toBe(true)
 
     const restore = injectCue('combat.hit', 'assets/audio/sfx/combat/hit.ogg')
     try {
-      expect(getBundleDescriptors('audio-core')).toEqual([])
+      expect(getBundleDescriptors('audio-core')).toEqual(core)
       const combat = getBundleDescriptors('audio-combat')
       const row = combat.find((d) => d.key === 'assets/audio/sfx/combat/hit.ogg')
       expect(row).toBeDefined()

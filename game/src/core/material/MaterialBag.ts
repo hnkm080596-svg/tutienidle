@@ -169,6 +169,14 @@ export class MaterialBag {
     )
   }
 
+  /** Restore an owned bag checkpoint without calling overridable grant hooks. */
+  restoreStacks(stacks: Readonly<MaterialStack>[]): void {
+    this.materials.clear()
+    for (const stack of stacks) {
+      this.materials.set(stack.material.id, { ...stack })
+    }
+  }
+
 
   clear() {
     this.materials.clear()

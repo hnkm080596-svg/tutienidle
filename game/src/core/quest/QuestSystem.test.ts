@@ -87,7 +87,8 @@ describe('QuestSystem', () => {
     const pillRegistry = new PillRegistry()
     const pillBag = new PillBag()
 
-    const bags = { materialRegistry, materialBag, pillRegistry, pillBag }
+    const bags = { materialRegistry, materialBag, pillRegistry, pillBag,
+      withAtomicClaim: <T>(settle: () => T): T => settle() }
     const rewardSystem = new RewardSystem()
 
     return { registry, manager, system, bags, rewardSystem, materialRegistry, materialBag }
@@ -104,6 +105,24 @@ describe('QuestSystem', () => {
     const receiver = createReceiver()
     expect(system.claim(registry, manager, rewardSystem, receiver, bags, 'collect_test')).toBe(true)
     expect(materialBag.getAmount('linh_chi')).toBe(0)
+    expect(receiver.spiritStone).toBe(10)
+  })
+
+  it('refuses to settle claim without an owner-backed transaction', () => {
+    const { registry, manager, system, bags, rewardSystem, materialRegistry, materialBag } = setup()
+    system.reconcileActiveQuests(registry, manager, createPlayer())
+    materialBag.add(materialRegistry.get('linh_chi'), 5)
+    manager.incrementProgress('collect_test', 5)
+    const receiver = createReceiver()
+    const { withAtomicClaim: _unused, ...unprotectedBags } = bags
+
+    expect(() => system.claim(registry, manager, rewardSystem, receiver, unprotectedBags, 'collect_test'))
+      .toThrow('Quest claim requires an atomic settlement boundary')
+    expect(materialBag.getAmount('linh_chi')).toBe(5)
+    expect(receiver.spiritStone).toBe(0)
+    expect(manager.getProgress('collect_test')?.claimed).toBe(false)
+    expect(manager.isClaiming()).toBe(false)
+    expect(system.claim(registry, manager, rewardSystem, receiver, bags, 'collect_test')).toBe(true)
     expect(receiver.spiritStone).toBe(10)
   })
 
@@ -253,7 +272,8 @@ describe('QuestSystem - domain-scoped reward material gate (F-W-10)', () => {
     const pillRegistry = new PillRegistry()
     const pillBag = new PillBag()
 
-    const bags = { materialRegistry, materialBag, pillRegistry, pillBag, playerRealmId }
+    const bags = { materialRegistry, materialBag, pillRegistry, pillBag, playerRealmId,
+      withAtomicClaim: <T>(settle: () => T): T => settle() }
     const rewardSystem = new RewardSystem()
 
     const player = createPlayer()
@@ -297,7 +317,10 @@ describe('QuestSystem - quest reward realm-band scaling (2026-10-05)', () => {
     const pillRegistry = new PillRegistry()
     const pillBag = new PillBag()
 
-    const bags = { materialRegistry, materialBag, pillRegistry, pillBag }
+    // Amount-only fixture: receiver callbacks in this suite cannot throw.
+    // Fault/rollback behavior is tested through the real GameManager path.
+    const bags = { materialRegistry, materialBag, pillRegistry, pillBag,
+      withAtomicClaim: <T>(settle: () => T): T => settle() }
     const rewardSystem = new RewardSystem()
 
     const player = createPlayer(playerRealmId)

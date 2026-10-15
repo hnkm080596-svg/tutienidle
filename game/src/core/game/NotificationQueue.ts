@@ -18,6 +18,14 @@ export class NotificationQueue {
     this.items.push(event)
   }
 
+  checkpoint(): NotificationEvent[] {
+    return [...this.items]
+  }
+
+  restoreCheckpoint(items: readonly NotificationEvent[]): void {
+    this.items = [...items]
+  }
+
   drain(): NotificationEvent[] {
     if (this.items.length === 0) {
       return EMPTY_EVENTS

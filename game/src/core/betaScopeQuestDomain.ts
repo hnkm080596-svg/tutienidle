@@ -13,12 +13,16 @@ import type { MaterialRegistry } from './material/MaterialRegistry'
 import type { PillBag } from './pill/PillBag'
 import type { PillRegistry } from './pill/PillRegistry'
 import type { PlayerData } from './player/Player'
-import type { Quest } from './quest/Quest'
+import type { Quest, QuestObjective } from './quest/Quest'
+import { questObjectives } from './quest/Quest'
 import type { QuestProgress } from './quest/QuestProgress'
 import {
   isQuestRewardDropAdmitted,
   questRewardBandRealmId,
   scaleQuestRewardByRealm,
+  questClaimDisabledReason,
+  questObjectiveProgress,
+  questTurnInCosts,
 } from './quest/QuestSystem'
 import type { QuestRegistry } from './quest/QuestRegistry'
 
@@ -47,6 +51,7 @@ export type BetaQuestClaimDisabledReason =
   | 'incomplete'
   | 'missing-turnin-items'
   | 'already-claimed'
+  | 'claim-in-progress'
 
 export interface BetaQuestClaim {
   available: boolean
@@ -62,6 +67,8 @@ export interface BetaQuestTurnIn {
 }
 
 export interface BetaQuestSurfaceModel {
+  /** Stable leaf rows for future multiobjective consumers. */
+  objectives?: readonly BetaQuestObjectiveModel[]
   id: string
   name: string
   description: string
@@ -105,6 +112,16 @@ export interface BetaQuestSurfaceModel {
   lockedPreview?: BetaQuestLockedPreview
 }
 
+export interface BetaQuestObjectiveModel {
+  id: string
+  kind: QuestObjective['kind']
+  progress: number
+  target: number
+  targetLabel: string | null
+  flagId?: string
+  turnIn?: BetaQuestTurnIn
+}
+
 /** Reasons the previewed chain step is still locked (both may apply). */
 export interface BetaQuestLockedPreview {
   /** Display name of the unmet predecessor quest. */
@@ -127,14 +144,16 @@ export interface BetaQuestSurfaceDeps {
   questRegistry?: Pick<QuestRegistry, 'has' | 'get'>
 }
 
-function targetLabelFor(quest: Quest, deps: BetaQuestSurfaceDeps): string | null {
-  const condition = quest.condition
+function targetLabelFor(condition: QuestObjective, deps: BetaQuestSurfaceDeps): string | null {
 
-  if (condition.kind === 'collect') {
+  if (condition.kind === 'collect' || condition.kind === 'acquire') {
     return deps.materialRegistry.has(condition.materialId)
       ? deps.materialRegistry.get(condition.materialId).name
       : condition.materialId
   }
+
+  if (condition.kind === 'realm_reached') return condition.realmId
+  if (condition.kind === 'stage_clear') return condition.stageId
 
   if (condition.kind !== 'kill') {
     return null
@@ -208,22 +227,8 @@ function claimFor(
   progress: QuestProgress,
   deps: BetaQuestSurfaceDeps,
 ): BetaQuestClaim {
-  if (progress.claimed) {
-    return { available: false, claimed: true, disabledReason: 'already-claimed' }
-  }
-
-  if (progress.progress < quest.condition.amount) {
-    return { available: false, claimed: false, disabledReason: 'incomplete' }
-  }
-
-  if (
-    quest.condition.kind === 'collect' &&
-    !deps.materialBag.has(quest.condition.materialId, quest.condition.amount)
-  ) {
-    return { available: false, claimed: false, disabledReason: 'missing-turnin-items' }
-  }
-
-  return { available: true, claimed: false, disabledReason: null }
+  const disabledReason = questClaimDisabledReason(quest, progress, deps.materialBag)
+  return { available: disabledReason === null, claimed: progress.claimed, disabledReason }
 }
 
 /**
@@ -239,15 +244,32 @@ export function betaQuestSurfaceFor(
   deps: BetaQuestSurfaceDeps,
 ): BetaQuestSurfaceModel {
   const condition = quest.condition
+  const leaves = questObjectives(condition)
+  const costs = questTurnInCosts(quest)
+  const objectives = leaves.map((leaf): BetaQuestObjectiveModel => ({
+    id: leaf.id,
+    kind: leaf.kind,
+    progress: questObjectiveProgress(quest, progress, leaf),
+    target: leaf.amount,
+    targetLabel: targetLabelFor(leaf, deps),
+    flagId: leaf.kind === 'flag' ? leaf.flagId : undefined,
+    turnIn: leaf.kind === 'collect' ? {
+      materialId: leaf.materialId,
+      required: costs.get(leaf.materialId) ?? leaf.amount,
+      owned: deps.materialBag.getAmount(leaf.materialId),
+    } : undefined,
+  }))
 
   return {
     id: quest.id,
     name: quest.name,
     description: quest.description,
     cadence: 'once',
-    progress: progress.progress,
-    target: condition.amount,
-    targetLabel: targetLabelFor(quest, deps),
+    progress: condition.kind === 'allOf'
+      ? objectives.filter((leaf) => leaf.progress >= leaf.target).length : progress.progress,
+    target: condition.kind === 'allOf' ? leaves.length : condition.amount,
+    targetLabel: condition.kind === 'allOf' ? null : objectives[0]?.targetLabel ?? null,
+    ...(condition.kind === 'allOf' ? { objectives } : {}),
     flagId: condition.kind === 'flag' ? condition.flagId : undefined,
     rewards: rewardsFor(quest, deps, player.realmId),
     claim: claimFor(quest, progress, deps),

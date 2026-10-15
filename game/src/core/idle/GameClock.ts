@@ -65,6 +65,11 @@ export function utcDayBucket(ms: number): number {
   return Math.floor(ms / UTC_DAY_MS)
 }
 
+/** Monday 00:00 UTC; week zero starts on 1970-01-05. */
+export function utcWeekBucket(ms: number): number {
+  return Math.floor((utcDayBucket(ms) - 4) / 7)
+}
+
 /**
  * Tinh thoi gian offline (da clamp theo maxOfflineSeconds).
  *

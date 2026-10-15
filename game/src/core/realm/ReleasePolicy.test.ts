@@ -528,7 +528,8 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
         manager,
         rewardSystem,
         receiver,
-        { materialRegistry, materialBag, pillRegistry, pillBag },
+        { materialRegistry, materialBag, pillRegistry, pillBag,
+          withAtomicClaim: <T>(settle: () => T): T => settle() },
         'release_policy_test',
       ),
     ).toBe(true)
@@ -783,7 +784,8 @@ describe('ReleasePolicy - pull-token census integrity (M-F-COMPANION-GIFT)', () 
         manager,
         rewardSystem,
         receiver,
-        { materialRegistry, materialBag, pillRegistry, pillBag },
+        { materialRegistry, materialBag, pillRegistry, pillBag,
+          withAtomicClaim: <T>(settle: () => T): T => settle() },
         'pull_token_mixed_test',
       ),
     ).toBe(true)

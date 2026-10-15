@@ -196,6 +196,14 @@ export class PillBag {
     return Array.from(this.pills.values(), (stack) => ({ ...stack }))
   }
 
+  /** Restore an owned bag checkpoint without re-running grant hooks. */
+  restoreStacks(stacks: Readonly<PillStack>[]): void {
+    this.pills.clear()
+    for (const stack of stacks) {
+      this.pills.set(stackKey(stack.pill.id, stack.quality), { ...stack })
+    }
+  }
+
   clear() {
     this.pills.clear()
   }

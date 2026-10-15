@@ -34,7 +34,67 @@ export interface FlagQuestCondition {
   amount: number
 }
 
-export type QuestCondition = CollectQuestCondition | KillQuestCondition | FlagQuestCondition
+export interface AcquireQuestCondition {
+  kind: 'acquire'
+  materialId: string
+  amount: number
+}
+
+export interface RealmQuestCondition {
+  kind: 'realm_reached'
+  realmId: string
+  amount: 1
+}
+
+export interface StageQuestCondition {
+  kind: 'stage_clear'
+  stageId: string
+  amount: 1
+}
+
+// Event leaves count committed deliveries while active. Acquisition is
+// historical progress, never a possession check or a turn-in cost.
+export type QuestLeafCondition =
+  | CollectQuestCondition | AcquireQuestCondition | KillQuestCondition | FlagQuestCondition
+  | RealmQuestCondition | StageQuestCondition
+
+export type QuestObjective = QuestLeafCondition & { id: string }
+
+export interface AllOfQuestCondition {
+  kind: 'allOf'
+  objectives: readonly QuestObjective[]
+}
+
+export type QuestCondition = QuestLeafCondition | AllOfQuestCondition
+
+// Legacy single conditions use a reserved identity only in projections;
+// their authoritative counter remains the existing scalar progress field.
+export function questObjectives(condition: QuestCondition): readonly QuestObjective[] {
+  return condition.kind === 'allOf'
+    ? condition.objectives
+    : [{ ...condition, id: 'legacy' }]
+}
+
+export function isValidQuestCondition(condition: QuestCondition): boolean {
+  const leaves = questObjectives(condition)
+  const ids = new Set<string>()
+  if (!Array.isArray(leaves) || leaves.length === 0) return false
+  return leaves.every((leaf) => {
+    if (!leaf || typeof leaf.id !== 'string' || leaf.id.trim().length === 0 ||
+        ids.has(leaf.id) || !Number.isSafeInteger(leaf.amount) || leaf.amount <= 0) return false
+    ids.add(leaf.id)
+    switch (leaf.kind) {
+      case 'collect':
+      case 'acquire': return typeof leaf.materialId === 'string' && leaf.materialId.length > 0
+      case 'flag': return typeof leaf.flagId === 'string' && leaf.flagId.length > 0
+      case 'realm_reached': return leaf.amount === 1 && typeof leaf.realmId === 'string' && leaf.realmId.length > 0
+      case 'stage_clear': return leaf.amount === 1 && typeof leaf.stageId === 'string' && leaf.stageId.length > 0
+      case 'kill': return (leaf.enemyId === undefined || typeof leaf.enemyId === 'string') &&
+        (leaf.zoneId === undefined || typeof leaf.zoneId === 'string')
+      default: return false
+    }
+  })
+}
 
 // Feature-witness flag ids emitted by domain seams into
 // QuestSystem.onFlag. Domain writers emit the literal id; the constants
