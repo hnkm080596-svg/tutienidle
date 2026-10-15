@@ -1,3 +1,4 @@
+import type { MaterialReceipt } from '../material/MaterialReceipt'
 import type { ArtifactPath } from '../artifact/Artifact'
 import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
@@ -155,7 +156,7 @@ export class GameManagerRealmAdvanceOps {
       markQuestRealmTransition: () => void
       // Material-landing funnel (the essence change credit is a live
       // landing).
-      notifyMaterialGained: (materialId: string, amount: number) => void
+      notifyMaterialGained: (materialId: string, amount: number, receipt: MaterialReceipt | null) => void
       // Growth toast funnel - invest converts bag essence into progress
       // silently; the queue surfaces the conversion the drop toast
       // cannot describe.

@@ -459,11 +459,7 @@ describe('r28-AUT - verified-held fix arms', () => {
         nextCycleAt,
         started: true,
       }, currentMs)
-      expect(system.getSaveState()).toEqual({
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-        nextCycleAt: 0,
-        started: false,
-      })
+      expect(system.getSaveState()).toEqual({})
     }
   })
 

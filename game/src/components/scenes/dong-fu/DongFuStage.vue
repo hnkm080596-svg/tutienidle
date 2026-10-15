@@ -20,6 +20,7 @@ import {
   type CommandWheelSlot,
 } from '@/data/ui/commandWheelCatalog'
 import { betaWheelSlots, isBetaStandalonePanel } from '@/core/betaScopeSurface'
+import { isBetaTechniqueSurfaceUnlocked } from '@/core/betaScopeTechniqueDomain'
 import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
 import { ARTIFACT_UNLOCK_REALM_ID, isArtifactDomainUnlocked } from '@/core/artifact/ArtifactProgression'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
@@ -217,6 +218,7 @@ const NAV_FEATURE_LOCKED: Partial<Record<PcPaperIcon, string>> = {
 }
 function navLocked(id: PcPaperIcon): boolean {
   if (id === 'vendor' || NAV_LOCKED.includes(id)) return true
+  if (id === 'technique' && !isBetaTechniqueSurfaceUnlocked(player.$state)) return true
   const panel = NAV_FEATURE_LOCKED[id]
   return panel !== undefined && !isBetaStandalonePanel(panel)
 }
@@ -519,7 +521,7 @@ onBeforeUnmount(() => {
 .df-scene { --df-gold: #c9a761; --df-gold-light: #ebd094; --df-ivory: #f1e6c5; position: relative; width: 100%; height: 100%; overflow: hidden; color: var(--df-ivory); font-family: var(--font-display, Georgia, serif); }
 .df-scene :deep(*) { box-sizing: border-box; }
 .df-scene :deep(button) { font-family: inherit; font-weight: 400; }
-.df-scene :deep(button:focus-visible) { outline: none; }
+.df-scene :deep(button:focus-visible) { outline: 2px solid var(--df-gold, #c9a761); outline-offset: 2px; }
 
 .landscape-design { background-size: 100% 100%; }
 

@@ -62,6 +62,7 @@ import { REALM_PASSIVES } from '@/data/realm/RealmPassives'
 import { HiddenBeastSystem } from '@/core/game/HiddenBeastSystem'
 import { hiddenBeastChannels } from '@/data/drop/HiddenMaterialChannels'
 import { HIDDEN_BEASTS } from '@/data/enemy/HiddenBeasts'
+import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { MaterialBag } from '@/core/material/MaterialBag'
 import { MaterialRegistry } from '@/core/material/MaterialRegistry'
 import { materials } from '@/data/materials/materials'
@@ -305,11 +306,11 @@ describe('carried hidden mechanics mint nothing downstream', () => {
     for (const material of materials) registry.register(material)
     const bag = new MaterialBag()
     bag.add(registry.get('tinh_hoa_phap_the'), 99_999)
-    bag.add(registry.get('spirit_stone_ha_pham'), 99_999)
+    bag.add(registry.get(SPIRIT_STONE_MATERIAL_ID), 99_999)
     // Bag.add clamps at the authored stack cap - compare pre/post, not
     // the requested amount.
     const essenceBefore = bag.getAmount('tinh_hoa_phap_the')
-    const stoneBefore = bag.getAmount('spirit_stone_ha_pham')
+    const stoneBefore = bag.getAmount(SPIRIT_STONE_MATERIAL_ID)
 
     const p = player({
       realmId: 'foundation_establishment',
@@ -337,7 +338,7 @@ describe('carried hidden mechanics mint nothing downstream', () => {
     expect(result.outcome).toBe('ineligible')
     expect(result.level).toBe(5)
     expect(bag.getAmount('tinh_hoa_phap_the')).toBe(essenceBefore)
-    expect(bag.getAmount('spirit_stone_ha_pham')).toBe(stoneBefore)
+    expect(bag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stoneBefore)
     expect(
       (p.hiddenPerfection!.realms.foundation_establishment!.mechanic as unknown as {
         completed: number
@@ -384,7 +385,7 @@ describe('dormant production settle seams', () => {
     const registry = new MaterialRegistry()
     for (const material of materials) registry.register(material)
     const bag = new MaterialBag()
-    bag.add(registry.get('mortal_ore_decade'), 100)
+    bag.add(registry.get('material_spirit_ore_decade'), 100)
 
     const system = new DecomposeSystem(bag)
     system.restore({
@@ -393,15 +394,11 @@ describe('dormant production settle seams', () => {
       started: true,
     })
 
-    expect(system.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
-    expect(system.previewDecomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
-    expect(system.decomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
-    expect(bag.getAmount('mortal_ore_decade')).toBe(100)
-    expect(system.decompose(['mortal_ore_decade'])).toBe(false)
+    expect(system.getSaveState()).toEqual({})
+    expect(system.previewDecomposeOre('material_spirit_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
+    expect(system.decomposeOre('material_spirit_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
+    expect(bag.getAmount('material_spirit_ore_decade')).toBe(100)
+    expect(system.decompose(['material_spirit_ore_decade'])).toBe(false)
   })
 })
 

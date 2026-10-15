@@ -1,3 +1,4 @@
+import { validMaterialReceipt, type MaterialReceipt, type MaterialGrant } from '../material/MaterialReceipt'
 import { QuestRegistry } from '../quest/QuestRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { QuestSystem } from '../quest/QuestSystem'
@@ -53,33 +54,30 @@ export interface GameManagerQuestOpsDeps {
  * GameManager.
  */
 export class GameManagerQuestOps {
-  constructor(private readonly deps: GameManagerQuestOpsDeps) {}
+  constructor(private readonly deps: GameManagerQuestOpsDeps) {
+    deps.materialBag.setDeliveryConsumer((grant) => this.deliverMaterialGrant(grant))
+  }
 
   /**
-   * Material-landing funnel (ex notifyQuestMaterialGained) - call
-   * EVERY time a material lands in the player bag. Subscriber:
-   * collect-quest progress (questSystem.onMaterialCollected). A
-   * zero/negative delivered amount is not a landing: no subscriber
-   * fires at all. NEVER call during save restore (double-count).
-   * BattleLootSystem and every GameManager material-granting path
-   * (production settle, building claim, Hoa Luyen, Linh Thach reward,
-   * refund, change credit...) route through this helper.
-   *
-   * 2026-09-23 hidden-perfection-lineage sec.19: the perfection-material
-   * discovery subscriber retired with BodyPerfection - HIDDEN-B/C
-   * mechanisms own their own discovery events.
+   * Consume an inventory-owned delivery exactly once for the current active
+   * quest set. Hydration, starter balances and refunds never issue receipts.
+   * Restore may replay the durable outbox using these same receipt identities.
    */
-  notifyMaterialGained(materialId: string, amount: number): void {
-    if (amount <= 0) {
-      return
-    }
+  private deliverMaterialGrant(grant: MaterialGrant): void {
+    this.deps.questManager.consumeMaterialGrant(grant, () => {
+      if (grant.receipt) this.deps.questSystem.onMaterialCollected(
+        this.deps.questRegistry, this.deps.questManager, grant.materialId, grant.receipt.payload.delivered,
+      )
+    })
+  }
 
-    this.deps.questSystem.onMaterialCollected(
-      this.deps.questRegistry,
-      this.deps.questManager,
-      materialId,
-      amount,
-    )
+  notifyMaterialGained(materialId: string, amount: number, receipt: MaterialReceipt | null): void {
+    if (!receipt) { if (amount > 0) throw new Error('Material acquisition requires an inventory receipt'); return }
+    if (!validMaterialReceipt(receipt) || receipt.payload.materialId !== materialId || receipt.payload.delivered !== amount) throw new Error('Malformed or mismatched material receipt')
+    if (this.deps.materialBag.isRetiredReceipt(receipt)) return
+    if (!this.deps.materialBag.ownsReceipt(receipt)) throw new Error('Foreign or mismatched material receipt')
+    // credit/withAcquisition already attempted delivery. Pending retry belongs
+    // to the next command/tick, never a duplicate callback inside this batch.
   }
 
   getActiveQuests(): { quest: Quest; progress: QuestProgress }[] {
@@ -152,7 +150,7 @@ export class GameManagerQuestOps {
     // neither active nor completed renders as a read-only dimmed row at
     // the chain tail, with the gates that still hold it. Pure read -
     // never admits, never mutates.
-    const completed = new Set(this.deps.questManager.getState().completedOnceIds)
+    const completed = new Set(this.deps.questManager.getCompletedOnceIds())
     const preview = chainOrder.find(
       (quest) => !models.some((model) => model.id === quest.id) && !completed.has(quest.id),
     )
@@ -249,8 +247,8 @@ export class GameManagerQuestOps {
         // M-F-BODY-PERFECTION - reward materials granted inside claim()
         // route back through THIS funnel (quest + discovery), instead of
         // the legacy direct onMaterialCollected call.
-        onMaterialGained: (materialId, delivered) =>
-          this.notifyMaterialGained(materialId, delivered),
+        onMaterialGained: (materialId, delivered, receipt) =>
+          this.notifyMaterialGained(materialId, delivered, receipt),
         playerRealmId: player.realmId,
         onClaimed: (quest) => {
           this.deps.notifications.push({ kind: 'loot', message: `Hoàn thành: ${quest.name}` })
@@ -267,6 +265,7 @@ export class GameManagerQuestOps {
           // Preserve live player object and nested reactive identities on failure.
           const savedPlayer = capturePlayerCheckpoint(player)
           const savedMaterials = this.deps.materialBag.getAll()
+          const savedMaterialReceipts = this.deps.materialBag.receiptSnapshot()
           const savedPills = this.deps.pillBag.getAll()
           const savedQuests = structuredClone(this.deps.questManager.getState())
           const savedNotifications = this.deps.notifications.checkpoint()
@@ -274,6 +273,7 @@ export class GameManagerQuestOps {
             return settle()
           } catch (error) {
             this.deps.materialBag.restoreStacks(savedMaterials)
+            this.deps.materialBag.replaceReceiptCheckpoint(savedMaterialReceipts)
             this.deps.pillBag.restoreStacks(savedPills)
             this.deps.questManager.restore(savedQuests)
             this.deps.notifications.restoreCheckpoint(savedNotifications)

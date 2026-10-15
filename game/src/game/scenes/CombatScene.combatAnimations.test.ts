@@ -80,14 +80,14 @@ function castBinding(scene: ReturnType<typeof createScene>) {
 let castSeq = 0
 function fireSkillCast(
   scene: ReturnType<typeof createScene>,
-  over: { sourceId?: string; slotRole?: string; skillId?: string; pendingToken?: string },
+  over: { sourceId?: string; slotRole?: string; skillId?: string; pendingToken?: string; presetId?: string },
 ) {
   castSeq++
   const cast = {
     ref: { sessionId: 1, requestId: `cast-${castSeq}`, token: `tok-${castSeq}` },
     rootSkillId: over.skillId ?? 'generic_basic',
     resolvedSkillId: over.skillId ?? 'generic_basic',
-    presetId: 'ngu_kiem_flight',
+    presetId: over.presetId ?? 'ngu_kiem_flight',
     source: { entityId: over.sourceId ?? PLAYER_ID, row: 1, column: 1 },
     declaredTargets: [{ entityId: 'enemy', row: 1, column: 8 }],
     candidateInstanceCount: 1,
@@ -584,6 +584,26 @@ describe('CombatScene â€” playCombatAnimation()', () => {
 
     expect(start).toHaveBeenCalledTimes(1)
     expect(gameSprite.playCalls).toEqual(['pham_nhan-attack'])
+  })
+
+  it('forwards the played Linh Bao hand-raised marker and impact to the shared runner', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    scene.playerArmed = false
+    scene.sprites.set(PLAYER_ID, sprite)
+    scene.anims = { exists: () => true }
+    const start = vi.spyOn(scene.skillPlayback, 'start')
+    const cast = fireSkillCast(scene, {
+      sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'linh_bao', presetId: 'linh_bao_burst',
+    })
+    const clip = animatedArtFormFor('pham_nhan_unarmed')!.castClips!.linh_bao!
+    expect(clip.chargeStartFrameIndex).toBe(4)
+    expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toEqual([clip.key])
+    expect(start).toHaveBeenCalledExactlyOnceWith(cast, scene.gameManagerRef, {
+      castMs: clipImpactMs(clip), chargeStartMs: 4 * 1000 / clip.frameRate,
+    })
+    expect(scene.skillVfxDebug.playback).toMatchObject({ phase: 'cast', faultCount: 0 })
+    expect(scene.gameManagerRef.acknowledgeActionImpact).not.toHaveBeenCalled()
   })
 
   // Impact-sync sec.62 (I5): the timing clip IS the played clip. When the
@@ -1255,7 +1275,7 @@ describe('CombatScene — onTurnStandbyComplete dying-entity tween channel (CR1-
     expect(killTweensOf).not.toHaveBeenCalled()
   })
 
-  it('living entity still gets the rect tween reset — baseline behavior unchanged', () => {
+  it('living entity returns to idle without resetting unrelated rect tweens', () => {
     const scene = createScene()
     const sprite = makeSprite('rect', fakeGameSprite())
 
@@ -1265,8 +1285,10 @@ describe('CombatScene — onTurnStandbyComplete dying-entity tween channel (CR1-
     scene.tweens = { killTweensOf }
     scene.anims = { exists: () => false }
 
+    const play = vi.spyOn(scene, 'playCombatAnimation')
     new CombatActionFeedback(scene as never).onTurnStandbyComplete({ actorId: 'mortal_savage_tiger_1' })
 
-    expect(killTweensOf).toHaveBeenCalledWith(sprite.rect)
+    expect(play).toHaveBeenCalledExactlyOnceWith(sprite, 'mortal_savage_tiger_1', 'standby_to_idle')
+    expect(killTweensOf).not.toHaveBeenCalled()
   })
 })

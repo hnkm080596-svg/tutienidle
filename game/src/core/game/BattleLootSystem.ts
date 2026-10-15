@@ -1,3 +1,4 @@
+import type { MaterialReceipt } from '../material/MaterialReceipt'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { EventBus } from '../events/EventBus'
 import { randomInt } from '../reward/DropRoll'
@@ -115,7 +116,7 @@ export interface BattleLootSystemDeps {
   // M-F-BODY-PERFECTION - material landings route through the ONE
   // funnel (collect-quest + canonical discovery) instead of calling
   // onMaterialCollected directly; quest deps stay for the kill hook.
-  notifyMaterialGained: (materialId: string, amount: number) => void
+  notifyMaterialGained: (materialId: string, amount: number, receipt: MaterialReceipt | null) => void
   // GP-01 - authorized live-time owner for the idle insight quota
   // clock. GameManager injects `() => time.now()`; direct-construction
   // fixtures fall back to the wall clock, preserving pre-migration
@@ -255,6 +256,7 @@ export class BattleLootSystem {
     healTarget: CombatEntity | null,
     stageOverride?: Stage,
   ) {
+    return this.deps.materialBag.withAcquisition<void>(() => {
     for (const battleEnemy of enemies) {
       if (battleEnemy.entity.alive || battleEnemy.rewardGranted) {
         continue
@@ -516,6 +518,8 @@ export class BattleLootSystem {
         enemies.splice(i, 1)
       }
     }
+
+    })
   }
 
   private giveReward(receiver: RewardReceiver, reward: Reward) {
@@ -655,11 +659,11 @@ export class BattleLootSystem {
               amount = Math.min(amount, open)
             }
 
-            const materialOverflow = this.deps.materialBag.add(material, amount)
+            const { overflow: materialOverflow, receipt } = this.deps.materialBag.credit(material, amount)
 
             // Collect-quest + perfection-discovery hook - chi tinh
             // luong that su vao tui (tru overflow).
-            this.deps.notifyMaterialGained(drop.itemId, amount - materialOverflow)
+            this.deps.notifyMaterialGained(drop.itemId, amount - materialOverflow, receipt)
 
             if (materialOverflow > 0) {
               overflowParts.push(`${materialOverflow} ${material.name}`)
@@ -823,9 +827,9 @@ export class BattleLootSystem {
       }
 
       // 9.8 - tran tui: funnel chi tinh delivered + toast bag.overflow.
-      const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
+      const { overflow, receipt } = this.deps.materialBag.credit(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
-      this.deps.notifyMaterialGained(reward.materialId, reward.amount - overflow)
+      this.deps.notifyMaterialGained(reward.materialId, reward.amount - overflow, receipt)
 
       if (overflow > 0) {
         this.deps.notifications.push(

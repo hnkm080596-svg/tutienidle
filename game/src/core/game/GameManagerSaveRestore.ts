@@ -1,3 +1,5 @@
+import { validateProductionReceiptSite } from '../production/ProductionReceiptCursor'
+import { validateMaterialReceiptSave } from '../quest/receipt/MaterialReceiptSaveValidation'
 import { SkillManager } from '../skill/SkillManager'
 import type { Skill } from '../skill/Skill'
 import type { TechniqueSystem } from '../technique/TechniqueSystem'
@@ -120,6 +122,12 @@ export class GameManagerSaveRestore {
     // applies the IDENTICAL check set (registry refs, technique holder +
     // progression, mortal-boundary contract, body integrity). One
     // authority: edit there, never fork a second rule here.
+    if (save.materialReceipts !== undefined) {
+      if (!validateMaterialReceiptSave(save.materialReceipts, save.quests?.materialReceipts, save.productionSites)) throw new Error('Malformed or foreign material receipt save')
+    } else if (save.quests?.materialReceipts !== undefined) {
+      throw new Error('Missing material receipt producer state')
+    }
+    if ((save.productionSites ?? []).some((site) => !validateProductionReceiptSite(site))) throw new Error('Malformed production receipt cursor')
     assertSaveAcceptable(save, {
       hasEquipment: (id) => this.deps.equipmentRegistry.has(id),
       hasAffix: (id) => this.deps.affixRegistry.has(id),
@@ -236,6 +244,10 @@ export class GameManagerSaveRestore {
     // R7/R8.1). Without this, a live-session restore into a
     // nonempty bag (boot retry, reload race) would merge saved entries on
     // top of whatever was already there instead of replacing it.
+    // A complete save replaces all owners, including its receipt history.
+    // Monotonic delivery replay does not prohibit loading an older full save.
+    if (save.materialReceipts !== undefined) this.deps.materialBag.replaceReceiptCheckpoint(save.materialReceipts)
+    else this.deps.materialBag.startReceiptBaseline()
     this.deps.materialBag.clear()
     this.deps.pillBag.clear()
     this.deps.equipmentBag.clear()
@@ -370,12 +382,17 @@ export class GameManagerSaveRestore {
       save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
       liveNowMs,
     )
+    // The producer journal is also the durable outbox. Replay before admitting
+    // new quests, so a pre-admission arrival never becomes retroactive credit.
+    this.deps.materialBag.flushDeliveries()
+
 
     // Production (plan S4.3) - restore state + offline settle tuan tu
     // trong cap; MOI auto-cycle mot seed/roll rieng.
     this.deps.productionSystem.restoreStates(
       (save.productionSites ?? []) as ProductionSiteStateInput[],
       restoreClockMs,
+      true,
     )
 
     for (const definition of this.deps.productionSystem.getSiteDefinitions()) {
@@ -536,6 +553,9 @@ export class GameManagerSaveRestore {
     // restore converges the active set to current eligibility BEFORE
     // the first tick runs. Placed LAST so the restored player realm is
     // final when unlock evaluation runs.
+    // Offline settlement can append more deliveries. Consume those against
+    // the carried active set before admitting new quests at this boundary.
+    this.deps.materialBag.flushDeliveries()
     this.deps.reconcileQuestLifecycle()
 
     // M1 (ARCH-001) - commit the payload identity only AFTER every slice

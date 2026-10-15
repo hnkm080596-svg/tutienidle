@@ -396,7 +396,7 @@ describe('auditR25 COR probe - quest cap and sibling lists (R25-COR-3)', () => {
 
   it('Q1 the cap rejects crafted quest lists: 1025-entry active/completedOnceIds/questFlags all fail', () => {
     const activeOverflow = realSave((wire) => {
-      ;(wire as { quests?: unknown }).quests = {
+      ;(wire as { quests?: unknown }).quests = { ...((wire as { quests?: unknown }).quests as object), ...({
         active: Array.from({ length: 1025 }, (_, i) => ({
           questId: `craft_${i}`,
           progress: 0,
@@ -404,30 +404,30 @@ describe('auditR25 COR probe - quest cap and sibling lists (R25-COR-3)', () => {
         })),
         completedOnceIds: [],
         lastDailyResetAtMs: currentMs,
-      }
+      }) }
     })
     const activeResult = validateGameSaveShape(activeOverflow)
     expect(activeResult.ok).toBe(false)
     expect(activeResult.issues.some((issue) => issue.path === '.quests.active')).toBe(true)
 
     const onceOverflow = realSave((wire) => {
-      ;(wire as { quests?: unknown }).quests = {
+      ;(wire as { quests?: unknown }).quests = { ...((wire as { quests?: unknown }).quests as object), ...({
         active: [],
         completedOnceIds: Array.from({ length: 1025 }, (_, i) => `craft_${i}`),
         lastDailyResetAtMs: currentMs,
-      }
+      }) }
     })
     const onceResult = validateGameSaveShape(onceOverflow)
     expect(onceResult.ok).toBe(false)
     expect(onceResult.issues.some((issue) => issue.path === '.quests.completedOnceIds')).toBe(true)
 
     const flagsOverflow = realSave((wire) => {
-      ;(wire as { quests?: unknown }).quests = {
+      ;(wire as { quests?: unknown }).quests = { ...((wire as { quests?: unknown }).quests as object), ...({
         active: [],
         completedOnceIds: [],
         questFlags: Array.from({ length: 1025 }, (_, i) => `flag_${i}`),
         lastDailyResetAtMs: currentMs,
-      }
+      }) }
     })
     const flagsResult = validateGameSaveShape(flagsOverflow)
     expect(flagsResult.ok).toBe(false)
@@ -437,12 +437,12 @@ describe('auditR25 COR probe - quest cap and sibling lists (R25-COR-3)', () => {
   it('Q2 honest saves can never reach 1024: the whole authored roster (21 quests) validates clean', () => {
     expect(QUESTS.length).toBe(21)
     const honest = realSave((wire) => {
-      ;(wire as { quests?: unknown }).quests = {
+      ;(wire as { quests?: unknown }).quests = { ...((wire as { quests?: unknown }).quests as object), ...({
         active: QUESTS.map((quest) => ({ questId: quest.id, progress: 0, claimed: false })),
         completedOnceIds: QUESTS.map((quest) => quest.id),
         questFlags: ['flag_a'],
         lastDailyResetAtMs: currentMs,
-      }
+      }) }
     })
     const result = validateGameSaveShape(honest)
     expect(result.ok).toBe(true)
@@ -496,11 +496,11 @@ describe('auditR25 COR probe - quest day-bucket marker (R25-COR-4)', () => {
       primeMortalCreationPick(writerPlayer, writer.skillManager)
       const save = buildGameSave(writerPlayer, writer)
       const parsed = JSON.parse(JSON.stringify(save)) as Record<string, unknown>
-      ;(parsed as { quests?: unknown }).quests = {
+      ;(parsed as { quests?: unknown }).quests = { ...((parsed as { quests?: unknown }).quests as object), ...({
         active: [],
         completedOnceIds: [],
         lastDailyResetAtMs: craftedStamp,
-      }
+      }) }
       return parsed
     })()
     const shape = validateGameSaveShape(wire)

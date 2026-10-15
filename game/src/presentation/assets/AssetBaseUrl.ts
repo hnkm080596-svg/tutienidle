@@ -18,6 +18,10 @@ export function getAssetBaseUrl(): string {
 
 export function resolveAssetUrl(path: string): string {
   if (!EXTERNAL_BASE) {
+    // Packaged Electron loads index.html through file:, where / means disk root.
+    if (typeof location !== 'undefined' && location.protocol === 'file:' && /^\/(?!\/)/.test(path)) {
+      return `.${path}`
+    }
     return path
   }
   if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(path) || path.startsWith('data:') || path.startsWith('blob:')) {

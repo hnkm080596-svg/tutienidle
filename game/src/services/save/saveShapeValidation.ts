@@ -1,3 +1,6 @@
+import { validateProductionReceiptSite } from '../../core/production/ProductionReceiptCursor'
+import type { ProductionSiteStateInput } from '../../core/production/ProductionTypes'
+import { validateMaterialReceiptSave } from '../../core/quest/receipt/MaterialReceiptSaveValidation'
 // Shape validation cho save (save-shape-validation-plan.md, Phase 0) -
 // pure function, khong dependency runtime, thu hep dan tu unknown,
 // KHONG dung any. Chi kiem tra SU HIEN DIEN va KIEU cua field bat buoc;
@@ -3725,6 +3728,9 @@ function validateProductionSitesSave(
     // `workerCycles` is accepted only as the legacy save field. New saves
     // write worker-neutral `productionCycles`; all carried records remain
     // individually validated so their reward seeds and progress survive.
+    if (!validateProductionReceiptSite(entry as unknown as ProductionSiteStateInput)) {
+      issues.push({ path: `${entryPath}.receiptCursor`, message: 'Invalid production receipt identity/cursor' })
+    }
     const cycles = entry.productionCycles ?? entry.workerCycles
     const cycleField = entry.productionCycles !== undefined ? 'productionCycles' : 'workerCycles'
     if (cycles !== undefined) {
@@ -4719,6 +4725,12 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
 
   // Mission A1 - deep element checks: a present-but-malformed slice must
   // fail the boundary before restore trusts the declared TS shape.
+  const receiptQuests = typeof parsed.quests === 'object' && parsed.quests !== null
+    ? (parsed.quests as Record<string, unknown>).materialReceipts : undefined
+  if ((parsed.materialReceipts !== undefined && !validateMaterialReceiptSave(parsed.materialReceipts, receiptQuests, parsed.productionSites)) ||
+    (receiptQuests !== undefined && parsed.materialReceipts === undefined)) {
+    issues.push({ path: 'materialReceipts', message: 'Invalid material receipt producer/consumer state' })
+  }
   if (parsed.quests !== undefined) {
     validateQuestSave(parsed.quests, '.quests', issues)
   }

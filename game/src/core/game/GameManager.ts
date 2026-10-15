@@ -377,7 +377,7 @@ export class GameManager {
   readonly techniqueSystem = new TechniqueSystem(this.techniqueManager)
 
   readonly materialRegistry = new MaterialRegistry()
-  readonly materialBag = new MaterialBag()
+  readonly materialBag = new MaterialBag(() => this.time.now())
 
   readonly equipmentRegistry = new EquipmentRegistry()
   readonly equipmentBag = new EquipmentBag()
@@ -386,7 +386,7 @@ export class GameManager {
   // Instant ore exchange remains domain-owned; defer the acquisition hook
   // until a successful bag transaction has committed.
   readonly decomposeSystem = new DecomposeSystem(this.materialBag, {
-    onEssenceProduced: (materialId, amount) => this.questOps.notifyMaterialGained(materialId, amount),
+    onEssenceProduced: (materialId, amount, receipt) => this.questOps.notifyMaterialGained(materialId, amount, receipt),
   })
 
   // Core Loop Foundation checklist (Phase 3, Muc AFFIX) - thay the
@@ -618,8 +618,8 @@ export class GameManager {
       materialBag: this.materialBag,
       notifications: this.notifications,
       // Deferred closure - questOps is assigned later in this constructor.
-      notifyMaterialGained: (materialId, amount) =>
-        this.questOps.notifyMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount, receipt) =>
+        this.questOps.notifyMaterialGained(materialId, amount, receipt),
     })
 
     // P7-M4 - ONE override-aware path-runtime binding shared by combat
@@ -679,8 +679,8 @@ export class GameManager {
       markQuestRealmTransition: () => this.tickOps.markQuestRealmTransition(),
       // Deferred closures - questOps is assigned later in this
       // constructor (same pattern as the other funnel subscribers).
-      notifyMaterialGained: (materialId, amount) =>
-        this.questOps.notifyMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount, receipt) =>
+        this.questOps.notifyMaterialGained(materialId, amount, receipt),
       // Growth toasts (Luyen The invest feedback) drain through the same
       // queue the loot notifications use.
       notifications: this.notifications,
@@ -735,8 +735,8 @@ export class GameManager {
       questRegistry: this.questRegistry,
       questManager: this.questManager,
       // Deferred closure - questOps is assigned later in this constructor.
-      notifyMaterialGained: (materialId, amount) =>
-        this.questOps.notifyMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount, receipt) =>
+        this.questOps.notifyMaterialGained(materialId, amount, receipt),
       hiddenBeast: this.hiddenBeastSystem,
       // GP-01: the idle insight quota mint reads the authority clock.
       now: () => this.time.now(),
@@ -776,8 +776,8 @@ export class GameManager {
       buildingRegistry: this.buildingRegistry,
       buildingSystem: this.buildingSystem,
       notifications: this.notifications,
-      notifyMaterialGained: (materialId, amount) =>
-        this.questOps.notifyMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount, receipt) =>
+        this.questOps.notifyMaterialGained(materialId, amount, receipt),
       getActivePlayer: () => this.activePlayer,
       sessionRng: () => this.sessionRng(),
     })
@@ -791,8 +791,8 @@ export class GameManager {
       materialRegistry: this.materialRegistry,
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
-      notifyMaterialGained: (materialId, amount) =>
-        this.questOps.notifyMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount, receipt) =>
+        this.questOps.notifyMaterialGained(materialId, amount, receipt),
       // GP-01: building accrual claim/previews read the authority clock.
       time: this.time,
     })
@@ -829,8 +829,8 @@ export class GameManager {
       materialRegistry: this.materialRegistry,
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
-      notifyMaterialGained: (materialId, amount) =>
-        this.questOps.notifyMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount, receipt) =>
+        this.questOps.notifyMaterialGained(materialId, amount, receipt),
     })
 
     this.saveOps = new GameManagerSaveRestore({
@@ -942,8 +942,8 @@ export class GameManager {
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,
-      notifyMaterialGained: (materialId, amount) =>
-        this.questOps.notifyMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount, receipt) =>
+        this.questOps.notifyMaterialGained(materialId, amount, receipt),
       notifications: this.notifications,
       productionSystem: this.productionSystem,
       materialBag: this.materialBag,

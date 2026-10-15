@@ -305,11 +305,7 @@ describe('r32-AUT F3 - DecomposeSystem.restore mergedDeadline over-bound mint', 
       },
       BOUND - 1,
     )
-    expect(system.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(system.getSaveState()).toEqual({})
   })
 
   it('end-to-end: the minted stamp refuses the next save write', () => {
@@ -508,8 +504,7 @@ describe('r32-AUT controls - r31 guards held at exact boundaries', () => {
   it('legacy deadline near the bound remains inert on restore', () => {
     const system = new DecomposeSystem(new MaterialBag())
     system.restore({ settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 }, nextCycleAt: BOUND - 1, started: true }, currentMs)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-    expect(system.getSaveState().started).toBe(false)
+    expect(system.getSaveState()).toEqual({})
   })
 
   it('AlchemySystem.startJob headroom: invalid_clock within a span of the bound', () => {

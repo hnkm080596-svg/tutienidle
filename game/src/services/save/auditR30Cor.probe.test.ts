@@ -326,8 +326,7 @@ describe('r30 COR - C: decompose legacy clock fields stay inert', () => {
         started: true,
       }, edge)
       expect(bag.getAll().find((s) => s.material.id === oreId)!.amount).toBe(oreBefore)
-      expect(system.getSaveState().started).toBe(false)
-      expect(system.getSaveState().nextCycleAt).toBe(0)
+      expect(system.getSaveState()).toEqual({})
     },
   )
 
@@ -345,8 +344,7 @@ describe('r30 COR - C: decompose legacy clock fields stay inert', () => {
         edge,
       )
 
-      expect(system.getSaveState().nextCycleAt).toBe(0)
-      expect(system.getSaveState().started).toBe(false)
+      expect(system.getSaveState()).toEqual({})
     },
   )
 
@@ -360,8 +358,7 @@ describe('r30 COR - C: decompose legacy clock fields stay inert', () => {
         nextCycleAt: edge,
         started: true,
       }, currentMs)
-      expect(system.getSaveState().nextCycleAt).toBe(0)
-      expect(system.getSaveState().started).toBe(false)
+      expect(system.getSaveState()).toEqual({})
     },
   )
 
@@ -372,8 +369,7 @@ describe('r30 COR - C: decompose legacy clock fields stay inert', () => {
       nextCycleAt: 2 ** 52 - 1,
       started: true,
     }, 2 ** 52 - 1)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-    expect(system.getSaveState().started).toBe(false)
+    expect(system.getSaveState()).toEqual({})
   })
 })
 

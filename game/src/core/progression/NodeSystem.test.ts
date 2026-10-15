@@ -4,6 +4,7 @@ import {
   aggregateNodeStatModifiers,
   canPurchaseNode,
   canUpgradeNode,
+  describeNodeLevelEffects,
   devResetBranch,
   getNodeLevel,
   getNodeMaxLevel,
@@ -13,6 +14,7 @@ import {
   purchaseNode,
   revokeNodeOwnership,
   respecNodeTree,
+  scaleModifierForLevel,
   upgradeNode,
 } from './NodeSystem'
 import { skillCoreNodeId } from './SkillCoreLevel'
@@ -1022,3 +1024,71 @@ describe('infoSkillId - info-anchor nodes (2026-10-04)', () => {
     expect(player.nodeLevels[node.id]).toBe(2)
   })
 })
+
+describe('describeNodeLevelEffects & scaleModifierForLevel (Slice 1.6)', () => {
+  it('scales statModifiers across levels with perLevelFlat and perLevelPercent', () => {
+    const node = powerNode({
+      effect: {
+        statModifiers: [
+          {
+            id: 'mod_flat',
+            sourceId: 'test_power',
+            sourceType: 'talent',
+            stat: 'might',
+            flat: 5,
+            perLevelFlat: 3,
+          },
+          {
+            id: 'mod_pct',
+            sourceId: 'test_power',
+            sourceType: 'talent',
+            stat: 'maxHp',
+            percent: 0.1,
+            perLevelPercent: 0.05,
+          },
+        ],
+      },
+    })
+
+    const scaledLv1 = scaleModifierForLevel(node.effect.statModifiers![0]!, 1)
+    const scaledLv4 = scaleModifierForLevel(node.effect.statModifiers![0]!, 4)
+
+    expect(scaledLv1.flat).toBe(5)
+    expect(scaledLv4.flat).toBe(14)
+
+    expect(describeNodeLevelEffects(node, 4)).toEqual([
+      { kind: 'stat', stat: 'might', value: 14 },
+      { kind: 'stat', stat: 'maxHp', value: 0.25 },
+    ])
+  })
+
+  it('projects skillDefinitionModifiers castStat and cooldownTurns descriptors', () => {
+    const node = minorNode({
+      effect: {
+        skillDefinitionModifiers: [
+          {
+            skillId: 'hoa_cau_thuat',
+            castStatModifiers: [{ stat: 'might', perLevel: 0.08 }],
+            cooldownTurnsDelta: { perLevel: -1 },
+          },
+          {
+            skillId: 'viem_long_tuc',
+            cooldownTurnsDelta: { flat: -2 },
+          },
+        ],
+      },
+    })
+
+    expect(describeNodeLevelEffects(node, 1)).toEqual([
+      { kind: 'castStat', skillId: 'hoa_cau_thuat', stat: 'might', value: 0.08 },
+      { kind: 'cooldownTurns', skillId: 'hoa_cau_thuat', value: -1, once: false },
+      { kind: 'cooldownTurns', skillId: 'viem_long_tuc', value: -2, once: true },
+    ])
+
+    expect(describeNodeLevelEffects(node, 3)).toEqual([
+      { kind: 'castStat', skillId: 'hoa_cau_thuat', stat: 'might', value: 0.24 },
+      { kind: 'cooldownTurns', skillId: 'hoa_cau_thuat', value: -3, once: false },
+    ])
+  })
+})
+

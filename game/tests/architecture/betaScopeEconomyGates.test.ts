@@ -8,10 +8,10 @@
  *   sec.11 equipment - wash/refine (live since 2026-10-09) reach real
  *                      validation instead of the scope gate; decompose
  *                      accepts legacy timer data as inert while instant
- *                      conversion remains fail-closed;
+ *                      conversion follows the live /6 floor contract;
  *   sec.12 alchemy   - dormant families cannot startJob or preview; the
  *                      canonical read-model only carries beta families;
- *   sec.13 production - each site advances its own cycle; Chiêu Hiền Quán
+ *   sec.13 production - each site advances its own cycle; Chieu Hien Quan
  *                      remains an art-only Architecture card;
  *   sec.14 domains   - companion/formation/artifact acquisition and
  *                      mutation seams are closed; the hidden-beast kill
@@ -78,7 +78,7 @@ const DORMANT_RECIPE: AlchemyRecipe = alchemyRecipes.find(
   (recipe) => recipe.id === 'alchemy_phi_van_dan_qi_refining',
 )!
 
-describe('sec.11 equipment hall - wash/refine live, ore-decompose fails closed at domain level', () => {
+describe('sec.11 equipment hall - wash/refine live, instant ore-decompose live at domain level', () => {
   it('wash entry points reach real validation (gate open)', () => {
     const gm = new GameManager()
 
@@ -175,23 +175,24 @@ describe('sec.11 equipment hall - wash/refine live, ore-decompose fails closed a
     expect(result.reason).not.toBe('scope_hidden')
   })
 
-  it('legacy decompose timers normalize inertly and instant exchange fails closed under beta', () => {
+  it('legacy decompose timers remain stateless and instant exchange works under authored beta flags', () => {
     const gm = new GameManager()
     gm.catalogOps.registerMaterials(materials)
-    gm.materialBag.add(gm.materialRegistry.get('mortal_ore_decade'), 10)
+    gm.materialBag.add(gm.materialRegistry.get('material_spirit_ore_decade'), 10)
     gm.decomposeSystem.restore({
       settings: { workers: 3, gradeFilter: 'all', ageFilter: 'all' },
       nextCycleAt: 0,
       started: true,
     })
-    expect(gm.decomposeSystem.getSaveState()).toEqual({
-      settings: { workers: 0, gradeFilter: 'all', ageFilter: 'all' },
-      nextCycleAt: 0,
-      started: false,
-    })
-    expect(gm.decomposeSystem.previewDecomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
-    expect(gm.decomposeSystem.decomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
-    expect(gm.materialBag.getAmount('mortal_ore_decade')).toBe(10)
+    expect(gm.decomposeSystem.getSaveState()).toEqual({})
+    expect(gm.materialBag.getAmount('material_spirit_ore_decade')).toBe(10)
+    const quote = gm.decomposeSystem.previewDecomposeOre('material_spirit_ore_decade', 6)
+    expect(quote).toEqual({ ok: true, materialId: 'luyen_khi_tinh_hoa', consumed: 6, produced: 1 })
+    expect(gm.materialBag.getAmount('material_spirit_ore_decade')).toBe(10)
+    expect(gm.decomposeSystem.decomposeOre('material_spirit_ore_decade', 6)).toEqual(quote)
+    expect(gm.materialBag.getAmount('material_spirit_ore_decade')).toBe(4)
+    expect(gm.materialBag.getAmount('luyen_khi_tinh_hoa')).toBe(1)
+    expect(gm.decomposeSystem.getSaveState()).toEqual({})
   })
 })
 

@@ -110,6 +110,7 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     // write/load khong doi shape, ke ca field quests (structuredClone).
     expect(outcome.save).toEqual(save)
     expect(outcome.save.quests).toEqual({
+      materialReceipts: save.quests!.materialReceipts,
       active: [{ questId: TEST_QUEST.id, progress: 2, claimed: false }],
       completedOnceIds: ['some_other_once_quest'],
       lastDailyResetAtMs: 0,
@@ -166,11 +167,7 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     const save = buildGameSave(player, gameManager)
     const decomposeSnapshot = structuredClone(save.decompose)
 
-    expect(decomposeSnapshot).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(decomposeSnapshot).toEqual({})
 
     const writeResult = writeGameSave(save)
     expect(writeResult).toEqual({ status: 'ok' })

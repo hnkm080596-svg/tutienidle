@@ -13,7 +13,7 @@
 //     scope-hidden left-panel mode can never render, because
 //     downstream commands (upgradeBuilding) are live
 //     economy writes.
-//   * Chiêu Hiền Quán is an art-only landmark with no upgrade effect.
+//   * Chieu Hien Quan is an art-only landmark with no upgrade effect.
 //   * Its compatibility surface renders art only and never imports
 //     companion/workforce domain APIs.
 //   * Carried dormant records (armed auto-farm on an ineligible stage,
@@ -155,7 +155,7 @@ describe('consumer seam: worker_lodge left-panel mode (contract sec.G + sec.F)',
     view.unmount()
   })
 
-  it('the mounted surface can spend live materials on the scope-hidden building (upgrade chain)', () => {
+  it('the retired worker building refuses upgrades without spending live materials', () => {
     const gameManager = realGameManager()
     // Foundation realm so the realm-tier gate inside upgrade() is NOT
     // the blocker - only the missing scope gate can refuse this.
@@ -168,19 +168,19 @@ describe('consumer seam: worker_lodge left-panel mode (contract sec.G + sec.F)',
       level: 1,
       lastCollectedAt: 0,
     })
-    gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_ore_decade'), 10)
+    gameManager.materialBag.add(gameManager.materialRegistry.get('material_spirit_ore_decade'), 10)
 
-    const oreBefore = gameManager.materialBag.getAmount('mortal_ore_decade')
+    const oreBefore = gameManager.materialBag.getAmount('material_spirit_ore_decade')
     const upgraded = gameManager.buildingOps.upgradeBuilding('chq_1')
 
     // The art-only landmark has no upgrade path and must not spend materials.
     expect(upgraded).toBe(false)
-    expect(gameManager.materialBag.getAmount('mortal_ore_decade')).toBe(oreBefore)
+    expect(gameManager.materialBag.getAmount('material_spirit_ore_decade')).toBe(oreBefore)
   })
 })
 
 // ---------------------------------------------------------------------------
-// F-B-CONS-3: Chiêu Hiền Quán compatibility surface stays art-only.
+// F-B-CONS-3: Chieu Hien Quan compatibility surface stays art-only.
 // ---------------------------------------------------------------------------
 describe('consumer seam: worker lodge read-model consumption (contract sec.F)', () => {
   it('WorkerLodgePanel is an art-only compatibility surface with no workforce controls', () => {

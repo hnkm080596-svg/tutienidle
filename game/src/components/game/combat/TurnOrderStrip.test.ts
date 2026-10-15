@@ -1,18 +1,45 @@
 // @vitest-environment jsdom
-// Phase A6 (2026-09-08) - TurnOrderStrip buff badge row: visible buffs
-// render as polarity-colored badges with name xstacks (remainingTurns)
-// and a description tooltip; hidden buffs are skipped. Mount per project
-// pattern (createApp + h + provide, no @vue/test-utils).
-import { describe, expect, it, vi } from 'vitest'
-import { createApp, h, ref } from 'vue'
+// Single initiative line with accessible actor avatars; no visible text,
+// badges, round counters or per-chip gauges. Mount the real component.
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import TurnOrderStrip from './TurnOrderStrip.vue'
+import { resetInitiativeSummons, setInitiativeSummoned } from '@/presentation/combat/CombatInitiativeReady'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
 import { createBaseStats } from '@/core/stats/StatBlock'
 import type { BuffInstanceSnapshot } from '@/core/buff2/BuffInstance'
 import type { TurnBattle, TurnBattleParticipant } from '@/core/battle/turn/TurnBattleSystem'
 import type { CombatEntity } from '@/core/combat/CombatEntity'
+
+let nextFrame: FrameRequestCallback | undefined
+const cleanups: Array<() => void> = []
+beforeEach(() => {
+  resetInitiativeSummons()
+  vi.stubGlobal('requestAnimationFrame', vi.fn((callback: FrameRequestCallback) => { nextFrame = callback; return 1 }))
+  vi.stubGlobal('cancelAnimationFrame', vi.fn())
+})
+afterEach(() => {
+  for (const cleanup of cleanups.splice(0)) cleanup()
+  nextFrame = undefined
+  resetInitiativeSummons()
+  vi.unstubAllGlobals()
+})
+async function frameAt(time: number) {
+  const callback = nextFrame
+  expect(callback).toBeDefined()
+  callback!(time)
+  await nextTick()
+}
+function avatarTrack(container: HTMLElement) {
+  const track = container.querySelector('.combat-initiative-track')!
+  expect(track).not.toBeNull()
+  expect(track.querySelector('svg')?.getAttribute('viewBox')).toBe('0 0 600 48')
+  expect(track.textContent?.trim()).toBe('')
+  expect(track.querySelector('text, header, .turn-order-strip__buff, .turn-order-strip__gauge-fill, .turn-order-strip__round')).toBeNull()
+  return track
+}
 
 function makeEntity(id: string): CombatEntity {
   const stats = createBaseStats()
@@ -96,6 +123,7 @@ interface MockGameManager {
   getTurnBattle: ReturnType<typeof vi.fn>
   getActiveTurnBattleStage: ReturnType<typeof vi.fn>
   getBattleBuffs: ReturnType<typeof vi.fn>
+  getFreezeReasons: ReturnType<typeof vi.fn>
 }
 
 function mountStrip(gm: MockGameManager): HTMLElement {
@@ -113,6 +141,7 @@ function mountStrip(gm: MockGameManager): HTMLElement {
   app.provide(STATE_VERSION_KEY, ref(0))
   app.provide(BUMP_STATE_KEY, vi.fn())
   app.mount(container)
+  cleanups.push(() => { app.unmount(); container.remove() })
 
   return container
 }
@@ -126,72 +155,52 @@ function makeGameManager(
     getTurnBattle: vi.fn(() => battle),
     getActiveTurnBattleStage: vi.fn(() => stage),
     getBattleBuffs: vi.fn(() => buffs),
+    getFreezeReasons: vi.fn(() => []),
   }
 }
 
-describe('TurnOrderStrip buff badges (Phase A6)', () => {
-  it('renders visible buff badges with name, stacks, remaining turns, and polarity classes', () => {
+describe('TurnOrderStrip avatar-only presentation', () => {
+  it('renders actor avatars without buff text, badges or counters', () => {
     const { battle, playerBuffs } = makeBattleFixture()
     const container = mountStrip(makeGameManager(battle, null, playerBuffs))
-
-    const badges = Array.from(container.querySelectorAll('.turn-order-strip__buff'))
-
-    // 3 instances on the pool (2x hoa_an stacks = 1 instance with 2 stacks +
-    // thach_giap_buff) + 1 hidden -> 2 visible badges.
-    expect(badges).toHaveLength(2)
-
-    const sealBadge = badges.find((badge) => badge.textContent?.includes('Hỏa Ấn'))
-
-    expect(sealBadge).toBeDefined()
-    expect(sealBadge!.className).toContain('is-debuff')
-    expect(sealBadge!.textContent).toContain('×2')
-
-    const buffBadge = badges.find((badge) => badge.className.includes('is-buff'))
-
-    expect(buffBadge).toBeDefined()
-
-    container.remove()
+    const track = avatarTrack(container)
+    expect(track.querySelectorAll('[data-actor-id]')).toHaveLength(2)
+    expect(track.querySelectorAll('image')).toHaveLength(2)
+    expect(track.querySelector('[data-actor-id="player"]')?.getAttribute('aria-label')).toBe('player')
+    expect(track.querySelector('[data-actor-id="enemy_1"]')?.getAttribute('aria-label')).toBe('enemy_1')
   })
 
-  it('skips hidden buffs', () => {
+  it('does not query buff content for the avatar-only strip', () => {
     const { battle, playerBuffs } = makeBattleFixture()
-    const container = mountStrip(makeGameManager(battle, null, playerBuffs))
-
-    const badges = Array.from(container.querySelectorAll('.turn-order-strip__buff'))
-
-    expect(badges.some((badge) => badge.textContent?.includes('Hidden'))).toBe(false)
-
-    container.remove()
+    const gm = makeGameManager(battle, null, playerBuffs)
+    const container = mountStrip(gm)
+    avatarTrack(container)
+    expect(gm.getBattleBuffs).not.toHaveBeenCalled()
+    expect(container.querySelectorAll('[data-actor-id] image')).toHaveLength(2)
   })
 
-  it('renders a description tooltip (title attribute) on each badge', () => {
+  it('keeps avatar identity accessible without native tooltip or visible name text', () => {
     const { battle, playerBuffs } = makeBattleFixture()
     const container = mountStrip(makeGameManager(battle, null, playerBuffs))
-
-    const badges = Array.from(container.querySelectorAll<HTMLElement>('.turn-order-strip__buff'))
-
-    for (const badge of badges) {
-      expect(badge.getAttribute('title')).toBeTruthy()
+    const avatars = avatarTrack(container).querySelectorAll('[data-actor-id]')
+    expect(avatars).toHaveLength(2)
+    for (const avatar of avatars) {
+      expect(avatar.getAttribute('role')).toBe('img')
+      expect(avatar.getAttribute('tabindex')).toBe('0')
+      expect(avatar.getAttribute('aria-label')).toBeTruthy()
+      expect(avatar.getAttribute('title')).toBeNull()
     }
-
-    container.remove()
   })
 
-  it('renders no badges when the battle is null', () => {
+  it('renders no track when the battle is null', () => {
     const container = mountStrip(makeGameManager(null))
-
-    expect(container.querySelectorAll('.turn-order-strip__buff')).toHaveLength(0)
-    expect(container.querySelector('.turn-order-strip')).toBeNull()
-
-    container.remove()
+    expect(container.querySelector('.combat-initiative-track')).toBeNull()
+    expect(container.querySelectorAll('[data-actor-id]')).toHaveLength(0)
   })
 })
 
-// Combat speed gauge + round indicator (2026-09-12) - each combatant chip
-// carries a thin ATB fill bar (actionGauge / GAUGE_MAX) and the strip shows
-// the completed-round counter, capped by the stage's perfectClearTurnLimit
-// when the current battle was launched from a stage that has one.
-describe('TurnOrderStrip speed gauge + round indicator', () => {
+// Gauge values drive avatar position only; domain state remains unchanged.
+describe('TurnOrderStrip initiative travel and actor visibility', () => {
   function bareBattle(overrides: Partial<TurnBattle> = {}): { battle: TurnBattle; player: TurnBattleParticipant; enemy: TurnBattleParticipant } {
     const player = makeParticipant('player')
     const enemy = makeParticipant('enemy_1')
@@ -207,104 +216,74 @@ describe('TurnOrderStrip speed gauge + round indicator', () => {
     return { battle, player, enemy }
   }
 
-  it('renders a gauge fill on each party chip proportional to actionGauge / GAUGE_MAX', () => {
+  it('moves the player avatar halfway along the single line for half gauge', async () => {
     const { battle, player } = bareBattle()
     player.actionGauge = 500
-
     const container = mountStrip(makeGameManager(battle))
-    const fill = container.querySelector<HTMLElement>('.turn-order-strip__member .turn-order-strip__gauge-fill')
-
-    expect(fill).not.toBeNull()
-    expect(fill!.style.width).toBe('50%')
-
-    container.remove()
+    for (let time = 100; time <= 600; time += 100) await frameAt(time)
+    const track = avatarTrack(container)
+    const marker = track.querySelector('[data-actor-id="player"]')!
+    expect(marker.getAttribute('data-progress')).toBe('50')
+    expect(marker.getAttribute('transform')).toBe('translate(300, 0)')
+    expect(player.actionGauge).toBe(500)
   })
 
-  it('clamps the gauge at 100% and marks the chip ready when actionGauge is full', () => {
+  it('clamps avatar travel at the line endpoint without changing the actor gauge', async () => {
     const { battle, player } = bareBattle()
     player.actionGauge = 1200
-
     const container = mountStrip(makeGameManager(battle))
-    const fill = container.querySelector<HTMLElement>('.turn-order-strip__member .turn-order-strip__gauge-fill')
-
-    expect(fill!.style.width).toBe('100%')
-    expect(fill!.className).toContain('is-ready')
-
-    container.remove()
+    for (let time = 100; time <= 1300; time += 100) await frameAt(time)
+    const marker = avatarTrack(container).querySelector('[data-actor-id="player"]')!
+    expect(marker.getAttribute('data-progress')).toBe('100')
+    expect(marker.getAttribute('transform')).toBe('translate(576, 0)')
+    expect(player.actionGauge).toBe(1200)
   })
 
-  it('renders a gauge fill on each upcoming-order item too', () => {
+  it('renders each living actor once instead of duplicating upcoming-order chips', () => {
     const { battle, player, enemy } = bareBattle()
     player.actionGauge = 0
     enemy.actionGauge = 0
-
     const container = mountStrip(makeGameManager(battle))
-    const items = Array.from(container.querySelectorAll('.turn-order-strip__item'))
-
-    // Same speed -> priority order (player first); every item gets a bar.
-    expect(items.length).toBeGreaterThan(0)
-    for (const item of items) {
-      expect(item.querySelector('.turn-order-strip__gauge-fill')).not.toBeNull()
-    }
-
-    container.remove()
+    const markers = avatarTrack(container).querySelectorAll('[data-actor-id]')
+    expect(Array.from(markers, marker => marker.getAttribute('data-actor-id')).sort()).toEqual(['enemy_1', 'player'])
+    for (const marker of markers) expect(marker.querySelector('image')?.getAttribute('href')).toBeTruthy()
   })
 
-  it('shows the CURRENT round (roundsElapsed + 1, 1-based) on the round chip', () => {
-    // 3 rounds completed -> the 4th is in progress, so the chip reads
-    // "Hiep 4", matching the PC predicate `roundsElapsed < limit at
-    // victory` (finish before the displayed round completes).
+  it('round advancement does not introduce a visible counter into the avatar line', () => {
     const { battle } = bareBattle({ roundsElapsed: 3 })
-
     const container = mountStrip(makeGameManager(battle))
-    const chip = container.querySelector('.turn-order-strip__round')
-
-    expect(chip).not.toBeNull()
-    expect(chip!.textContent).toContain('Hiệp 4')
-
-    container.remove()
+    const track = avatarTrack(container)
+    expect(track.querySelectorAll('[data-actor-id]')).toHaveLength(2)
+    expect(battle.roundsElapsed).toBe(3)
   })
 
-  it('appends the stage perfect-clear limit and marks the chip over-limit when exceeded', () => {
-    // PC requires roundsElapsed < limit at victory. At roundsElapsed = 15,
-    // limit = 15 the window is already gone - the in-progress round is the
-    // 16th, displayed as "Hiep 16/15" with is-over.
+  it('stage perfect-clear limits do not add numbers or over-limit badges to the line', () => {
     const { battle } = bareBattle({ roundsElapsed: 15 })
-    const stage = { perfectClearTurnLimit: 15 }
-
-    const container = mountStrip(makeGameManager(battle, stage as never))
-    const chip = container.querySelector('.turn-order-strip__round')
-
-    expect(chip!.textContent).toContain('16')
-    expect(chip!.textContent).toContain('15')
-    expect(chip!.className).toContain('is-over')
-
-    container.remove()
+    const gm = makeGameManager(battle, { perfectClearTurnLimit: 15 })
+    const container = mountStrip(gm)
+    const track = avatarTrack(container)
+    expect(track.querySelector('.is-over')).toBeNull()
+    expect(track.querySelectorAll('image')).toHaveLength(2)
+    expect(gm.getActiveTurnBattleStage).not.toHaveBeenCalled()
   })
 
-  it('does not mark the chip over while the current round can still finish under the limit', () => {
-    // roundsElapsed = 14, limit = 15 -> in round 15, still PC-able.
+  it('unsummoned actors stay hidden while the battle is fighting', () => {
     const { battle } = bareBattle({ roundsElapsed: 14 })
-    const stage = { perfectClearTurnLimit: 15 }
-
-    const container = mountStrip(makeGameManager(battle, stage as never))
-    const chip = container.querySelector('.turn-order-strip__round')
-
-    expect(chip!.textContent).toContain('15')
-    expect(chip!.className).not.toContain('is-over')
-
-    container.remove()
+    setInitiativeSummoned('enemy_1', false)
+    const container = mountStrip(makeGameManager(battle, { perfectClearTurnLimit: 15 }))
+    const track = avatarTrack(container)
+    expect(track.querySelectorAll('[data-actor-id]')).toHaveLength(1)
+    expect(track.querySelector('[data-actor-id="enemy_1"]')).toBeNull()
+    expect(track.querySelector('[data-actor-id="player"]')).not.toBeNull()
   })
 
-  it('shows a plain counter for battles without a stage (tribulation) or without a limit', () => {
-    const { battle } = bareBattle({ roundsElapsed: 2 })
-
+  it('dead actors are absent from the avatar line even without a stage', () => {
+    const { battle, enemy } = bareBattle({ roundsElapsed: 2 })
+    enemy.entity.alive = false
     const container = mountStrip(makeGameManager(battle, null))
-    const chip = container.querySelector('.turn-order-strip__round')
-
-    expect(chip!.textContent).toBe('Hiệp 3')
-    expect(chip!.className).not.toContain('is-over')
-
-    container.remove()
+    const track = avatarTrack(container)
+    expect(track.querySelectorAll('[data-actor-id]')).toHaveLength(1)
+    expect(track.querySelector('[data-actor-id="player"]')).not.toBeNull()
+    expect(track.querySelector('[data-actor-id="enemy_1"]')).toBeNull()
   })
 })

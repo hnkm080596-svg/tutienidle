@@ -356,11 +356,11 @@ describe('RestoreTimeAuthority — field-epoch stamps (r16)', () => {
     const manager = registeredManager()
     manager.setActivePlayer(player.$state)
     const save = makeSave({ lastSavedAt: NOW - 3_600_000 })
-    save.quests = {
+    save.quests = { ...(save.quests as object), ...({
       active: [],
       completedOnceIds: [],
       lastDailyResetAtMs: NOW - 3_600_000,
-    }
+    }) }
 
     const result = restoreGameSession(player, manager, save, {
       kind: 'cold-boot',

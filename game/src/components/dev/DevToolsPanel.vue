@@ -324,9 +324,7 @@ function resetPath() {
   // In-flight production cycles carry collectionRealmId pinned at the realm
   // they started under - kept cycles would mint realm claims a mortal
   // cannot produce. Sites stay; only the pinned lanes drop.
-  gameManager.productionSystem.restoreStates(
-    gameManager.productionSystem.getAllStates().map((s) => ({ ...s, productionCycles: [] })),
-  )
+  gameManager.productionSystem.cancelPendingCycles()
   clampRealmCoherence()
   lastResult.value = 'ok'
   bumpState()

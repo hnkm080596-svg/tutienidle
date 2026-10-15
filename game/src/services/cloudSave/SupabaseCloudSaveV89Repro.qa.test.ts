@@ -1,36 +1,9 @@
-// QA R4 attack repro (blind wave 4) - FINDING R4-SAVE-1 (HIGH), cloud leg.
-//
-// Attack vector: the v89 -> v90 re-stamp migration was wired ONLY into
-// inspectLocalSave (SaveSystem.ts:566-588). The remote-authoritative
-// pull path still hard-requires CURRENT_SAVE_VERSION on both the row
-// envelope and the payload:
-//   - SAVE_READY: SupabaseCloudSaveService.ts:739-741
-//     (`foundVersion !== CURRENT_SAVE_VERSION || save.schemaVersion !==
-//      CURRENT_SAVE_VERSION` -> 'incompatible')
-//   - adoptCommittedPending: SupabaseCloudSaveService.ts:435-437 - the
-//     identical gate runs on a pending-journal payload the server
-//     committed during replay (pending records written pre-upgrade).
-//
-// The gate's own comment (line ~730) claims a downloaded payload
-// "passes the SAME client pipeline the local adapter runs" - false
-// after this commit: the local adapter now migrates 88 -> 89 -> 90,
-// this path migrates nothing.
-//
-// Honest flow that breaks: every player whose server row was written
-// by a v89 build boots the v90 build -> load() -> 'incompatible' ->
-// boot fails onto the recovery surface (useAppLifecycle marks the
-// recovery failed). On the previous build the identical row loaded
-// 'ok' - the bump introduced the rejection.
-//
-// Repro: stub fetch returns a well-formed SAVE_READY row carrying
-// schemaVersion 89 + payload version 89 (exactly what the server
-// legitimately holds for a v89 writer). load() must consume it (status
-// 'ok', payload re-stamped to CURRENT). Currently 'incompatible' ->
-// FAIL on current HEAD.
+// Cloud SAVE_READY admission rejects non-current payloads and mismatched envelopes.
+// Rejection preserves local bytes; matching current versions remain consumable.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SupabaseCloudSaveService } from './SupabaseCloudSaveService'
-import { setSaveAccountId } from '../save/saveKeys'
+import { resolveSaveKey, setSaveAccountId } from '../save/saveKeys'
 import { CURRENT_SAVE_VERSION } from '../save/SaveSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { ClientBuildInfo } from '../backend/ClientBuildInfo'
@@ -127,9 +100,44 @@ beforeEach(() => {
   setSaveAccountId('u1')
 })
 
-describe('R4-SAVE-1 - cloud pull must migrate v89 rows like the local pipeline', () => {
-  it('SAVE_READY carrying a v89 row loads ok (currently incompatible)', async () => {
+describe('cloud pull rejects old versions consistently with local admission', () => {
+  it('matching current payload and envelope load without minting or spending materials', async () => {
+    const payload = validGameSave()
+    stubFetch(() => json({
+      status: 'SAVE_READY', character: REMOTE_CHARACTER,
+      save: { schemaVersion: CURRENT_SAVE_VERSION, saveRevision: 5, payload, updatedAt: '2026-09-30T00:00:00Z' },
+      serverCheckpoint: CHECKPOINT, serverTimeUtc: '2026-09-30T00:00:00Z',
+    }))
+    const result = await makeService().load()
+    expect(result.status).toBe('ok')
+    if (result.status !== 'ok') return
+    expect(result.save.version).toBe(CURRENT_SAVE_VERSION)
+    expect(result.save.materials).toEqual(payload.materials)
+    expect(result.save.pills).toEqual(payload.pills)
+  })
+
+  it.each([
+    [CURRENT_SAVE_VERSION, 89],
+    [89, CURRENT_SAVE_VERSION],
+  ])('rejects mismatched envelope %i / payload %i without replacing local bytes', async (schemaVersion, version) => {
+    const payload = { ...validGameSave(), version }
+    const raw = JSON.stringify(payload)
+    const prior = JSON.stringify(validGameSave())
+    localStorage.setItem(resolveSaveKey(), prior)
+    stubFetch(() => json({
+      status: 'SAVE_READY', character: REMOTE_CHARACTER,
+      save: { schemaVersion, saveRevision: 5, payload, updatedAt: '2026-09-30T00:00:00Z' },
+      serverCheckpoint: CHECKPOINT, serverTimeUtc: '2026-09-30T00:00:00Z',
+    }))
+    expect(await makeService().load()).toEqual({ status: 'incompatible', foundVersion: version, raw })
+    expect(localStorage.getItem(resolveSaveKey())).toBe(prior)
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('SAVE_READY carrying a v89 row remains incompatible without replacing local bytes', async () => {
     const payload = { ...validGameSave(), version: 89 }
+    const raw = JSON.stringify(payload)
+    localStorage.setItem(resolveSaveKey(), raw)
     stubFetch(() => json({
       status: 'SAVE_READY',
       character: REMOTE_CHARACTER,
@@ -145,9 +153,9 @@ describe('R4-SAVE-1 - cloud pull must migrate v89 rows like the local pipeline',
 
     const result = await makeService().load()
 
-    expect(result.status).toBe('ok')
-    if (result.status === 'ok') {
-      expect(result.save.version).toBe(CURRENT_SAVE_VERSION)
-    }
+    expect(result).toEqual({ status: 'incompatible', foundVersion: 89, raw })
+    expect(localStorage.getItem(resolveSaveKey())).toBe(raw)
+    expect(JSON.stringify(payload)).toBe(raw)
+    expect(fetch).toHaveBeenCalledTimes(1)
   })
 })

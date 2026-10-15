@@ -15,6 +15,7 @@ import type { AlchemyRecipe, ActiveAlchemyJob } from '@/core/alchemy/AlchemySyst
 import type { Material } from '@/core/material/Material'
 import type { Pill } from '@/core/pill/Pill'
 import type { Building } from '@/core/building/Building'
+import { buildings } from '@/data/building/buildings'
 import { BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import {
   BUMP_STATE_KEY,
@@ -77,6 +78,7 @@ const PILL_ROOM: Building = {
   baseStorageCapacity: 0,
   upgradeCost: [[], [], []],
   functionType: 'pill_room',
+  levels: buildings.find(building => building.id === 'pill_room')!.levels,
 }
 
 function createManager(): GameManager {
@@ -112,7 +114,7 @@ function stockAndRoom(gameManager: GameManager) {
 }
 
 describe('QA-B seam — canBrew slot gate vs domain merge contract', () => {
-  it('a same-order +1 click stays enabled at full slots because the domain merges it (no new slot)', async () => {
+  it('a repeated recipe click appends the active batch without consuming a waiting slot', async () => {
     const gameManager = createManager()
     stockAndRoom(gameManager)
 
@@ -128,7 +130,7 @@ describe('QA-B seam — canBrew slot gate vs domain merge contract', () => {
 
     const player = usePlayerStore(pinia)
 
-    // Order 1 occupies the only slot (pill_room L1 -> 1 concurrent job).
+    // Level 1 has one active kiln and three waiting slots.
     const started = gameManager.alchemyOps.startAlchemyJob(TEST_RECIPE.id, 'test_herb', player.$state)
     expect(started.ok).toBe(true)
     expect(gameManager.alchemyOps.getAlchemyJobs()).toHaveLength(1)
@@ -138,12 +140,19 @@ describe('QA-B seam — canBrew slot gate vs domain merge contract', () => {
 
     const button = container.querySelector<HTMLButtonElement>('.alchemy-brew button')!
 
-    // Domain contract (proven in AlchemyQueueSeams.qa.test.ts):
-    // enqueueJob merges this click into the tail order - it needs NO
-    // free slot. The surface instead shows 'job_slots_full' and disables
-    // the button, so on a 1-slot room the merge click the rework is
-    // built around is unreachable.
+    expect(gameManager.alchemyOps.getAlchemyQueueState()).toMatchObject({ maxQueueSlots: 3, maxTotalJobs: 4, usedQueueSlots: 0 })
     expect(button.disabled).toBe(false)
+    button.click()
+    await nextTick()
+    expect(gameManager.alchemyOps.getAlchemyJobs()).toHaveLength(1)
+    expect(gameManager.alchemyOps.getAlchemyJobs()[0]!.quantity).toBe(2)
+    expect(gameManager.alchemyOps.getAlchemyQueueState().waitingJobs).toHaveLength(0)
+    expect(gameManager.materialBag.getAmount(HERB.id)).toBe(48)
+    gameManager.materialBag.remove(HERB.id, 48)
+    stateVersion.value += 1
+    await nextTick()
+    expect(button.disabled).toBe(true)
+    expect(gameManager.alchemyOps.getAlchemyJobs()[0]!.quantity).toBe(2)
 
     app.unmount()
     container.remove()

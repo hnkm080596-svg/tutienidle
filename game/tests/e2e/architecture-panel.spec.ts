@@ -11,17 +11,15 @@ test('Architecture owns upgrades and expedition replay consumes live progress', 
   await page.getByRole('button', { name: 'Kiến Trúc', exact: true }).click()
   await expect(page.getByTestId('architecture-building-card')).toHaveCount(6)
   await expect(page.locator('.overlay-panel')).toHaveCount(0)
-  await expect(page.locator('[data-building-id="vendor"] [data-testid="architecture-building-upgrade"]')).toHaveCount(0)
-  await expect(page.locator('[data-building-id="chi_hien_quan"] [data-testid="architecture-building-upgrade"]')).toHaveCount(0)
+  await expect(page.locator('[data-building-id="vendor"]')).toHaveCount(0)
+  await expect(page.locator('[data-building-id="chi_hien_quan"]')).toHaveCount(0)
+  await expect(page.locator('[data-building-id="gathering_outpost"]')).toHaveCount(0)
   const room = page.locator('[data-building-id="pill_room"]')
-  await room.getByTestId('architecture-building-upgrade').click()
+  await room.locator('.architecture-card__actions button').click()
   await expect(room).toContainText('Cấp 1/9')
+  await expect(page.locator('.architecture-notice[role="status"]')).toBeVisible()
   await page.screenshot({ path: 'test-results/architecture-panel-live.png' })
-  await page.locator('[data-building-id="gathering_outpost"]').getByTestId('architecture-details').click()
-  await expect(page.getByTestId('architecture-site-upgrade')).toHaveCount(3)
-  await page.screenshot({ path: 'test-results/architecture-production-details-live.png' })
-  await page.getByTestId('architecture-close-details').click()
-  await page.getByTestId('architecture-back').click()
+  await page.keyboard.press('Escape')
   const armed = await page.evaluate(async () => {
     const url = '/src/stores/player.ts'
     const { usePlayerStore } = await import(/* @vite-ignore */ url)
@@ -47,7 +45,7 @@ test('Architecture owns upgrades and expedition replay consumes live progress', 
   if (await page.locator('.home-navigation-toggle').isVisible()) await page.locator('.home-navigation-toggle').click()
   await page.getByRole('button', { name: 'Kiến Trúc', exact: true }).click()
   await expect(replay).toBeHidden()
-  await page.getByTestId('architecture-back').click()
+  await page.keyboard.press('Escape')
   await expect(replay).toBeVisible()
   await replay.getByTestId('autofarm-stop').click()
   await expect(replay).toHaveCount(0)
@@ -74,7 +72,7 @@ test('Pill Room merges active batches and refunds unfinished units', async ({ pa
     const recipe = manager.alchemyOps.getAlchemyRecipes().find(item => item.realmId === player.realmId && betaRecipeFamilyOfId(item.id) !== null)
     if (!recipe) throw new Error('No playable alchemy recipe')
     const herb = recipe.herbVariants[0]!
-    const ids = [herb.materialId, `${recipe.fuelWoodRealmId}_wood_${herb.age}`, 'spirit_stone_ha_pham', 'bui_go', 'luyen_dan_tinh_hoa', ...(recipe.specialIngredients ?? []).map(item => item.materialId)]
+    const ids = [herb.materialId, 'material_spirit_stone', 'bui_go', 'luyen_dan_tinh_hoa', ...(recipe.specialIngredients ?? []).map(item => item.materialId)]
     for (const id of ids) manager.materialBag.add(manager.materialRegistry.get(id), 1000)
     const jobs = Array.from({ length: 4 }, () => manager.alchemyOps.startAlchemyJob(recipe.id, herb.materialId, player.$state).ok)
     const beforeRejected = manager.materialBag.getAmount(herb.materialId)

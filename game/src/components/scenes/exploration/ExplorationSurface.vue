@@ -86,7 +86,7 @@ onBeforeUnmount(() => {
 // Chon Ai is the ONLY place Auto Battle is configured pre-combat, and
 // the build deep-link goes to the real build surface (skill panel).
 function openBuild() {
-  ui.standalonePanel = 'skill'
+  ui.openStandalonePanel('skill')
 }
 
 const zones = computed(() => gameManager.zoneRegistry.getAll())

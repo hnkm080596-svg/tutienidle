@@ -104,7 +104,13 @@ const MORTAL_CHAPTER: ChapterConfig = {
   // to x3.6 on the boar king's floor. Softened 2026-10-05 (random-drop
   // ruling): f8/f9 down from 2.8/3.2 to 2.7/3.0 - f9 hit the farm cap
   // on an unlucky seed and could starve the qi entry climb downstream.
-  floorStatScales: [1.0, 1.0, 1.3, 1.55, 1.85, 2.15, 2.45, 2.7, 3.0, 3.6],
+  // Retuned 2026-10-15 (R1 row-5 default standing slot): moving the
+  // default player standing row from 4 to 5 (f831335f3) makes
+  // selectTarget's sameRow priority switch targets when waves 2-3 spawn
+  // on row 5, costing ~4-5% effective DPS on multi-wave floors 8-9;
+  // f8/f9 adjusted to 2.6/2.85 (f10 solo boss stays 3.6) to restore
+  // the pre-f831335f3 21-seed clear rate.
+  floorStatScales: [1.0, 1.0, 1.3, 1.55, 1.85, 2.15, 2.45, 2.6, 2.85, 3.6],
 }
 
 const FOUNDATION_CHAPTER: ChapterConfig = {

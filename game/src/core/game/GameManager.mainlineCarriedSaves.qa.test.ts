@@ -146,10 +146,10 @@ describe('carried pre-fold saves - in-flight fold-ins are never evicted (F1)', (
 
     // Two more herb landings reach the requirement through the real
     // material funnel.
-    manager.questOps.notifyMaterialGained(HERB_MATERIAL, 2)
+    manager.questOps.notifyMaterialGained(HERB_MATERIAL, 2, manager.materialBag.credit(manager.materialRegistry.get(HERB_MATERIAL), 2).receipt)
     expect(manager.questManager.getProgress(HERB_QUEST)!.progress).toBe(5)
 
-    manager.materialBag.add(manager.materialRegistry.get(HERB_MATERIAL), 5)
+    manager.materialBag.add(manager.materialRegistry.get(HERB_MATERIAL), 3)
     expect(manager.questOps.claimQuest(HERB_QUEST)).toBe(true)
     expect(manager.questManager.isCompletedOnce(HERB_QUEST)).toBe(true)
 

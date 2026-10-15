@@ -1,12 +1,12 @@
 // ProductionBalance.simulation.test.ts (gp123 6F, task D1) - simulation
-// 24h x 1 worker x 3 chuoi kinh te voi seed co dinh, khoa bat dang thuc
+// 24h x independent production sites with a fixed seed; pin inequalities
 // theo tung chuoi (moi chuoi bat dang thuc rieng, neu chi tiet ben duoi) bang so lieu thuc
 // cua engine (ProductionSystem/AlchemySystem/DecomposeSystem) - khong
 // dung mo hinh rut gon:
 //
 // - Chuoi Thao (Dong Thien -> Dan Phong): dan san xuat <= thao tieu thu.
-// - Chuoi Go (Lam -> nhien lieu Dan Phong): go theo tuoi >= nhien lieu
-//   cac job dan can (rule resolveFuelWood: dung realm + dung tuoi).
+// - Wood chain: forest -> explicit decomposition -> furnace fuel >= demand.
+//   Compare canonical dust output with the alchemy job fuel demand.
 // - Chuoi Khoang (Quang -> Phan Giai): khoang san xuat >= khoang phan
 //   giai tieu thu.
 //
@@ -40,7 +40,7 @@ import {
   AlchemySystem,
 } from '../alchemy/AlchemySystem'
 import { DecomposeSystem } from './DecomposeSystem'
-import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { ProductionSystem } from './ProductionSystem'
 import {
   TERRITORY_THANH_VAN,
@@ -53,6 +53,7 @@ import type { HerbAge } from './ProductionTypes'
 import { HERB_AGES } from './ProductionTypes'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
+  RESOURCE_CYCLE_BASE_SECONDS,
   GROTTO_HERB_AMOUNT,
   HERB_AGE_WEIGHTS,
   MATERIAL_AGE_AMOUNTS,
@@ -63,7 +64,7 @@ import {
 } from './ProductionBalance'
 
 // =========================
-// Tham so simulation - 24h game time, buoc 1s, 1 worker moi chuoi.
+// Simulation - 24h game time, 1s steps, one independently enabled site per chain.
 // =========================
 
 const SIM_SECONDS = 86_400
@@ -77,9 +78,6 @@ const GROTTO_SITE_ID = TERRITORY_THANH_VAN.productionSiteIds.grotto
 
 /** Dan phuong mo hinh hoa: 1 trong 8 dan pham Pham Nhan (chain Thao/Go). */
 const HERB_RECIPE = alchemyRecipes.find((recipe) => recipe.id === 'alchemy_tu_linh_dan_mortal')!
-
-/** Dan Phong nhan thao DU truc HerbAge 5 bac (recipes sinh tu HERB_AGES). */
-const CRAFTABLE_AGES: readonly HerbAge[] = HERB_AGES
 
 /** Level Dan Phong 1 - bonus 0, success % dung bang bang base theo tuoi. */
 const ALCHEMY_ROOM_LEVEL = 1
@@ -137,32 +135,8 @@ function accumulateEvents(
   }
 }
 
-const WOOD_ID_PATTERN = /^(.+)_wood_(decade|century|millennium|myriad_year|thuong_co)$/
-const ORE_ID_PATTERN = /^(.+)_ore_(decade|century|millennium|myriad_year|thuong_co)$/
-
-/** Go theo tuoi tu ket qua Lam - key `${realmId}_wood_${age}`. */
-function woodByRealmAge(produced: Map<string, number>): Map<string, Record<HerbAge, number>> {
-  const table = new Map<string, Record<HerbAge, number>>()
-
-  for (const [materialId, amount] of produced) {
-    const match = WOOD_ID_PATTERN.exec(materialId)
-
-    if (!match) {
-      continue
-    }
-
-    const realmId = match[1]!
-    const age = match[2] as HerbAge
-
-    const row = table.get(realmId) ?? zeroByAge()
-
-    row[age] += amount
-
-    table.set(realmId, row)
-  }
-
-  return table
-}
+const WOOD_ID_PATTERN = /^material_spirit_wood_(decade|century|millennium|myriad_year|thuong_co)$/
+const ORE_ID_PATTERN = /^material_spirit_ore_(decade|century|millennium|myriad_year|thuong_co)$/
 
 // =========================
 // Chuoi Thao (Dong Thien -> Dan Phong) - dung chung cho test thao va go
@@ -209,7 +183,7 @@ function runHerbChain(): HerbChainResult {
     const herbsProduced = new Map<string, number>()
 
     for (let nowMs = 0; nowMs <= SIM_END_MS; nowMs += STEP_MS) {
-      // 1 worker Dong Thien - pool capacity 1, khong assignment (round-robin).
+      // The enabled grotto runs independently without workforce allocation.
       system.tick(nowMs, bag, registry, 'mortal')
 
       accumulateEvents(herbsProduced, new Map(), system.drainSettlementEvents())
@@ -260,11 +234,13 @@ function runHerbChain(): HerbChainResult {
 }
 
 // =========================
-// Chain Go - Lam 24h, doi chieu tung tuoi voi nhu cau nhien lieu chain Thao.
+// Wood chain - independent forest site for 24h, then explicit fuel exchange.
 // =========================
 
 interface WoodChainResult {
-  woodProduced: Map<string, Record<HerbAge, number>>
+  woodProduced: number
+
+  fuelProduced: number
 
   overflowTotal: number
 }
@@ -292,7 +268,13 @@ function runWoodChain(): WoodChainResult {
 
     const overflowTotal = [...overflow.values()].reduce((total, amount) => total + amount, 0)
 
-    return { woodProduced: woodByRealmAge(produced), overflowTotal }
+    const woodIds = [...produced.keys()].filter(id => WOOD_ID_PATTERN.test(id))
+    const decompose = new DecomposeSystem(bag)
+    expect(woodIds.length).toBeGreaterThan(0)
+    expect([...produced.keys()]).toEqual(woodIds)
+    expect(decompose.decomposeWithResult(woodIds)).toEqual({ ok: true })
+    const woodProduced = woodIds.reduce((total, id) => total + (produced.get(id) ?? 0), 0)
+    return { woodProduced, fuelProduced: bag.getAmount(BUI_GO_ID), overflowTotal }
   } finally {
     spy.mockRestore()
   }
@@ -384,10 +366,12 @@ describe('PRODUCTION_RATE_TABLE (gp123 6F — bảng tổng hợp, pure derivati
   it('đủ realm × 3 site-kind; cycleSeconds suy đúng từ bảng gốc', () => {
     const realmCount = Object.keys(CYCLE_BASE_SECONDS_BY_REALM).length
 
+    expect(RESOURCE_CYCLE_BASE_SECONDS).toBe(100)
     expect(PRODUCTION_RATE_TABLE).toHaveLength(realmCount * 3)
 
     for (const row of PRODUCTION_RATE_TABLE) {
-      const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[row.collectionRealmId]
+      const baseSeconds = row.kind === 'grotto'
+        ? CYCLE_BASE_SECONDS_BY_REALM[row.collectionRealmId] : RESOURCE_CYCLE_BASE_SECONDS
 
       expect(baseSeconds).toBeDefined()
 
@@ -405,7 +389,7 @@ describe('PRODUCTION_RATE_TABLE (gp123 6F — bảng tổng hợp, pure derivati
     }
   })
 
-  it('pattern yield id khớp quy ước material (`<realm>_wood_<age>` / `<realm>_ore_<age>`)', () => {
+  it('resource yield IDs are age-only across every collection realm', () => {
     const forestMortal = PRODUCTION_RATE_TABLE.find(
       (row) => row.kind === 'forest' && row.collectionRealmId === 'mortal',
     )
@@ -414,13 +398,16 @@ describe('PRODUCTION_RATE_TABLE (gp123 6F — bảng tổng hợp, pure derivati
       (row) => row.kind === 'mine' && row.collectionRealmId === 'mortal',
     )
 
-    expect(forestMortal?.yieldMaterialIdPattern).toBe('mortal_wood_<age>')
+    expect(forestMortal?.yieldMaterialIdPattern).toBe('material_spirit_wood_<age>')
 
-    expect(mineMortal?.yieldMaterialIdPattern).toBe('mortal_ore_<age>')
+    expect(mineMortal?.yieldMaterialIdPattern).toBe('material_spirit_ore_<age>')
+    for (const row of PRODUCTION_RATE_TABLE.filter(row => row.kind !== 'grotto')) {
+      expect(row.yieldMaterialIdPattern).toBe(`material_spirit_${row.kind === 'forest' ? 'wood' : 'ore'}_<age>`)
+    }
   })
 })
 
-describe('Simulation 24h × 1 worker — cân bằng từng chuỗi (gp123 6F)', () => {
+describe('Simulation 24h with independent sites — cân bằng từng chuỗi (gp123 6F)', () => {
   it('chuỗi Thảo: đan sản xuất ≤ thảo tiêu thụ (Động Thiên → Đan Phòng)', () => {
     const chain = runHerbChain()
 
@@ -437,30 +424,13 @@ describe('Simulation 24h × 1 worker — cân bằng từng chuỗi (gp123 6F)',
     expect(chain.pillsProduced).toBeLessThanOrEqual(chain.herbsConsumed)
   })
 
-  it('chuỗi Gỗ: gỗ sản xuất theo tuổi ≥ nhiên liệu job đan cần (cùng phân bố tuổi)', () => {
+  it('wood decomposes into enough canonical furnace fuel for the herb-chain jobs', () => {
     const herbChain = runHerbChain()
     const woodChain = runWoodChain()
-
-    // Nhien lieu can theo tuoi - rule resolveFuelWood: dung `<realm>_wood_<age>`,
-    // realm cua dan phuong mortal -> chi go mortal cua DUNG tuoi dung duoc.
-    const fuelNeeded = zeroByAge()
-
-    for (const age of CRAFTABLE_AGES) {
-      fuelNeeded[age] = herbChain.jobsByAge[age] * HERB_RECIPE.fuelWoodAmount
-    }
-
-    const woodMortal = woodChain.woodProduced.get('mortal') ?? zeroByAge()
-
-    console.log(
-      `[6F Gỗ] mortal_wood SX theo tuổi vs nhiên liệu cần:\n` +
-      fmtAgeTable({ 'SX mortal': woodMortal, 'cần mortal': fuelNeeded }) +
-      `\nSX mọi realm:\n${fmtAgeTable(Object.fromEntries([...woodChain.woodProduced]))}` +
-      `\noverflow=${woodChain.overflowTotal}`,
-    )
-
-    for (const age of CRAFTABLE_AGES) {
-      expect(woodMortal[age]).toBeGreaterThanOrEqual(fuelNeeded[age])
-    }
+    const fuelNeeded = herbChain.jobsStarted * HERB_RECIPE.fuelWoodAmount
+    expect(fuelNeeded).toBeGreaterThan(0)
+    expect(woodChain.woodProduced).toBeGreaterThan(0)
+    expect(woodChain.fuelProduced).toBeGreaterThanOrEqual(fuelNeeded)
   })
 
   it('chuỗi Khoáng: khoáng sản xuất ≥ khoáng Phân Giải tiêu thụ', () => {

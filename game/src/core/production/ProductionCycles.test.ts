@@ -80,14 +80,21 @@ describe('buildProductionCycle — deadline math', () => {
 })
 
 describe('buildProductionCycle — cycleId', () => {
-  it('embeds siteId and the base-36 start clock', () => {
-    const frozenMs = 1_700_000_000_000
-
-    vi.spyOn(Date, 'now').mockReturnValue(frozenMs)
-
-    const cycle = buildProductionCycle('thanh_van_quang', 'mortal', 1, 100, 0)
-
-    expect(cycle.cycleId.startsWith(`cycle_thanh_van_quang_${frozenMs.toString(36)}_`)).toBe(true)
+  it('uses the durable identity supplied by the production owner, independent of wall clock', () => {
+    vi.spyOn(Date, 'now').mockImplementation(() => {
+      throw new Error('wall clock is not an identity source')
+    })
+    const cycle = buildProductionCycle(
+      'thanh_van_quang',
+      'mortal',
+      1,
+      100,
+      12_000,
+      () => 0.25,
+      () => ({ cycleId: 'production:thanh_van_quang:42', receiptOrdinal: 42 }),
+    )
+    expect(cycle.cycleId).toBe('production:thanh_van_quang:42')
+    expect(cycle.receiptOrdinal).toBe(42)
   })
 
   it('stays unique across identical calls under a frozen clock (monotonic counter)', () => {
@@ -100,6 +107,7 @@ describe('buildProductionCycle — cycleId', () => {
 
     const counterOf = (cycleId: string): number => Number(cycleId.slice(cycleId.lastIndexOf('_') + 1))
 
+    expect(Number.isFinite(counterOf(first.cycleId))).toBe(true)
     expect(counterOf(second.cycleId)).toBe(counterOf(first.cycleId) + 1)
   })
 

@@ -14,7 +14,7 @@
 :is(#app,body) .game-button--ghost { color:#f2e1ba; }
 :is(#app,body) .game-button>.ink-nine-slice { display:none; }
 :is(#app,body) .game-button:hover:not(:disabled) { filter:brightness(1.08);transform:none; }
-:is(#app,body) .game-button:focus-visible { outline:none; }
+:is(#app,body) .game-button:focus-visible { outline:2px solid var(--th-gold,#ddbc76);outline-offset:2px; }
 :is(#app,body) :is(.overlay-panel__card:not(.overlay-panel__card--system),.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.error-screen__panel,.save-incompatible__panel) {
   background:none;border:0;border-image:none;border-radius:0;color:#302718;font-family:var(--pc-font-body);isolation:isolate;
 }

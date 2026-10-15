@@ -475,11 +475,7 @@ describe('auditR27 AUT - rejected hypotheses (fix claims hold)', () => {
       nextCycleAt: currentMs + 10 * 86_400_000,
       started: true,
     }, currentMs)
-    expect(system.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(system.getSaveState()).toEqual({})
   })
 
   it('R5 r27-COR-1: corrupt-LOW authority does NOT re-anchor began stamps (authority excluded)', () => {

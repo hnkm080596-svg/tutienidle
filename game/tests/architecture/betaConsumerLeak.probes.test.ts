@@ -2,11 +2,8 @@
 // QA FIXPOINT probe (consumer leak, run qa-fixpoint-master) - UI seams
 // that must read the SAME authority the scoped systems already read:
 //
-// CONSUMER-01 (Low): ProductionPanel's grotto card advertised
-// PILL_FAMILIES.length (8 authored rows) as producible "chu duoc"
-// while only 3 families are beta-admitted - the panel overstated what
-// the Dong Thien can ever deliver. The count now derives from
-// betaRecipeFamilyOfId, the same authority the alchemy catalog reads.
+// CONSUMER-01: production cards must advertise their actual owner-derived
+// output rates. The current card shows throughput instead of family counts.
 //
 // CONSUMER-02 (Low): the command wheel's character-slot dot fired on
 // raw cultivationProgress >= 1, a false positive at the TC ceiling
@@ -28,8 +25,6 @@ import { useUiStore } from '@/stores/ui'
 import { i18n } from '@/i18n'
 import { vTooltip } from '@/directives/tooltip'
 import { buildings } from '@/data/building/buildings'
-import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
-import { betaRecipeFamilyOfId } from '@/core/betaScope'
 import { THANH_VAN_PRODUCTION_SITES } from '@/core/production/ProductionCatalog'
 import {
   CORE_REALM_LEVEL,
@@ -58,6 +53,12 @@ function mountPanel() {
     lastCollectedAt: 0,
   })
 
+  // Rates belong to an active cycle; start each independent production site.
+  for (const site of THANH_VAN_PRODUCTION_SITES) {
+    gameManager.buildingOps.setProductionAutoRestart(site.siteId, true)
+  }
+  gameManager.productionSystem.tick(gameManager.time.now(), gameManager.materialBag, gameManager.materialRegistry, 'mortal')
+
   const app = createApp({ render: () => h(ProductionPanel) })
   app.use(pinia)
   app.use(i18n)
@@ -69,28 +70,31 @@ function mountPanel() {
   })
   app.mount(container)
 
-  return { container, app }
+  return { container, app, gameManager }
 }
 
-describe('CONSUMER-01: the grotto card advertises only beta-admitted pill families', () => {
-  it('the rendered reward count equals the admitted roster, not the authored table', async () => {
-    const { container, app } = mountPanel()
+describe('CONSUMER-01: production cards advertise the canonical output rate', () => {
+  it('each rendered rate agrees with its production view despite the display ordering', async () => {
+    const { container, app, gameManager } = mountPanel()
     await nextTick()
-
-    const grottoIndex = THANH_VAN_PRODUCTION_SITES.findIndex((site) => site.kind === 'grotto')
     const cards = container.querySelectorAll('.site-card')
-    expect(grottoIndex).toBeGreaterThanOrEqual(0)
     expect(cards.length).toBe(THANH_VAN_PRODUCTION_SITES.length)
-
-    const reward = cards[grottoIndex]?.querySelector('.site-card__reward')
-    const count = Number((reward?.textContent ?? '').match(/\d+/)?.[0])
-
-    const admittedCount = PILL_FAMILIES.filter(
-      (family) => betaRecipeFamilyOfId(family.id) !== null,
-    ).length
-    expect(admittedCount).toBeLessThan(PILL_FAMILIES.length)
-    expect(count).toBe(admittedCount)
-
+    const views = gameManager.buildingOps.getProductionViews(gameManager.time.now())
+    for (const view of views) {
+      const kind = view.definition.kind
+      const card = container.querySelector(`.site-card[data-kind="${kind}"]`)
+      expect(card, `missing ${kind} production card`).not.toBeNull()
+      const range = view.baseOutputPerSecond
+      expect(range, `missing ${kind} production rate`).toBeDefined()
+      expect(range!.min).toBeGreaterThan(0)
+      expect(range!.max).toBeGreaterThanOrEqual(range!.min)
+      const formatRate = (value: number) => value.toLocaleString('vi-VN', { maximumFractionDigits: 3 })
+      const amount = range!.min === range!.max ? formatRate(range!.min) : `${formatRate(range!.min)}–${formatRate(range!.max)}`
+      const expected = i18n.global.t('panels.production.resourceRate', {
+        amount, resource: i18n.global.t(`panels.production.resources.${kind}`),
+      })
+      expect(card!.querySelector('.source-reward')?.textContent).toBe(expected)
+    }
     app.unmount()
   })
 })

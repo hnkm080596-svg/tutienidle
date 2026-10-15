@@ -298,11 +298,7 @@ describe('auditR28 COR probe - restore-clock boundaries (B)', () => {
 
     expect(validateGameSaveShape(wire).ok).toBe(true)
     manager.saveOps.restoreFromSave(wire)
-    expect(manager.decomposeSystem.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(manager.decomposeSystem.getSaveState()).toEqual({})
   })
 })
 

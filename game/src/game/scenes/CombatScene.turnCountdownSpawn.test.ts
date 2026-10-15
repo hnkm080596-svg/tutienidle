@@ -42,6 +42,7 @@ function makeSceneWithCountdown() {
   // update() touches many of them and a bare Object.create() instance
   // would have none of them.
   const scene = createTestScene() as CombatSceneTestView
+  scene.tweens = { timeScale: 1, add: vi.fn(), killTweensOf: vi.fn() }
 
   scene.projection = {} // truthy - reconcileTurnCountdownSpawn only checks presence.
   scene.renderMode = 'flat' // isPerspective=false - resolveUprightVfxDepth skips gridToScreen.

@@ -175,44 +175,21 @@ describe('auditR27 COR probe - began-pair shift contract (W)', () => {
   })
 
   it('W1 production: post-dated pair re-grounds at restoreNow with span exact; boundary `>` strict', () => {
-    const system = createProductionSystem()
-
-    system.restoreStates(
-      [
-        {
-          siteId: FOREST_SITE_ID,
-          level: 1,
-          autoRestart: true,
-          productionCycles: [
-            workerCycle(currentMs + 60_000, 'post'), // post-dated: shifts to [now, now+span]
-            workerCycle(currentMs - 5_000, 'flight'), // honest in-flight: untouched
-            workerCycle(currentMs, 'edge'), // boundary: started==restoreNow untouched
-            workerCycle(currentMs + 1, 'edge1'), // +1ms: shifts by 1
-          ],
-        },
-      ],
-      currentMs,
-    )
-
-    const cycles = system.getState(FOREST_SITE_ID)!.productionCycles!
-    const byId = new Map(cycles.map((c) => [c.cycleId, c]))
-
-    const post = byId.get('post')!
-    expect(post.startedAtMs).toBe(currentMs)
-    expect(post.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
-    expect(post.rollSeed).toBe(42)
-
-    const flight = byId.get('flight')!
-    expect(flight.startedAtMs).toBe(currentMs - 5_000)
-    expect(flight.completesAtMs).toBe(currentMs - 5_000 + MORTAL_CYCLE_MS)
-
-    const edge = byId.get('edge')!
-    expect(edge.startedAtMs).toBe(currentMs)
-    expect(edge.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
-
-    const edge1 = byId.get('edge1')!
-    expect(edge1.startedAtMs).toBe(currentMs)
-    expect(edge1.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
+    // Each time boundary is an independent legacy-admission case. Four
+    // simultaneous legacy heads would exceed the maintained three-head cap.
+    for (const [cycleId, startedAtMs] of [
+      ['post', currentMs + 60_000], ['flight', currentMs - 5_000],
+      ['edge', currentMs], ['edge1', currentMs + 1],
+    ] as const) {
+      const system = createProductionSystem()
+      system.restoreStates([{ siteId: FOREST_SITE_ID, level: 1, autoRestart: true,
+        productionCycles: [workerCycle(startedAtMs, cycleId)] }], currentMs)
+      const cycle = system.getState(FOREST_SITE_ID)!.productionCycles![0]!
+      expect(cycle.cycleId).toBe(cycleId)
+      expect(cycle.startedAtMs).toBe(Math.min(startedAtMs, currentMs))
+      expect(cycle.completesAtMs).toBe(Math.min(startedAtMs, currentMs) + MORTAL_CYCLE_MS)
+      expect(cycle.rollSeed).toBe(42)
+    }
   })
 
   it('W2 alchemy: shifted pair re-derives the reservation digest - witness still replays, settle delivers', () => {
@@ -325,11 +302,7 @@ describe('auditR27 COR probe - began-pair shift contract (W)', () => {
     const first = manager.decomposeSystem.getSaveState()
     manager.saveOps.restoreFromSave(wire, undefined)
 
-    expect(first).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(first).toEqual({})
     expect(manager.decomposeSystem.getSaveState()).toEqual(first)
   })
 
@@ -494,11 +467,7 @@ describe('auditR27 COR probe - restoreClock floor / corrupt-low authority (F)', 
     const cooldown2 = reader.tribulationDirector.serializeRuntime().cooldownUntil
     expect(cooldown2).toBe(currentMs + TRIBULATION_COOLDOWN_SECONDS * 1000)
 
-    expect(reader.decomposeSystem.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(reader.decomposeSystem.getSaveState()).toEqual({})
 
     // And the first tick pays NOTHING early - the corrupt authority only
     // shrunk the accrual window, never minted in-flight work.

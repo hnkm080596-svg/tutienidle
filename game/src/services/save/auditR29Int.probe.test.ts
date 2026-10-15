@@ -211,11 +211,7 @@ describe('auditR29 INT probe - tick/settle nowMs guard parity (P)', () => {
       started: true,
     }, Number.NaN)
 
-    expect(system.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(system.getSaveState()).toEqual({})
     expect(bag.get(ore.id)?.amount).toBe(oreAmountBefore)
   })
 })

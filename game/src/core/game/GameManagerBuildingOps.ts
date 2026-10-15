@@ -1,3 +1,4 @@
+import type { MaterialReceipt } from '../material/MaterialReceipt'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import { BuildingRegistry } from '../building/BuildingRegistry'
@@ -27,7 +28,7 @@ export interface GameManagerBuildingOpsDeps {
   // Collect-quest + perfection-discovery hook (see GameManager.notifyMaterialGained) -
   // GameManager supplies a closure because the real hook needs
   // questSystem/questRegistry/questManager, states outside building/production scope.
-  notifyMaterialGained: (materialId: string, amount: number) => void
+  notifyMaterialGained: (materialId: string, amount: number, receipt: MaterialReceipt | null) => void
   // GP-01 - authorized live-time owner for the building accrual clock
   // (seconds domain) and production previews (ms domain). Optional for
   // B1: direct constructor fixtures keep wall-clock behavior;
@@ -116,6 +117,7 @@ export class GameManagerBuildingOps {
   // material binh thuong (plan Workstream F); claim() tra amount +
   // materialId, GameManager resolve template va cong bag.
   collectBuilding(instanceId: string, player: PlayerData, currentTime = this.nowSeconds(), cycles = false): number {
+    return this.deps.materialBag.withAcquisition<number>(() => {
     // Pre-check registry TRUOC khi claim reset moc thoi gian (review
     // 2026-08-28): neu materialId khong resolve duoc ma van claim, san
     // luong bi mat trang (moc da reset, bag khong duoc cong).
@@ -142,9 +144,9 @@ export class GameManagerBuildingOps {
     if (claimed.amount > 0 && claimed.materialId && this.deps.materialRegistry.has(claimed.materialId)) {
       // 9.8 - bag clamp tai stackLimit; quest chi tinh delivered, tran
       // day toast thay vi mat lang le.
-      const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(claimed.materialId), claimed.amount)
+      const { overflow, receipt } = this.deps.materialBag.credit(this.deps.materialRegistry.get(claimed.materialId), claimed.amount)
 
-      this.deps.notifyMaterialGained(claimed.materialId, claimed.amount - overflow)
+      this.deps.notifyMaterialGained(claimed.materialId, claimed.amount - overflow, receipt)
 
       if (overflow > 0) {
         this.deps.notifications.push(
@@ -154,6 +156,8 @@ export class GameManagerBuildingOps {
     }
 
     return claimed.amount
+
+    })
   }
 
   settleAutomaticProduction(player: PlayerData): void {

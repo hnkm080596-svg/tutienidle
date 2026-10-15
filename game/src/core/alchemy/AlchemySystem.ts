@@ -489,12 +489,11 @@ export function unitsStartedAt(
   return Math.min(quantity, Math.floor((nowMs - job.startedAtMs) / perUnitMs) + 1)
 }
 
-let jobCounter = 0
-
-function nextJobId(): string {
-  jobCounter += 1
-
-  return `alchemy_${Date.now().toString(36)}_${jobCounter}`
+function parseAlchemyJobCounter(jobId: string): number {
+  const match = /_(\d+)$/.exec(jobId)
+  if (!match) return 0
+  const parsed = Number(match[1])
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 0
 }
 
 // FNV-1a fold for the legacy (no rollSeedBase) roll stream - a fixed
@@ -544,7 +543,16 @@ export class AlchemySystem {
   // same base, which is exactly the anti-scum property.
   private rollSeedCursor = 0
 
+  // Instance-owned monotonic counter for jobIds, reseeded on restoreJobs.
+  private jobCounter = 0
+
   private pendingEvents: AlchemySettlementEvent[] = []
+
+  private nextJobId(nowMs: number): string {
+    this.jobCounter += 1
+    const stamp = Number.isFinite(nowMs) ? Math.floor(Math.max(0, nowMs)).toString(36) : '0'
+    return `alchemy_${stamp}_${this.jobCounter}`
+  }
 
   private allocRollSeedBase(): number | undefined {
     if (this.rollSeedCursor + ALCHEMY_MAX_BATCH_QUANTITY > 2 ** 32) return undefined
@@ -715,7 +723,20 @@ export class AlchemySystem {
     })
 
     this.rollSeedCursor = 0
+    this.jobCounter = 0
+    for (const job of jobs) {
+      if (job && typeof job.jobId === 'string') {
+        const parsedSeq = parseAlchemyJobCounter(job.jobId)
+        if (parsedSeq > this.jobCounter) {
+          this.jobCounter = parsedSeq
+        }
+      }
+    }
     for (const job of this.jobs) {
+      const parsedSeq = parseAlchemyJobCounter(job.jobId)
+      if (parsedSeq > this.jobCounter) {
+        this.jobCounter = parsedSeq
+      }
       if (
         job.rollSeedBase !== undefined &&
         job.rollSeedBase + ALCHEMY_MAX_BATCH_QUANTITY <= 2 ** 32
@@ -880,13 +901,13 @@ export class AlchemySystem {
       }
     }
 
-    const jobId = nextJobId()
     const previousCompletion = liveJobs.at(-1)?.completesAtMs
     const startedAtMs = previousCompletion === undefined ? nowMs : Math.max(nowMs, previousCompletion)
     const completesAtMs = startedAtMs + batchSeconds * 1000
     if (!(startedAtMs >= 0 && completesAtMs < 2 ** 52)) {
       return { ok: false, reason: 'invalid_clock' }
     }
+    const jobId = this.nextJobId(nowMs)
 
     // Reserve atomic - tru toan bo sau khi moi check pass.
     bag.remove(herbMaterialId, herbAmount)

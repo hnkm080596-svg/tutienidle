@@ -5,6 +5,8 @@ import { createApp, h, ref } from 'vue'
 import { createPinia } from 'pinia'
 import ArchitectureSurface from '../scenes/architecture/ArchitectureSurface.vue'
 import { GameManager } from '@/core/game/GameManager'
+import { getArchitectureBuildingModels } from '@/core/game/ArchitectureReadModel'
+import { isBetaBuildingSurface, isBetaLeftPanelMode } from '@/core/betaScopeSurface'
 import { createDefaultPlayer } from '@/core/player/Player'
 import { buildings } from '@/data/building/buildings'
 import { i18n } from '@/i18n'
@@ -27,20 +29,25 @@ function mountArchitecture() {
   app.provide(BUMP_STATE_KEY, () => { stateVersion.value += 1 })
   document.body.appendChild(container)
   app.mount(container)
-  return { app, container }
+  return { app, container, manager, player }
 }
 
 afterEach(() => { document.body.innerHTML = '' })
 
 describe('Vendor Architecture card', () => {
-  it('shows the vendor as art-only with no sales or upgrade controls', () => {
+  it('retains the vendor as nonfunctional art data without adding commerce to the six-card Architecture scene', () => {
     const mounted = mountArchitecture()
     try {
-      const vendor = mounted.container.querySelector('[data-building-id="vendor"]')
-      expect(vendor).not.toBeNull()
-      expect(vendor?.textContent).toContain('Chỉ trưng bày')
-      expect(vendor?.querySelectorAll('button')).toHaveLength(0)
-      expect(vendor?.querySelectorAll('[data-testid*="sale"]')).toHaveLength(0)
+      const vendor = getArchitectureBuildingModels(mounted.manager, mounted.player).find(model => model.id === 'vendor')
+      expect(vendor).toMatchObject({ artOnly: true, canUpgrade: false, maxed: true, maxLevel: 1 })
+      expect(vendor?.currentEffects).toEqual([])
+      expect(vendor?.nextEffects).toEqual([])
+      expect(vendor?.costs).toEqual([])
+      expect(isBetaBuildingSurface('vendor')).toBe(false)
+      expect(isBetaLeftPanelMode('vendor')).toBe(false)
+      expect(mounted.container.querySelectorAll('.architecture-card')).toHaveLength(6)
+      expect(mounted.container.querySelector('[data-building-id="vendor"]')).toBeNull()
+      expect(mounted.container.querySelector('[data-testid*="sale"]')).toBeNull()
     } finally {
       mounted.app.unmount()
     }

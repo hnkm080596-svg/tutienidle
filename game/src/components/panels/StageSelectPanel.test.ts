@@ -134,9 +134,9 @@ describe('StageSelectPanel — B5 auto-farm armed state + refused start guard (a
 
     // Select perfect_farm on the already-selected first stage, then Start.
     // Modes live in the dropdown now - open it, then pick the option.
-    container.querySelector<HTMLElement>('.mode-toggle')!.click()
+    container.querySelector<HTMLElement>('.mode-block [aria-haspopup="listbox"]')!.click()
     await nextTick()
-    const farmChip = container.querySelector<HTMLElement>('.mode-option[data-mode="perfect_farm"]')!
+    const farmChip = Array.from(container.querySelectorAll<HTMLElement>('.mode-block [role="option"]')).find(option => option.textContent === t('panels.stageSelect.modes.perfectFarm'))!
     farmChip.click()
     await nextTick()
     container.querySelector<HTMLButtonElement>('[data-testid="stage-start-button"]')!.click()
@@ -162,16 +162,16 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     await nextTick()
 
     // Modes live in the dropdown now - open it, then pick the option.
-    container.querySelector<HTMLElement>('.mode-toggle')!.click()
+    container.querySelector<HTMLElement>('.mode-block [aria-haspopup="listbox"]')!.click()
     await nextTick()
-    const chips = Array.from(container.querySelectorAll<HTMLElement>('.mode-option'))
+    const chips = Array.from(container.querySelectorAll<HTMLElement>('.mode-block [role="option"]'))
     expect(chips.length).toBeGreaterThanOrEqual(3)
 
-    container.querySelector<HTMLElement>('.mode-option[data-mode="repeat"]')!.click()
+    Array.from(container.querySelectorAll<HTMLElement>('.mode-block [role="option"]')).find(option => option.textContent === t('panels.stageSelect.modes.repeat'))!.click()
     await nextTick()
     // The armed mode leaves the option list - it becomes the toggle
     // face itself (Minh's one-row saving rule).
-    expect(container.querySelector<HTMLElement>('.mode-toggle')!.textContent).toContain('Lặp Lại')
+    expect(container.querySelector<HTMLElement>('.mode-block [aria-haspopup="listbox"]')!.textContent).toContain('Lặp Lại')
 
     // Frontier pick anchors on dong_2 at open (first uncleared) - so
     // the disarm check must click a DIFFERENT node: back to dong_1.
@@ -180,7 +180,7 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
       .click()
     await nextTick()
 
-    expect(container.querySelector<HTMLElement>('.mode-toggle')!.textContent).toContain('Mặc Định')
+    expect(container.querySelector<HTMLElement>('.mode-block [aria-haspopup="listbox"]')!.textContent).toContain('Mặc Định')
 
     unmount()
   })
@@ -196,11 +196,11 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     await nextTick()
     await nextTick()
 
-    container.querySelector<HTMLElement>('.mode-toggle')!.click()
+    container.querySelector<HTMLElement>('.mode-block [aria-haspopup="listbox"]')!.click()
     await nextTick()
-    container.querySelector<HTMLElement>('.mode-option[data-mode="progress"]')!.click()
+    Array.from(container.querySelectorAll<HTMLElement>('.mode-block [role="option"]')).find(option => option.textContent === t('panels.stageSelect.modes.progress'))!.click()
     await nextTick()
-    expect(container.querySelector<HTMLElement>('.mode-toggle')!.textContent).toContain('Tiến Ải')
+    expect(container.querySelector<HTMLElement>('.mode-block [aria-haspopup="listbox"]')!.textContent).toContain('Tiến Ải')
 
     // Cross-chapter pick now goes straight through the single-vista
     // map - tapping the first qi_refining node (qi_refining_forest,
@@ -208,7 +208,7 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     container.querySelector<HTMLElement>('[data-stage-id="qi_refining_forest"]')!.click()
     await nextTick()
 
-    expect(container.querySelector<HTMLElement>('.mode-toggle')!.textContent).toContain('Mặc Định')
+    expect(container.querySelector<HTMLElement>('.mode-block [aria-haspopup="listbox"]')!.textContent).toContain('Mặc Định')
 
     unmount()
   })

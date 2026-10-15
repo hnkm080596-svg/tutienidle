@@ -1,5 +1,4 @@
-// Skill-cast impulse path: the shared presentation runner drives actor
-// motion straight from the cast fact - it must never acknowledge the engine.
+// Authored animation owns actor motion; the shared runner owns action ACKs.
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
@@ -36,8 +35,8 @@ function createScene() {
   return { scene, tweenConfigs }
 }
 
-describe('cast-phase actor impulse', () => {
-  it('moves the source sprite but never acknowledges', () => {
+describe('cast-phase authored-only actor motion', () => {
+  it('keeps the source still and admits the shared runner without an early ACK', () => {
     const { scene, tweenConfigs } = createScene()
     scene.sprites.set('player', { kind: 'rect', rect: { x: 50, y: 0 }, offsetX: 0,
       footY: 60, personWidth: 24, personHeight: 40 } as never)
@@ -49,7 +48,9 @@ describe('cast-phase actor impulse', () => {
       declaredTargets: [{ entityId: 'enemy_1', row: 1, column: 8 }],
       candidateInstanceCount: 1, disposition: 'action',
     })
-    expect(tweenConfigs.some(cfg => cfg.offsetX === 8)).toBe(true)
+    expect(tweenConfigs).toEqual([])
+    expect(scene.sprites.get('player').offsetX).toBe(0)
+    expect(scene.skillVfxDebug.playback).toMatchObject({ phase: 'cast', faultCount: 0 })
     expect(scene.gameManagerRef.acknowledgeActionImpact).not.toHaveBeenCalled()
   })
 })

@@ -1,3 +1,7 @@
+// @ts-expect-error The project omits Node ambient types; Vitest supplies this at runtime.
+import { existsSync } from 'node:fs'
+// @ts-expect-error The project omits Node ambient types; Vitest supplies this at runtime.
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   enumerateResources,
@@ -6,6 +10,8 @@ import {
   getCombatDescriptors,
   getCoreUiDescriptors,
   getHomeDescriptors,
+  getUiChromeDescriptors,
+  getUiSceneDescriptors,
   getTribulationDescriptors,
   type AssetResourceDescriptor,
 } from './AssetBundleCatalog'
@@ -208,5 +214,47 @@ describe('W4 dom-audio lane', () => {
         expect(bundle.startsWith('audio-')).toBe(false)
       }
     }
+  })
+})
+
+
+// @ts-expect-error Node ambient types are supplied by Vitest at runtime.
+const PUBLIC_ROOT = join(process.cwd(), 'public')
+
+describe('component art bundle ownership', () => {
+  it('preloads shared dropdown chrome before home is revealed', () => {
+    const url = '/assets/ui/tien-hiep-2026-10/controls/dropdown-frame-cloud-v1.svg'
+    expect(getUiChromeDescriptors()).toContainEqual({ kind: 'dom-image', key: url, url })
+    expect(existsSync(join(PUBLIC_ROOT, url))).toBe(true)
+  })
+
+  it('warms combat, production and expedition component art exactly once from real files', () => {
+    const required = [
+      '/assets/backgrounds/thanh-van/spring/morning/03-battle-ground.png',
+      '/assets/ui/tien-hiep-2026-10/combat/battle-card/backdrop-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/battle-card/frame-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/battle-card/meter-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/battle-card/ring-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/expand-button-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/health-fill-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/item-slot-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/player-card/avatar-ring-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/player-card/backdrop-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/player-card/frame-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/player-card/meter-frame-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/skill-active-v1.png',
+      '/assets/ui/tien-hiep-2026-10/combat/skill-inactive-v1.png',
+      '/assets/ui/tien-hiep-2026-10/production/blessed-forest-v1.png',
+      '/assets/ui/tien-hiep-2026-10/production/herb-grotto-v1.png',
+      '/assets/ui/tien-hiep-2026-10/production/spirit-mine-v1.png',
+      '/assets/ui/tien-hiep-2026-10/production/spirit-vein-v1.png',
+    ]
+    const descriptors = getUiSceneDescriptors()
+    for (const url of required) {
+      expect(descriptors.filter((d) => d.kind === 'dom-image' && d.url === url), url)
+        .toEqual([{ kind: 'dom-image', key: url, url }])
+      expect(existsSync(join(PUBLIC_ROOT, url)), url).toBe(true)
+    }
+    expect(getBundlesForRoute('home')).not.toContain('ui-scenes')
   })
 })

@@ -229,6 +229,9 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   for (const definition of manager.productionSystem.getSiteDefinitions()) {
     manager.productionSystem.ensureSiteState(definition.siteId)
   }
+  // Admit every site's empty or carried receipt cursor through its owner,
+  // so both writers compare the same current persistence contract.
+  manager.productionSystem.restoreStates(manager.productionSystem.getAllStates())
 
   // Alchemy - a still-running job (completesAtMs in the future so the
   // restore-time offline settle leaves it pending).
@@ -318,6 +321,6 @@ describe('Mission A7 — whole-payload save conformance', () => {
 
     // save2 must equal the normalized persisted form - only the volatile
     // lastSavedAt may differ (Date.now is mocked equal anyway).
-    expect(stripVolatile(save2)).toEqual(stripVolatile(normalized))
+    expect(stripVolatile(JSON.parse(JSON.stringify(save2)) as GameSave)).toEqual(stripVolatile(normalized))
   })
 })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Retained as an inert compatibility surface for old imports. Chiêu Hiền
-// Quán is represented as an art-only landmark in Architecture; it owns no
+// Retained as an inert compatibility surface for old imports. Chieu Hien
+// Quan is represented as an art-only landmark in Architecture; it owns no
 // worker, companion, or upgrade controls.
 import { useI18n } from 'vue-i18n'
 

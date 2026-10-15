@@ -375,12 +375,33 @@ export function upgradeNode(
   return true
 }
 
+import type { StatType } from '../stats/StatTypes'
+
+export type NodeLevelEffectEntry =
+  | {
+      kind: 'stat'
+      stat: StatType
+      value: number
+    }
+  | {
+      kind: 'castStat'
+      skillId: string
+      stat: StatType
+      value: number
+    }
+  | {
+      kind: 'cooldownTurns'
+      skillId: string
+      value: number
+      once: boolean
+    }
+
 /**
  * Scales a modifier by level - same formula as getScaledPassiveModifiers():
  * value at level L = base + perLevel x (L - 1). A single-level node (root/
  * keystone) at L=1 yields exactly base, no perLevel.
  */
-function scaleModifierForLevel<T extends { flat?: number; percent?: number; perLevelFlat?: number; perLevelPercent?: number }>(
+export function scaleModifierForLevel<T extends { flat?: number; percent?: number; perLevelFlat?: number; perLevelPercent?: number }>(
   modifier: T,
 
   level: number,
@@ -394,6 +415,62 @@ function scaleModifierForLevel<T extends { flat?: number; percent?: number; perL
 
     percent: (modifier.percent ?? 0) + (modifier.perLevelPercent ?? 0) * extraLevels,
   }
+}
+
+/**
+ * Pure domain read-model for the cumulative node-effect entries at `level`
+ * (1..maxLevel), built directly from `scaleModifierForLevel` (statModifiers)
+ * and the PhapTuNodeModifiers castStat/cooldownTurnsDelta scaling formulas
+ * so UI surfaces never re-derive modifier math (V4c).
+ */
+export function describeNodeLevelEffects(
+  node: ProgressionNode,
+  level: number,
+): NodeLevelEffectEntry[] {
+  if (!Number.isInteger(level) || level < 1) {
+    return []
+  }
+
+  const out: NodeLevelEffectEntry[] = []
+
+  for (const mod of node.effect?.statModifiers ?? []) {
+    const scaled = scaleModifierForLevel(mod, level)
+    const value = scaled.flat !== 0 ? scaled.flat : scaled.percent
+    out.push({
+      kind: 'stat',
+      stat: mod.stat,
+      value,
+    })
+  }
+
+  for (const spec of node.effect?.skillDefinitionModifiers ?? []) {
+    for (const cm of spec.castStatModifiers ?? []) {
+      out.push({
+        kind: 'castStat',
+        skillId: spec.skillId,
+        stat: cm.stat,
+        value: cm.perLevel * level,
+      })
+    }
+    if (spec.cooldownTurnsDelta?.perLevel !== undefined) {
+      out.push({
+        kind: 'cooldownTurns',
+        skillId: spec.skillId,
+        value: spec.cooldownTurnsDelta.perLevel * level,
+        once: false,
+      })
+    }
+    if (spec.cooldownTurnsDelta?.flat !== undefined && level === 1) {
+      out.push({
+        kind: 'cooldownTurns',
+        skillId: spec.skillId,
+        value: spec.cooldownTurnsDelta.flat,
+        once: true,
+      })
+    }
+  }
+
+  return out
 }
 
 /**

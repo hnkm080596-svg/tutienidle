@@ -44,7 +44,7 @@ describe('DecomposeSystem — immediate ore command', () => {
     expect(bag.getAmount('material_spirit_ore_decade')).toBe(0)
     expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(2)
     expect(onEssenceProduced).toHaveBeenCalledTimes(1)
-    expect(onEssenceProduced).toHaveBeenCalledWith(LUYEN_KHI_TINH_HOA_ID, 2)
+    expect(onEssenceProduced).toHaveBeenCalledWith(LUYEN_KHI_TINH_HOA_ID, 2, expect.objectContaining({ producer: 'inventory', payload: { kind: 'material_delivered', materialId: LUYEN_KHI_TINH_HOA_ID, delivered: 2 } }))
   })
   it('uses floor conversion so splitting requests cannot increase output', () => {
     const batchedBag = new MaterialBag()
@@ -141,7 +141,7 @@ describe('DecomposeSystem — immediate ore command', () => {
     expect(bag.getAmount('material_spirit_ore_decade')).toBe(0)
     expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(2)
     expect(onEssenceProduced).toHaveBeenCalledTimes(1)
-    expect(onEssenceProduced).toHaveBeenCalledWith(LUYEN_KHI_TINH_HOA_ID, 2)
+    expect(onEssenceProduced).toHaveBeenCalledWith(LUYEN_KHI_TINH_HOA_ID, 2, expect.objectContaining({ producer: 'inventory', payload: { kind: 'material_delivered', materialId: LUYEN_KHI_TINH_HOA_ID, delivered: 2 } }))
   })
 
   it('generic output adapter receives credit once and capacity failure preserves inputs', () => {

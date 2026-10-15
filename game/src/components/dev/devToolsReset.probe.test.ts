@@ -125,9 +125,7 @@ function panelReset(gameManager: GameManager, player: ReturnType<typeof usePlaye
     gameManager.skillSystem.unlearn(skill.id)
   }
   bootstrapEarlyGamePlayer(gameManager, player.$state)
-  gameManager.productionSystem.restoreStates(
-    gameManager.productionSystem.getAllStates().map((s) => ({ ...s, productionCycles: [] })),
-  )
+  gameManager.productionSystem.cancelPendingCycles()
   // clampRealmCoherence
   const realm = REALMS.find((r) => r.id === player.realmId)
   if (realm !== undefined && player.realmLevel > realm.maxLevel) {
@@ -187,6 +185,7 @@ describe('DevToolsPanel save-boundary preflight', () => {
       })),
     )
     expect(gameManager.productionSystem.getAllStates().some(state => (state.productionCycles?.length ?? 0) > 0)).toBe(true)
+    const canceledCycles = gameManager.productionSystem.getAllStates()
     panelReset(gameManager, player)
 
     expect(gameManager.productionSystem.getAllStates().every(state => (state.productionCycles?.length ?? 0) === 0)).toBe(true)
@@ -195,6 +194,22 @@ describe('DevToolsPanel save-boundary preflight', () => {
     expect(gameManager.techniqueManager.getActive?.() ?? null).toBeNull()
     const learned = gameManager.skillManager.getAll().map((s) => s.id).sort()
     expect(learned).toEqual([...MORTAL_PRECURSOR_SKILL_IDS].sort())
+    expectSaveLegal(gameManager, player)
+    const save = JSON.parse(JSON.stringify(buildGameSave(player.$state, gameManager)))
+    const reopened = context()
+    reopened.gameManager.saveOps.restoreFromSave(save)
+    expectSaveLegal(reopened.gameManager, reopened.player)
+    const inventory = reopened.gameManager.materialBag.getAll()
+    reopened.gameManager.productionSystem.restoreStates(canceledCycles, now)
+    reopened.gameManager.productionSystem.tick(
+      now + 100_000, reopened.gameManager.materialBag, reopened.gameManager.materialRegistry, 'mortal',
+    )
+    expect(reopened.gameManager.materialBag.getAll()).toEqual(inventory)
+    expect(reopened.gameManager.productionSystem.drainSettlementEvents()).toEqual([])
+    expectSaveLegal(reopened.gameManager, reopened.player)
+    const frontier = gameManager.productionSystem.getAllStates()
+    panelReset(gameManager, player)
+    expect(gameManager.productionSystem.getAllStates()).toEqual(frontier)
     expectSaveLegal(gameManager, player)
   })
 

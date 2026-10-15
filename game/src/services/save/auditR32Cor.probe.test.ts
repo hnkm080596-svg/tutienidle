@@ -330,8 +330,7 @@ describe('r32 COR - B: headroom guards on clock + delta mints', () => {
       { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 4 }, nextCycleAt: BOUND - 1, started: true },
       BOUND - 1,
     )
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-    expect(system.getSaveState().started).toBe(false)
+    expect(system.getSaveState()).toEqual({})
   })
 })
 

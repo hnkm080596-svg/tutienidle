@@ -11,7 +11,7 @@ import { lockBetaTalentsForTests } from '../../core/game/__fixtures__/betaTalent
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
 import { settleProductionOffline } from '../../core/production/ProductionOffline'
 import type { ProductionCycle, ProductionSiteState } from '../../core/production/ProductionTypes'
-import type { MaterialBag } from '../../core/material/MaterialBag'
+import { MaterialBag } from '../../core/material/MaterialBag'
 import type { MaterialRegistry } from '../../core/material/MaterialRegistry'
 import type { GameSave } from './SaveSystem'
 
@@ -548,7 +548,7 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
           granted.push(cycle)
         },
       },
-      {} as MaterialBag,
+      new MaterialBag(() => currentMs),
       {} as MaterialRegistry,
       'mortal',
       settleNowMs,
@@ -599,7 +599,7 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
           siteId === 'forge_site' ? ({ siteId, maxLevel: 9 } as never) : undefined,
         grantCycleRewards: () => {},
       },
-      {} as MaterialBag,
+      new MaterialBag(() => currentMs),
       {} as MaterialRegistry,
       'mortal',
       settleNowMs,
@@ -650,7 +650,7 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
           siteId === 'forge_site' ? ({ siteId, maxLevel: 9 } as never) : undefined,
         grantCycleRewards: () => {},
       },
-      {} as MaterialBag,
+      new MaterialBag(() => currentMs),
       {} as MaterialRegistry,
       'mortal',
       settleNowMs,

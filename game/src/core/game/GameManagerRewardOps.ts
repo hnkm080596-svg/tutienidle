@@ -1,3 +1,4 @@
+import type { MaterialReceipt } from '../material/MaterialReceipt'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
@@ -24,7 +25,7 @@ export class GameManagerRewardOps {
       materialRegistry: MaterialRegistry
       materialBag: MaterialBag
       notifications: NotificationQueue
-      notifyMaterialGained: (materialId: string, amount: number) => void
+      notifyMaterialGained: (materialId: string, amount: number, receipt: MaterialReceipt | null) => void
     },
   ) {}
 
@@ -48,9 +49,9 @@ export class GameManagerRewardOps {
 
         if (amount > 0 && this.deps.materialRegistry.has(spiritStoneId)) {
           // 9.8 - bag overflow: quests count only delivered + toast.
-          const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(spiritStoneId), amount)
+          const { overflow, receipt } = this.deps.materialBag.credit(this.deps.materialRegistry.get(spiritStoneId), amount)
 
-          this.deps.notifyMaterialGained(spiritStoneId, amount - overflow)
+          this.deps.notifyMaterialGained(spiritStoneId, amount - overflow, receipt)
 
           if (overflow > 0) {
             this.deps.notifications.push(
@@ -62,6 +63,9 @@ export class GameManagerRewardOps {
     )
   }
   giveReward(receiver: RewardReceiver, reward: Reward) {
+    return this.deps.materialBag.withAcquisition<void>(() => {
     this.deps.rewardSystem.give(receiver, reward)
+
+    })
   }
 }

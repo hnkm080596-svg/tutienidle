@@ -472,8 +472,7 @@ describe('r29 COR - sibling retired Decompose state (E)', () => {
     }, Number.NaN)
 
     const state = system.getSaveState()
-    expect(state.nextCycleAt).toBe(0)
-    expect(state.started).toBe(false)
+    expect(state).toEqual({})
     const save = validWireSave() as unknown as Record<string, unknown>
     save['decompose'] = state
     expect(validateGameSaveShape(save as never).ok).toBe(true)
@@ -494,7 +493,7 @@ describe('r29 COR - sibling retired Decompose state (E)', () => {
 
     expect(manager.getState().lastDailyResetAtMs).toBe(currentMs)
     const save = validWireSave() as unknown as Record<string, unknown>
-    save['quests'] = manager.getState()
+    save['quests'] = { ...(save['quests'] as object), ...(manager.getState()) }
     const shape = validateGameSaveShape(save as never)
     expect(shape.ok).toBe(true)
   })

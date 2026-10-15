@@ -244,9 +244,10 @@ describe('quest claim through real save snapshots', () => {
     const player = reactive(createDefaultPlayer())
     primeMortalCreationPick(player, manager.skillManager)
     manager.setActivePlayer(player)
-    manager.materialBag.add(wood, 1)
     manager.questSystem.reconcileActiveQuests(manager.questRegistry, manager.questManager, player)
-    manager.questOps.notifyMaterialGained(wood.id, 1)
+    manager.questOps.notifyMaterialGained(wood.id, 1, manager.materialBag.credit(wood, 1).receipt)
+    const initialProducerReceipts = manager.materialBag.receiptSnapshot()
+    const initialConsumerReceipts = structuredClone(manager.questManager.getState().materialReceipts)
     const initialInsight = player.skillInsight
     const initialCultivation = player.cultivation
     const originalAdd = manager.materialBag.add.bind(manager.materialBag)
@@ -258,6 +259,8 @@ describe('quest claim through real save snapshots', () => {
     expect(() => manager.questOps.claimQuest(quest.id)).toThrow('stone already credited')
     failure.mockRestore()
 
+    expect(manager.materialBag.receiptSnapshot()).toEqual(initialProducerReceipts)
+    expect(manager.questManager.getState().materialReceipts).toEqual(initialConsumerReceipts)
     expect(player.skillInsight).toBe(initialInsight)
     expect(player.cultivation).toBe(initialCultivation)
     const failedSnapshot = JSON.parse(JSON.stringify(buildGameSave(player, manager)))

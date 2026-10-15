@@ -119,7 +119,7 @@ function saveWithJobs(jobs: unknown[], pillRoomLevel = 1): Record<string, unknow
 
 describe('R6-DORMANT-SLOT - parked orders must not consume the authored slot count at the gate', () => {
   it('accepts [dormant + live] at a level-1 pill_room (the state the writer honestly emits)', () => {
-    // Level 1 -> maxJobs 1. The live queue is full, the dormant record
+    // Level 1 -> one active kiln plus three waiting orders. The live queue is full, the dormant record
     // is dead weight the writer cannot drop (it rides the unfiltered
     // feed). INVARIANT: the slot gate counts only records that can
     // actually occupy a live slot (i.e. records that settle pills).
@@ -129,10 +129,9 @@ describe('R6-DORMANT-SLOT - parked orders must not consume the authored slot cou
     expect(shape.ok).toBe(true)
   })
 
-  it('sanity pin: a genuine two-live-job save at level 1 still refuses (slot law intact)', () => {
-    const shape = validateGameSaveShape(
-      saveWithJobs([liveRecord('live_1'), liveRecord('live_2')]),
-    )
-    expect(shape.ok).toBe(false)
+  it('admits four live orders at level 1 and rejects a fifth (one kiln plus three waiting)', () => {
+    const orders = Array.from({ length: 4 }, (_, index) => liveRecord(`live_${index}`))
+    expect(validateGameSaveShape(saveWithJobs(orders)).ok).toBe(true)
+    expect(validateGameSaveShape(saveWithJobs([...orders, liveRecord('overflow')])).ok).toBe(false)
   })
 })

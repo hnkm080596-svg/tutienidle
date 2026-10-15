@@ -1,3 +1,4 @@
+import { issueProductionIdentity, cursorFor, rollbackUnpublishedIssuance } from './ProductionReceiptCursor'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type {
@@ -97,6 +98,8 @@ function settleProductionCyclesOffline(
     // Advance the site's single cycle chain through the authorized
     // offline window. Over-budget completions are forfeited so backlog
     // cannot be granted later outside the cap.
+    bag.prepareCredit()
+    const beforeIssued = cursorFor(state).issuedThrough
     const result = advanceWorkerLanes({
       siteId: state.siteId,
       collectionRealmId: currentRealmId,
@@ -108,6 +111,7 @@ function settleProductionCyclesOffline(
       nowMs,
       emptyLaneStartMs: offlineSinceMs,
       advanceMode: 'deadline',
+      issueIdentity: () => issueProductionIdentity(state),
       // Each site owns its full allowance; sibling order cannot spend it.
       budgetMs: budgetRemainingMs,
       rng,
@@ -128,7 +132,7 @@ function settleProductionCyclesOffline(
     // live tick reads - NOT the raw wall clock, which a user can move.
     const fieldEpochShiftMs = Math.max(0, (deps.fieldNow?.() ?? Date.now()) - nowMs)
     const seededHeads = new Set(result.seededPending)
-    state.productionCycles = result.pending.map((cycle) =>
+    const nextPending = result.pending.map((cycle) =>
       // r32-AUT-4: the re-stamp must not mint out-of-domain either - a
       // crafted wall clock far ahead of the settle epoch would push the
       // shifted stamps >= 2^52 and self-refuse the next save write.
@@ -144,10 +148,15 @@ function settleProductionCyclesOffline(
         : cycle,
     )
 
-    for (const cycle of result.completed) {
-      deps.grantCycleRewards(cycle, bag, registry)
-
-      settled += 1
+    try {
+      for (const cycle of result.completed) {
+        deps.grantCycleRewards(cycle, bag, registry)
+        settled += 1
+      }
+      state.productionCycles = nextPending
+    } catch (error) {
+      rollbackUnpublishedIssuance(state, beforeIssued)
+      throw error
     }
   }
 

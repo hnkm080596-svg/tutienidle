@@ -1,3 +1,5 @@
+import { MaterialBag } from '../core/material/MaterialBag'
+import { QuestManager } from '../core/quest/QuestManager'
 // @vitest-environment jsdom
 //
 // Remediation Task 5 (2026-09-05) - App.vue boot/tick/listener lifecycle
@@ -86,14 +88,14 @@ function makeStubs() {
         off: vi.fn(),
       },
       materialRegistry: { has: () => false },
-      materialBag: { add: vi.fn(), getAll: () => [] },
+      materialBag: (() => { const bag = new MaterialBag(); vi.spyOn(bag, 'add').mockReturnValue(0); return bag })(),
       techniqueManager: { getAll: () => [] },
       skillManager: { getAll: () => [] },
       equipmentBag: { getAll: () => [] },
       pillBag: { getAll: () => [] },
       equipmentSlotManager: { getAll: () => [] },
       alchemySystem: { getJobs: () => [] },
-      questManager: { getState: () => ({}) },
+      questManager: new QuestManager(),
       decomposeSystem: { getSaveState: () => ({}) },
       tribulationDirector: { serializeRuntime: () => ({}) },
       productionSystem: { getSiteDefinitions: () => [], getAllStates: () => [] },

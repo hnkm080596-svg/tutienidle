@@ -45,7 +45,7 @@ function createFakeScene(options: { isPerspective?: boolean } = {}) {
       width: 0,
       destroy: () => obj,
       // positionSprite() writes here. Captured so a test can read where the
-      // body actually landed (Spec B sec4.3's idle bob).
+      // body actually landed on the projected ground.
       setPosition: vi.fn(() => obj),
       displayHeight: 0,
     }
@@ -71,12 +71,10 @@ function createFakeScene(options: { isPerspective?: boolean } = {}) {
     },
     physics: { add: { existing: vi.fn() } },
     textures: { exists: () => true },
-    // Spec B sec4.3 - enemies now start an idle-bob tween on creation. The host
-    // interface always declared `tweens`; this fixture simply never supplied it,
-    // and the cast below hid that until something read it.
+    // The host owns tweens for effects and resource cleanup.
     tweens: { add: vi.fn(), killTweensOf: vi.fn() },
     // CombatGridViewHost.startEntityIdle - kicks the entity's idle state after
-    // creation (clip in animated mode, no-op where a static bob already runs).
+    // creation (authored clip when available, static fallback otherwise).
     startEntityIdle: vi.fn(),
     fallbackSpriteTextureKey: () => undefined,
   }
@@ -356,100 +354,39 @@ describe('CombatGridView.redrawGridLines() — kích thước lưới lấy từ
   })
 })
 
-// ---------------------------------------------------------------------------
-// Spec B sec4.3/sec6 B6 - the idle bob
-// ---------------------------------------------------------------------------
-//
-// sec3.2 described enemies as static "nhu hien tai". They were not: walk sway/
-// bob/tilt were deleted outright on 2026-08-26, leaving rotation 0 and a
-// straight projected position. So "static plus a slight shake" is a TARGET
-// state, and these tests cover the half that had to be ADDED, not removed.
-describe('CombatGridView — idle motion for static entities', () => {
-  function fakeProjection() {
-    return {
-      rows: 6,
-      columns: 6,
-      gridToScreen: () => ({ x: 100, y: 200, scale: 1 }),
-      cellSizeAt: () => ({ width: 94.49, height: 41.4 }),
-      footprintPolygon: () => [],
+// Authored clips own body motion; static fallback art stays on the ground.
+describe('CombatGridView - authored-only idle motion', () => {
+  it('static enemies create no bob state or motion tween, including repeated same-species creation', () => {
+    const { scene, gridView } = createFakeScene()
+    for (const id of ['mortal_savage_tiger_1', 'mortal_savage_tiger_2']) {
+      const sprite = gridView.getOrCreateSprite(id, 0xd94a4a, id, 4, {
+        currentHp: 10, maxHp: 10, isBoss: false,
+      })
+      expect(sprite.idle).toBeUndefined()
+      expect(sprite.offsetX).toBe(0)
+      expect(scene.startEntityIdle).toHaveBeenCalledWith(sprite, id)
     }
-  }
-
-  it('a static enemy starts a looping, phase-delayed bob on creation', () => {
-    const { scene, gridView } = createFakeScene()
-
-    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_1', 0xd94a4a, 'Boar', 4, {
-      currentHp: 10,
-      maxHp: 10,
-      isBoss: false,
-    })
-
-    expect(sprite.idle).toBeDefined()
-
-    const tweens = scene.tweens as { add: ReturnType<typeof vi.fn> }
-
-    expect(tweens.add).toHaveBeenCalledTimes(1)
-
-    const config = tweens.add.mock.calls[0]![0] as Record<string, unknown>
-
-    expect(config.targets).toBe(sprite.idle)
-    expect(config.repeat).toBe(-1)
-    expect(config.yoyo).toBe(true)
-    expect(config.offsetY).toBeLessThan(0)
-    expect(config.duration as number).toBeGreaterThan(0)
+    expect((scene.tweens as { add: ReturnType<typeof vi.fn> }).add).not.toHaveBeenCalled()
   })
 
-  it('two individuals of the SAME species get different phases', () => {
-    // The failure this pins is the one that reads worse than no motion at all:
-    // five wolves share one texture key, so a per-key phase would make a row
-    // breathe as a single organism. The delay comes from the runtime id.
+  it('static body, feet and shadow stay on the projected ground across repeated positioning', () => {
     const { scene, gridView } = createFakeScene()
-
-    gridView.getOrCreateSprite('mortal_savage_tiger_1', 0xd94a4a, 'A', 4, {
-      currentHp: 10,
-      maxHp: 10,
-      isBoss: false,
-    })
-    gridView.getOrCreateSprite('mortal_savage_tiger_2', 0xd94a4a, 'B', 4, {
-      currentHp: 10,
-      maxHp: 10,
-      isBoss: false,
-    })
-
-    const tweens = scene.tweens as { add: ReturnType<typeof vi.fn> }
-    const first = tweens.add.mock.calls[0]![0] as { delay: number }
-    const second = tweens.add.mock.calls[1]![0] as { delay: number }
-
-    expect(first.delay).not.toBe(second.delay)
-  })
-
-  it('the bob moves the BODY, leaving feet, shadow and depth on the ground', () => {
-    const { scene, gridView } = createFakeScene()
-
     scene.isPerspective = true
-    scene.projection = fakeProjection()
-
-    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_1', 0xd94a4a, 'Boar', 4, {
-      currentHp: 10,
-      maxHp: 10,
-      isBoss: false,
+    scene.projection = {
+      rows: 6, columns: 6,
+      gridToScreen: () => ({ x: 100, y: 200, scale: 1 }),
+      cellSizeAt: () => ({ width: 94.49, height: 41.4 }), footprintPolygon: () => [],
+    }
+    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_1', 0xd94a4a, 'Tiger', 4, {
+      currentHp: 10, maxHp: 10, isBoss: false,
     })
-
-    sprite.idle!.offsetY = -6
-
-    gridView.positionSprite(sprite, 3)
-
+    for (let frame = 0; frame < 3; frame++) gridView.positionSprite(sprite, 3)
     const body = sprite.rect as unknown as { setPosition: ReturnType<typeof vi.fn> }
     const shadow = sprite.shadow as unknown as { setPosition: ReturnType<typeof vi.fn> }
-
-    // Body lifted by exactly the offset...
-    expect(body.setPosition).toHaveBeenCalledWith(100, 194)
-
-    // ...while the shadow and the foot point stay on the projected ground. A
-    // shadow that rose with the body would read as the creature hovering, and a
-    // moving footY would reorder the depth sort mid-breath.
-    expect(shadow.setPosition).toHaveBeenCalledWith(100, 200)
+    expect(body.setPosition).toHaveBeenLastCalledWith(100, 200)
+    expect(shadow.setPosition).toHaveBeenLastCalledWith(100, 200)
     expect(sprite.footY).toBe(200)
+    expect(sprite.idle).toBeUndefined()
   })
 
   it('the reskinned player draws its character atlas and skips the bob (character-art-infra)', () => {
@@ -474,7 +411,7 @@ describe('CombatGridView — idle motion for static entities', () => {
     ).toHaveBeenCalledWith(player, 'player')
   })
 
-  it('destroying a sprite kills its bob, which outlives the GameObject otherwise', () => {
+  it('destroying a static sprite destroys its body without creating a bob cleanup target', () => {
     const { scene, gridView } = createFakeScene()
 
     const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_1', 0xd94a4a, 'Boar', 4, {
@@ -483,11 +420,11 @@ describe('CombatGridView — idle motion for static entities', () => {
       isBoss: false,
     })
 
+    const destroy = vi.spyOn(sprite.rect, 'destroy')
     gridView.destroyEntitySprite(sprite)
-
-    expect((scene.tweens as { killTweensOf: ReturnType<typeof vi.fn> }).killTweensOf).toHaveBeenCalledWith(
-      sprite.idle,
-    )
+    expect(destroy).toHaveBeenCalledOnce()
+    expect(sprite.idle).toBeUndefined()
+    expect((scene.tweens as { killTweensOf: ReturnType<typeof vi.fn> }).killTweensOf).not.toHaveBeenCalled()
   })
 })
 

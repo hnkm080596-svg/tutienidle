@@ -9,15 +9,10 @@ vi.mock('../../core/betaScope', async (importOriginal) => ({
   betaRecipeFamilyOfId: () => 'tu_linh_dan',
 }))
 
-// QA wave-4 blind seam hunt (2026-10-11) - cross-save seam NONE of the
-// previous waves covered: REAL loadGame() pipeline for v89 payloads.
-//
-// Class A: a v89 save written by the POST-fold v89 build (9c1ad6d8 era)
-// carries jobs with rollSeedBase + a digest folded over the seed field.
-// Class B: a v89 save written by the PRE-anchor v89 build (77d311dc era)
-// carries legacy jobs - no rollSeedBase, digest folded without it.
-// Both must migrate through inspectLocalSave's pure re-stamp and still
-// verify the reservation witness, then settle through the real
+// Real loadGame admission with seeded and unseeded reservation witnesses.
+// Positive alchemy behavior uses CURRENT; old-version bytes are rejected.
+// Old versions are now rejected. Current-schema job records must still
+// verify their reservation witness, then settle through the real
 // restoreJobs -> tick path minting deterministic rolls.
 
 import {
@@ -39,8 +34,6 @@ import {
 } from '../../core/alchemy/AlchemySystem'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { PillBag } from '../../core/pill/PillBag'
-import { MaterialBag } from '../../core/material/MaterialBag'
-import { MaterialRegistry } from '../../core/material/MaterialRegistry'
 
 const SAVE_KEY = resolveSaveKey()
 
@@ -68,7 +61,7 @@ class MemoryStorage implements Storage {
 
 const RECIPE = alchemyRecipes.find((recipe) => recipe.id === 'alchemy_tu_linh_dan_mortal')!
 
-function v89SaveWithJobs(jobs: Record<string, unknown>[]) {
+function currentSaveWithJobs(jobs: Record<string, unknown>[], version: number = CURRENT_SAVE_VERSION) {
   const gameManager = new GameManager()
   gameManager.buildingManager.add({
     instanceId: 'b-pill',
@@ -83,14 +76,13 @@ function v89SaveWithJobs(jobs: Record<string, unknown>[]) {
     string,
     unknown
   >
-  save.version = 89
+  save.version = version
   save.alchemyJobs = jobs
   return JSON.stringify(save)
 }
 
-// A post-fold v89 writer emitted this exact record shape: quantity +
-// unitsDone + rollSeedBase stamped, digest folded over all of them.
-function seededV89Job(overrides: Record<string, unknown> = {}) {
+// Seeded job record: the digest binds batch progress and roll anchor.
+function seededJob(overrides: Record<string, unknown> = {}) {
   const job = alchemyJobFixture(
     {
       jobId: 'v89_seeded_1',
@@ -111,11 +103,9 @@ function seededV89Job(overrides: Record<string, unknown> = {}) {
   return job as unknown as Record<string, unknown>
 }
 
-// A pre-anchor v89 writer emitted this shape: no rollSeedBase, and the
-// digest folded WITHOUT the seed field (and - for the earliest v89
-// writers - without batch fields either when the job predates the
-// queue rework).
-function legacyV89Job(overrides: Record<string, unknown> = {}) {
+// Unseeded job shape accepted inside a current-schema save; the digest
+// folds the fields actually present, independently of version admission.
+function unseededJob(overrides: Record<string, unknown> = {}) {
   const seeded = alchemyJobFixture(
     {
       jobId: 'v89_legacy_1',
@@ -145,14 +135,30 @@ function legacyV89Job(overrides: Record<string, unknown> = {}) {
   return legacy
 }
 
-describe('SEAM-1 cross-save: v89 payload -> v90 build through real loadGame()', () => {
+describe('strict version admission and current-schema alchemy job seams', () => {
   beforeEach(() => {
     vi.stubGlobal('localStorage', new MemoryStorage())
     setSaveAccountId(null)
   })
 
-  it('v89 seeded job (digest folded with rollSeedBase) verifies + migrates clean', () => {
-    localStorage.setItem(SAVE_KEY, v89SaveWithJobs([seededV89Job()]))
+  it.each([
+    ['seeded', () => seededJob()],
+    ['unseeded', () => unseededJob()],
+  ] as const)('rejects old-version %s jobs without rewriting bytes or restoring/minting', (_kind, job) => {
+    const raw = currentSaveWithJobs([job()], 89)
+    localStorage.setItem(SAVE_KEY, raw)
+    const restore = vi.spyOn(AlchemySystem.prototype, 'restoreJobs')
+    const tick = vi.spyOn(AlchemySystem.prototype, 'tick')
+    try {
+      expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: 89, raw })
+      expect(localStorage.getItem(SAVE_KEY)).toBe(raw)
+      expect(restore).not.toHaveBeenCalled()
+      expect(tick).not.toHaveBeenCalled()
+    } finally { restore.mockRestore(); tick.mockRestore() }
+  })
+
+  it('current seeded job preserves its rollSeedBase reservation witness', () => {
+    localStorage.setItem(SAVE_KEY, currentSaveWithJobs([seededJob()]))
 
     const outcome = loadGame()
 
@@ -161,13 +167,13 @@ describe('SEAM-1 cross-save: v89 payload -> v90 build through real loadGame()', 
       const jobs = (outcome.save as { alchemyJobs?: ActiveAlchemyJob[] }).alchemyJobs
       expect(jobs).toHaveLength(1)
       expect(jobs![0]!.rollSeedBase).toBe(0)
-      // The witness still replays after the version re-stamp.
+      // The current-schema witness still replays after load.
       expect(verifyAlchemyJobReservation(jobs![0]!, RECIPE)).toBeNull()
     }
   })
 
-  it('v89 LEGACY unseeded job (digest without seed field) verifies + migrates clean', () => {
-    localStorage.setItem(SAVE_KEY, v89SaveWithJobs([legacyV89Job()]))
+  it('current-schema unseeded job preserves its reservation witness', () => {
+    localStorage.setItem(SAVE_KEY, currentSaveWithJobs([unseededJob()]))
 
     const outcome = loadGame()
 
@@ -180,11 +186,11 @@ describe('SEAM-1 cross-save: v89 payload -> v90 build through real loadGame()', 
     }
   })
 
-  it('the migrated v89 seeded job settles through restoreJobs->tick and mints', () => {
-    const job = seededV89Job({
+  it('the current-schema seeded job settles through restoreJobs->tick and mints', () => {
+    const job = seededJob({
       completesAtMs: 1_000 + alchemySecondsFor(RECIPE, 1) * 1000,
     })
-    localStorage.setItem(SAVE_KEY, v89SaveWithJobs([job]))
+    localStorage.setItem(SAVE_KEY, currentSaveWithJobs([job]))
 
     const outcome = loadGame()
     expect(outcome.status).toBe('ok')
@@ -205,14 +211,14 @@ describe('SEAM-1 cross-save: v89 payload -> v90 build through real loadGame()', 
     expect(events[0]!.delivered).toBeGreaterThan(0)
   })
 
-  it('a merged v89 job (quantity>1, unitsDone>0) reloads mid-batch and rolls only the remaining units', () => {
-    const job = seededV89Job({
+  it('a current-schema merged job (quantity>1, unitsDone>0) reloads mid-batch and rolls only the remaining units', () => {
+    const job = seededJob({
       jobId: 'v89_merged_midbatch',
       quantity: 3,
       unitsDone: 1,
       completesAtMs: 1_000 + alchemySecondsFor(RECIPE, 1) * 1000 * 3,
     })
-    localStorage.setItem(SAVE_KEY, v89SaveWithJobs([job]))
+    localStorage.setItem(SAVE_KEY, currentSaveWithJobs([job]))
 
     const outcome = loadGame()
     expect(outcome.status).toBe('ok')
@@ -237,7 +243,7 @@ describe('SEAM-1 cross-save: v89 payload -> v90 build through real loadGame()', 
     expect(events[0]!.mintedGrades).toHaveLength(2)
   })
 
-  it('the re-stamp arm re-folds a post-dated v89 seeded job and the witness still verifies', () => {
+  it('current job restore re-folds a post-dated seeded job and the witness still verifies', () => {
     // startedAtMs > restoreNowMs (clock moved back between save and
     // load) forces restoreJobs to re-ground the pair and re-fold the
     // digest - the rollSeedBase must ride the fold or the job settles

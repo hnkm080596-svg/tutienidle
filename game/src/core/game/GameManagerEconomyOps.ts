@@ -1,3 +1,4 @@
+import type { MaterialReceipt } from '../material/MaterialReceipt'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { PlayerData } from '../player/Player'
@@ -9,7 +10,7 @@ export class GameManagerEconomyOps {
     materialRegistry: MaterialRegistry
     materialBag: MaterialBag
     getAlchemyRecipes: () => AlchemyRecipe[]
-    notifyMaterialGained: (materialId: string, amount: number) => void
+    notifyMaterialGained: (materialId: string, amount: number, receipt: MaterialReceipt | null) => void
   }) {}
 
   sellMaterialToVendor(

@@ -24,7 +24,7 @@
 :is(#app, body) .paper-navigation .paper-navigation-icon img, :is(#app, body) .paper-navigation .paper-back img { width: 30px; height: 30px; transform: none; filter: brightness(0) saturate(100%) invert(83%) sepia(30%) saturate(600%) hue-rotate(352deg); }
 :is(#app, body) .paper-navigation .active { background: linear-gradient(90deg,transparent,#b58a3740,transparent); outline: 1px solid #b9995370; box-shadow: 0 0 12px #d5aa4430; color: #fff2c5; }
 :is(#app, body) .paper-navigation button:hover:not(.is-locked) { color: #ffe5a4; }
-:is(#app, body) .paper-navigation button:focus-visible { outline: none; }
+:is(#app, body) .paper-navigation button:focus-visible { outline: 2px solid var(--th-gold, #ddbc76); outline-offset: 2px; }
 :is(#app, body) .cf-scene .cf-paper, :is(#app, body) .inventory-scene .inventory-paper, :is(#app, body) .equipment-scene .equipment-paper, :is(#app, body) .skill-paper-scene .skill-paper, :is(#app, body) .realm-scene .realm-paper, :is(#app, body) .technique-scene .technique-paper, :is(#app, body) .body-scene .body-paper, :is(#app, body) .alchemy-scene .alchemy-paper, :is(#app, body) .exploration-scene .exploration-paper, :is(#app, body) .quest-scene .quest-paper, :is(#app, body) .settings-scene .settings-paper {
   left: 156px; width: 1272px; border-image-width: 52px;
 }
@@ -348,8 +348,8 @@
   .th-panel-swap-enter-active, .th-panel-swap-leave-active { transition: none; }
 }
 
-/* Owner ruling 2026-10-11: suppress button focus frames app-wide
-   (ESC focus restoration draws the gold ring on nav/panel buttons). */
-:is(#app, body) button:focus-visible { outline: none !important; }
-
 }
+
+/* D3 ruling (2026-10-15, U1): restore keyboard-only :focus-visible outline
+   using the theme gold token across all buttons, including inside GamePanel/GameCard. */
+:is(#app, body) button:focus-visible { outline: 2px solid var(--th-gold, #ddbc76); outline-offset: 2px; }

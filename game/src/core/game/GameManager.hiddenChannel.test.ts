@@ -44,15 +44,19 @@ function injectGrottoChannel(manager: GameManager, channel: GrottoChannel): void
 }
 
 function restoreDueGrottoCycle(manager: GameManager, rollSeed: number): void {
+  const cursor = manager.productionSystem.getState(GROTTO)?.receiptCursor ?? { issuedThrough: 0, settledThrough: 0, settledAhead: [], legacyOrigins: [] }
+  const ordinal = cursor.issuedThrough + 1
   manager.productionSystem.restoreStates([
     {
       siteId: GROTTO,
+      receiptCursor: { ...cursor, issuedThrough: ordinal },
       level: 1,
       autoRestart: false,
       activeWorkerSlots: 0,
       workerCycles: [
         {
           cycleId: `gm_cycle_${rollSeed}`,
+          receiptOrdinal: ordinal,
           siteId: GROTTO,
           collectionRealmId: 'mortal',
           siteLevelAtStart: 1,

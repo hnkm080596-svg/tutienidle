@@ -1,0 +1,16 @@
+{
+  "runId": "beta-stabilization-phase1-2026-10-15",
+  "productRoot": ".",
+  "goal": "Phase 1 of Closed Beta Master Plan: (1.1) Tune mortal_dong_8..10 floorStatScales for row-5 default standing position; (1.2) Replace module-level cycleId/jobId counter + Date.now() in ProductionCycles.ts and AlchemySystem.ts with instance-owned counter + nowMs and pin system time in TrucCoJourney.test.ts; (1.3) Lock technique rail entry in DongFuStage.vue while Mortal and route ExplorationSurface openBuild through openStandalonePanel('skill'); (1.4) Commit minor floor breakthrough before playing FX in RealmSurface.vue while holding displayed floor until FX peak; (1.5) Restore 2px gold focus-visible outline in tien-hiep-ui.css and pc-paper-production.css; (1.6) Export describeNodeLevelEffects(node, level) from NodeSystem.ts and consume in SkillSurface.vue with i18n turns unit.",
+  "requiredReadiness": true,
+  "contractPaths": [
+    "docs/qa/protocol/README.md"
+  ],
+  "attackModelPath": "attack-model.json",
+  "checkout": "E:/tutienidle/.agent-worktrees/phase-1-beta-fixes/game",
+  "branch": "phase-1-beta-fixes",
+  "base": "796034053",
+  "head": "796034053",
+  "capacityLimit": 5,
+  "environmentPath": "environment.json"
+}

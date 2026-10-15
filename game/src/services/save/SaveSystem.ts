@@ -359,6 +359,8 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
 
     skills: detachSaveValue(gameManager.skillManager.getAll()),
 
+    materialReceipts: detachSaveValue(gameManager.materialBag.receiptSnapshot()),
+
     materials: detachSaveValue(gameManager.materialBag.getAll().map((stack) => ({
       materialId: stack.material.id,
 
@@ -392,6 +394,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
       level: state.level,
 
       autoRestart: state.autoRestart,
+      receiptCursor: state.receiptCursor,
 
       productionCycles: state.productionCycles?.length ? state.productionCycles : undefined,
 
@@ -401,7 +404,9 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
 
     alchemyJobs: detachSaveValue(gameManager.alchemySystem.getJobs()),
 
-    quests: detachSaveValue(gameManager.questManager.getState()),
+    quests: detachSaveValue({ ...gameManager.questManager.getState(),
+      materialReceipts: gameManager.questManager.materialReceiptSnapshot(gameManager.materialBag.receiptSnapshot()),
+    }),
 
     // R7 (AR-08) - detached decompose snapshot (getSaveState returns a
     // value copy; detachSaveValue keeps it independent of live state).

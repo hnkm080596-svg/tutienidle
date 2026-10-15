@@ -403,11 +403,7 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
       started: true,
     })
 
-    expect(system.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(system.getSaveState()).toEqual({})
     expect(bag.getAll()).toHaveLength(0)
   })
 })

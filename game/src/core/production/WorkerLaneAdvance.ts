@@ -65,6 +65,7 @@ export interface WorkerLaneAdvanceParams {
 
   /** Seeded stream for rollSeed mints on spawned cycles (GameManager binds sessionRng). */
   rng?: () => number
+  issueIdentity?: () => { cycleId: string; receiptOrdinal: number }
 }
 
 export interface WorkerLaneAdvanceResult {
@@ -297,7 +298,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
 
       completed.push(
         lane.saved ??
-          buildProductionCycle(siteId, collectionRealmId, siteLevel, baseSeconds, lane.startMs, params.rng),
+          buildProductionCycle(siteId, collectionRealmId, siteLevel, baseSeconds, lane.startMs, params.rng, params.issueIdentity),
       )
     } else {
       forfeited += 1
@@ -328,7 +329,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
 
   const pending = lanes.map((lane) =>
     lane.saved ??
-    buildProductionCycle(siteId, collectionRealmId, siteLevel, baseSeconds, lane.startMs, params.rng),
+    buildProductionCycle(siteId, collectionRealmId, siteLevel, baseSeconds, lane.startMs, params.rng, params.issueIdentity),
   )
 
   const seededPending = pending.filter(

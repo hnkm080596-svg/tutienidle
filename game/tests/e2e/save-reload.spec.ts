@@ -1,4 +1,4 @@
-﻿import { expect, test } from './fixtures'
+import { expect, test } from './fixtures'
 
 import {
   bootToGuestHome,
@@ -40,7 +40,7 @@ import {
  *    save khong phu thuoc viec danh tran: cultivation tick + building
  *    progression da co trong save.
  */
-const SPIRIT_STONE_ID = 'spirit_stone_ha_pham'
+const SPIRIT_STONE_ID = 'material_spirit_stone'
 const SEEDED_AMOUNT = 12_345
 const SAVE_KEY = GUEST_SAVE_KEY
 

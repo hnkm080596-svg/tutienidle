@@ -705,11 +705,7 @@ describe('TC6-C hostile slices', () => {
     expect(result.status).toBe('ok')
     // The legacy timer is accepted for compatibility but cannot reactivate
     // a worker loop or produce a resource.
-    expect(manager.decomposeSystem.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(manager.decomposeSystem.getSaveState()).toEqual({})
   })
 
   it('C6 - pill-source timed effect admits ONLY manaRegenPerTurn modifiers', () => {

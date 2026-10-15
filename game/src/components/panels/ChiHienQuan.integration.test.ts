@@ -109,8 +109,8 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     const player = usePlayerStore(deps.pinia)
 
     player.realmId = 'mortal'
-    deps.app.mount(deps.container)
     deps.gameManager.setActivePlayer(player.$state)
+    deps.app.mount(deps.container)
 
     expect(deps.container.querySelector('[data-testid="chi-hien-quan-art-only"]')).not.toBeNull()
     expect(deps.container.querySelector('.worker-lodge-panel__art')?.getAttribute('src')).toContain('chi_hien_quan/base.png')
@@ -121,7 +121,7 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     deps.app.unmount()
   })
 
-  it('ProductionPanel keeps Linh Mạch collection and autonomous site controls without workforce UI', async () => {
+  it('ProductionPanel renders the automatic vein and three autonomous sites without worker controls', async () => {
     const deps = makeDeps(ProductionPanel)
 
     deps.gameManager.buildingManager.add({
@@ -134,8 +134,8 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     const player = usePlayerStore(deps.pinia)
 
     player.realmId = 'mortal'
-    deps.app.mount(deps.container)
     deps.gameManager.setActivePlayer(player.$state)
+    deps.app.mount(deps.container)
 
     await nextTick()
 
@@ -150,7 +150,9 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
 
     expect(deps.container.querySelectorAll('[data-testid="production-upgrade"]')).toHaveLength(0)
     expect(deps.container.querySelector('.site-card .source-body button')).toBeNull()
-    expect(deps.container.querySelector('.site-card__auto')).not.toBeNull()
+    expect(deps.container.querySelectorAll('.site-card')).toHaveLength(3)
+    expect(deps.container.querySelector('.site-card input[type=checkbox]')).toBeNull()
+    expect(deps.container.querySelector('.site-card button')).toBeNull()
 
     deps.app.unmount()
   })
@@ -185,8 +187,8 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     const player = usePlayerStore(deps.pinia)
 
     player.realmId = 'mortal'
-    deps.app.mount(deps.container)
     deps.gameManager.setActivePlayer(player.$state)
+    deps.app.mount(deps.container)
 
     await nextTick()
 

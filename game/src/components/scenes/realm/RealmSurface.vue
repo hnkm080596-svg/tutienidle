@@ -35,6 +35,8 @@ const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
 
 const selected = ref(0)
+const advancing = ref(false)
+const displayedFloor = ref<number | null>(null)
 
 const canBreakthrough = computed(() => gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state))
 const nextRealmSurface = computed(() => betaNextRealmSurfaceFor(player.$state))
@@ -61,7 +63,7 @@ const model = computed<RealmUiModel>(() => {
 
   return {
     name: realm.name,
-    currentFloor: player.realmLevel,
+    currentFloor: displayedFloor.value ?? player.realmLevel,
     maxFloor: realm.maxLevel,
     progress: percent,
     cultivation: `${formatNumber(player.cultivation)} / ${formatNumber(player.cultivationRequired)}`,
@@ -76,6 +78,7 @@ const model = computed<RealmUiModel>(() => {
     // (cultivation capped at required, a floor still left below the
     // realm's max).
     canAdvanceFloor:
+      !advancing.value &&
       player.realmLevel < realm.maxLevel &&
       player.cultivation >= player.cultivationRequired,
     passives: realmStatPassiveRows.value,
@@ -95,21 +98,31 @@ function onSelectFloor(floor: number) {
   selected.value = floor
 }
 
-const advancing = ref(false)
-
-// Owner ruling (2026-10-11): a minor Dot Pha plays the qi cinematic
-// first (dim + lock, silhouette inhale, ring blast); the floor commits
-// at the burst peak while the flash still covers the swap. Major-realm
-// ceremonies keep their own do-kiep flow.
+// D2 ruling (2026-10-15, P17): commit the minor floor advance immediately
+// via breakthroughWithConsequences so presentation failure or mid-FX
+// unmount never drops the outcome; hold displayedFloor on the previous
+// floor until playBreakthroughFx resolves at the qi-burst peak.
 async function onAdvanceFloor() {
   if (!model.value.canAdvanceFloor || advancing.value) return
+  const previousFloor = player.realmLevel
+  displayedFloor.value = previousFloor
+  selected.value = previousFloor
+  const result = gameManager.realmAdvanceOps.breakthroughWithConsequences(player)
+  if (result.kind === 'failure') {
+    displayedFloor.value = null
+    selected.value = player.realmLevel
+    return
+  }
   advancing.value = true
   try {
     await playBreakthroughFx()
+  } catch {
+    // Presentation failure must never roll back or block committed progression (P17).
   } finally {
+    displayedFloor.value = null
+    selected.value = player.realmLevel
     advancing.value = false
   }
-  gameManager.realmAdvanceOps.breakthroughWithConsequences(player)
 }
 
 function onBreakthrough() {
@@ -125,11 +138,14 @@ function onQuanKhi() {
 // sibling overlay): the remembered floor must follow the NEW realm or
 // the newly advanced floor, else the card keeps showing stale progress
 // (a floor N of the new realm as "Chua mo", or the pre-breakthrough
-// floor after "Dot Pha" landed).
+// floor after "Dot Pha" landed). While displayedFloor is held during the
+// minor FX inhale, wait for the FX peak finally-block to flip selected.
 watch(
   () => [player.realmId, player.realmLevel] as const,
   () => {
-    selected.value = player.realmLevel
+    if (displayedFloor.value === null) {
+      selected.value = player.realmLevel
+    }
   },
 )
 </script>

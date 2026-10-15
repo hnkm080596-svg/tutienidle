@@ -394,13 +394,13 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
     const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId
     const liveState = manager.productionSystem.ensureSiteState(siteId)
     liveState.level = 4
-    liveState.autoRestart = true
+    liveState.autoRestart = false
 
     manager.saveOps.restoreFromSave(baseSave(player, { productionSites: [] }))
 
     const restored = manager.productionSystem.getState(siteId)!
     expect(restored.level).toBe(1)
-    expect(restored.autoRestart).toBe(false)
+    expect(restored.autoRestart).toBe(true)
   })
 
   it('alchemyJobs: empty clears live jobs; an absent slice also resets', () => {
@@ -451,11 +451,7 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
     })
     manager.saveOps.restoreFromSave(save)
 
-    expect(manager.decomposeSystem.getSaveState()).toEqual({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: 0,
-      started: false,
-    })
+    expect(manager.decomposeSystem.getSaveState()).toEqual({})
   })
 
   it('restore settles production without reading worker capacity or assignments', () => {

@@ -12,6 +12,9 @@
 // dock tu bao quan style cua no.
 import { describe, expect, it } from 'vitest'
 import source from './CombatSceneOverlay.vue?raw'
+import panelSource from '@/components/scenes/combat/CombatPanel.vue?raw'
+import canvasSource from '@/components/common/SceneDesignCanvas.vue?raw'
+import { GAME_UI_WIDTH, GAME_UI_HEIGHT } from '@/presentation/geometry/GameUiFrame'
 
 function styleBlock(): string {
   const match = /<style[^>]*>([\s\S]*?)<\/style>/.exec(source)
@@ -26,14 +29,23 @@ function styleBlock(): string {
 function ruleOf(selector: string): string {
   const style = styleBlock()
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const regex = new RegExp(`${escaped}\\s*\\{([\\s\\S]*?)\\}`, 'm')
-  const match = regex.exec(style)
+  const regex = new RegExp(`${escaped}\\s*\\{([\\s\\S]*?)\\}`, 'gm')
+  const matches = [...style.matchAll(regex)]
+  const match = matches.at(-1)
 
   if (!match) {
     throw new Error(`Selector "${selector}" không tồn tại trong style block`)
   }
 
-  return match[1]!
+  const declarations = new Map<string, string>()
+  for (const rule of matches) {
+    for (const declaration of rule[1]!.split(';')) {
+      const colon = declaration.indexOf(':')
+      if (colon < 0) continue
+      declarations.set(declaration.slice(0, colon).trim(), declaration.slice(colon + 1).trim())
+    }
+  }
+  return [...declarations].map(([name, value]) => `${name}: ${value}`).join('; ')
 }
 
 describe('CombatSceneOverlay — style contract (T8.1)', () => {
@@ -56,24 +68,29 @@ describe('CombatSceneOverlay — style contract (T8.1)', () => {
     expect(rule).toContain('height: var(--combat-topbar-h)')
   })
 
-  it('battlefield: relative + flex 1 (vùng chứa 2 panel)', () => {
+  it('battlefield fills the shared design canvas without intercepting pointer input', () => {
     const rule = ruleOf('.combat-scene-overlay__battlefield')
 
-    expect(rule).toContain('position: relative')
-    expect(rule).toContain('flex: 1 1 auto')
+    expect(rule).toContain('position: absolute')
+    expect(rule).toContain('inset: 0')
     expect(rule).toContain('pointer-events: none')
+    expect(panelSource).toContain('<SceneDesignCanvas overlay')
+    expect(canvasSource).toContain('width: GAME_UI_WIDTH, height: GAME_UI_HEIGHT')
+    expect(GAME_UI_WIDTH / GAME_UI_HEIGHT).toBe(16 / 9)
+    expect(canvasSource).toContain('Math.min(width / props.width, height / props.height)')
   })
 
-  it('AI panel (bảng chọn mục tiêu): absolute + left/top var + z-12', () => {
+  it('AI panel uses fixed coordinates inside the shared design canvas', () => {
     const rule = ruleOf('.combat-scene-overlay__ai-panel')
 
     expect(rule).toContain('position: absolute')
-    expect(rule).toContain('left: 0.96vw')
-    // ui-combat reskin (2026-10-04) - panel sits ~28vh abs, under the new
-    // framed player card (mock ui-combat.html: ai-panel top 198/768);
-    // the max() floor keeps it below the card on short viewports.
-    expect(rule).toContain('top: calc(max(28vh, 1.8vh + 190px) - var(--combat-topbar-h))')
+    expect(rule).toContain('left: 24px')
+    // The last authored selector wins inside the shared design canvas.
+    expect(rule).toContain('top: 476px')
+    expect(rule).toContain('width: 210px')
     expect(rule).toContain('z-index: 12')
+    expect(ruleOf('.combat-scene-overlay__turn-order-strip')).toContain('left: 50%')
+    expect(ruleOf('.combat-scene-overlay__turn-order-strip')).toContain('translateX(-50%)')
   })
 
   it('Build HUD + turn skill bar KHÔNG còn ở overlay (Task 7 — đã vào dock)', () => {

@@ -29,8 +29,8 @@ const couplet = computed(() => {
 </script>
 <template>
   <section class="character-portrait">
-    <h2 class="character-portrait__name">{{ model.name }}</h2>
-    <p class="character-portrait__line">{{ model.realm }}<template v-if="model.path"> · {{ model.path }}</template></p>
+    <h2 class="character-portrait__name" data-testid="character-name">{{ model.name }}</h2>
+    <p class="character-portrait__line" data-testid="character-realm-line">{{ model.realm }}<template v-if="model.path"> · {{ model.path }}</template></p>
     <CharacterFidelityFigure />
     <template v-if="couplet">
       <span class="character-couplet character-couplet--left"><em v-for="word in couplet.left" :key="word">{{ word }}</em></span>

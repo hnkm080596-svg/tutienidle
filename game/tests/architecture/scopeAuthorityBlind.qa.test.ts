@@ -136,15 +136,22 @@ afterEach(() => {
 // F-A: forged retired-tier spirit-stone stacks. Post-flatten
 // (2026-10-11) there is exactly one stone id - the trung/thuong ids
 // exist in no catalog, so a persisted stack is an unknown material id
-// like any other: shape validation admits the payload, then
-// restoreGameSession's registry preflight rejects it - the forged
+// rejected by the fresh-resource identity check during shape admission.
+// restoreGameSession also rejects the payload - the forged
 // stack can never reach the live bag or pay a cost.
 // ------------------------------------------------------------------
-describe('F-A: forged retired-tier spirit stones die at the registry preflight', () => {
+describe('F-A: forged retired-tier spirit stones die at save admission', () => {
   it('a forged trung_pham stack is rejected on restore', () => {
     const save = mortalSave()
     save.materials = [{ materialId: 'spirit_stone_trung_pham', amount: 5000 } as never]
-    expect(validateGameSaveShape(save).ok).toBe(true)
+    const admission = validateGameSaveShape(save)
+    expect(admission.ok).toBe(false)
+    if (!admission.ok) {
+      expect(admission.issues).toContainEqual({
+        path: 'materials[0]',
+        message: "retired resource identity 'spirit_stone_trung_pham'",
+      })
+    }
 
     const { manager, result } = restoreSave(save)
     expect(result.status).toBe('rejected')
@@ -156,7 +163,14 @@ describe('F-A: forged retired-tier spirit stones die at the registry preflight',
   it('a forged thuong_pham stack is rejected on restore', () => {
     const save = mortalSave()
     save.materials = [{ materialId: 'spirit_stone_thuong_pham', amount: 100 } as never]
-    expect(validateGameSaveShape(save).ok).toBe(true)
+    const admission = validateGameSaveShape(save)
+    expect(admission.ok).toBe(false)
+    if (!admission.ok) {
+      expect(admission.issues).toContainEqual({
+        path: 'materials[0]',
+        message: "retired resource identity 'spirit_stone_thuong_pham'",
+      })
+    }
 
     const { manager, result } = restoreSave(save)
     expect(result.status).toBe('rejected')

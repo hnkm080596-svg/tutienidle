@@ -24,12 +24,19 @@ describe('Linh Bao asset contract', () => {
     expect(LINH_BAO_VFX_ASSETS.burst.lastFrame).toBe(11)
   })
 
-  it('binds the recipe atlas cue to the enumerated asset key and frame count', () => {
+  it('uses white authored charge and a scaled procedural explosion instead of the legacy burst atlas', () => {
     const recipe = getSkillPresentationRecipe('linh_bao_burst')
-    const cue = recipe.impact.find(candidate => candidate.primitive === 'atlas')
-    expect(cue?.atlas?.key).toBe(LINH_BAO_VFX_ASSETS.burst.key)
-    expect(cue?.atlas?.frames).toBe(LINH_BAO_VFX_ASSETS.burst.lastFrame - LINH_BAO_VFX_ASSETS.burst.firstFrame + 1)
-    expect(cue?.durationMs).toBe(recipe.impactMs)
+    expect(recipe.color).toBe(0xffffff)
+    expect(recipe.cast).toContainEqual(expect.objectContaining({
+      primitive: 'atlas', anchor: 'targets', fitCastPhase: true,
+      atlas: { key: 'hoa-cau-charge', frames: 51, scale: 1.75, tintFill: 0xffffff, alpha: 0.8 },
+    }))
+    expect(recipe.impact).toContainEqual(expect.objectContaining({
+      primitive: 'burst', anchor: 'targets', shape: 'explosion', scale: 1.3,
+      durationMs: recipe.impactMs,
+    }))
+    expect([...recipe.cast, ...recipe.impact, ...recipe.recovery].some(cue =>
+      cue.atlas?.key === LINH_BAO_VFX_ASSETS.burst.key)).toBe(false)
   })
 
   it('indexes only nonblank frames inside the real PNG', async () => {

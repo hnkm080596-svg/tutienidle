@@ -3,6 +3,8 @@ import { expect, it } from 'vitest'
 import { createApp, h } from 'vue'
 import { createI18n } from 'vue-i18n'
 import ExplorationPaperMap from './ExplorationPaperMap.vue'
+import { vTooltip } from '@/directives/tooltip'
+import { useTooltip } from '@/composables/useTooltip'
 
 // Locked stages are NOT selectable (user ruling: unqualified stages are
 // locked, not clickable): the button stays focusable for its state
@@ -13,12 +15,17 @@ it('blocks locked stage selection while keeping the state label reachable', () =
   const chosen: string[] = []
   const container = document.createElement('div')
   const app = createApp({ render: () => h(ExplorationPaperMap, { chapter: chapters[0] ?? null, terrain: '/terrain.png', selected: 'locked-stage', onSelect: (id: string) => chosen.push(id) }) })
+  app.directive('tooltip', vTooltip)
   app.use(createI18n({ legacy: false, locale: 'vi', messages: { vi: { exploration: { stageLabel: '{stage} · {state}', state: { locked: 'Locked' }, boss: 'Boss' } } } })).mount(container)
   try {
     const button = container.querySelector<HTMLButtonElement>('button')!
     expect(button.disabled).toBe(false)
     expect(button.getAttribute('aria-disabled')).toBe('true')
-    expect(button.title).toBe('Locked')
+    expect(button.getAttribute('aria-label')).toBe('7 · Locked')
+    expect(button.title).toBe('')
+    button.dispatchEvent(new Event('pointerenter'))
+    expect(useTooltip().content.value).toMatchObject({ title: '7', description: 'Locked' })
+    expect(button.querySelector('.node-label')).toBeNull()
     expect(button.classList.contains('locked')).toBe(true)
     // locked = grey + non-interactive (no lock glyph since 2026-10-11);
     // the stars row is present but unlit until a perfect clear.
@@ -29,7 +36,7 @@ it('blocks locked stage selection while keeping the state label reachable', () =
     button.click()
     expect(chosen).toEqual([])
     expect(JSON.stringify(chapters)).toBe(before)
-  } finally { app.unmount() }
+  } finally { app.unmount(); useTooltip().dismissTooltip() }
 })
 
 it('emits select for unlocked stages', () => {
@@ -37,6 +44,7 @@ it('emits select for unlocked stages', () => {
   const chosen: string[] = []
   const container = document.createElement('div')
   const app = createApp({ render: () => h(ExplorationPaperMap, { chapter: chapters[0] ?? null, terrain: '/terrain.png', selected: 'open-stage', onSelect: (id: string) => chosen.push(id) }) })
+  app.directive('tooltip', vTooltip)
   app.use(createI18n({ legacy: false, locale: 'vi', messages: { vi: { exploration: { stageLabel: '{stage} · {state}', state: { available: 'Open' }, boss: 'Boss' } } } })).mount(container)
   try {
     const button = container.querySelector<HTMLButtonElement>('button')!
@@ -44,5 +52,5 @@ it('emits select for unlocked stages', () => {
     expect(button.querySelector('.node-stars')).not.toBeNull()
     button.click()
     expect(chosen).toEqual(['open-stage'])
-  } finally { app.unmount() }
+  } finally { app.unmount(); useTooltip().dismissTooltip() }
 })

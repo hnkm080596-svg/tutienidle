@@ -1,3 +1,5 @@
+import type { ProductionReceiptCursor } from '../../core/production/ProductionTypes'
+import type { MaterialReceiptState } from '../../core/material/MaterialReceipt'
 import type { PlayerData } from '../../core/player/Player'
 import type { Technique } from '../../core/technique/Technique'
 import type { Skill } from '../../core/skill/Skill'
@@ -182,6 +184,8 @@ export interface GameSave {
   skills: Skill[]
 
   materials: MaterialStackSave[]
+
+  materialReceipts?: MaterialReceiptState
 
   equipment: EquipmentInstance[]
 
@@ -369,6 +373,7 @@ export function computeRestoreIdentity(save: GameSave): string {
     save.techniques,
     save.skills,
     save.materials,
+    save.materialReceipts ?? null,
     save.equipment,
     save.pills,
     save.talismans,
@@ -384,6 +389,7 @@ export function computeRestoreIdentity(save: GameSave): string {
 }
 
 export interface ProductionCycleSave {
+  receiptOrdinal?: number
   cycleId: string
 
   siteId: string
@@ -403,6 +409,7 @@ export interface ProductionCycleSave {
 
 /** Shape persist cua ProductionSiteState - khop core/production. */
 export interface ProductionSiteStateSave {
+  receiptCursor?: ProductionReceiptCursor
   siteId: string
 
   level: number

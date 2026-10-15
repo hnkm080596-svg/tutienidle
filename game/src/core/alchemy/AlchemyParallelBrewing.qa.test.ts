@@ -1,10 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
-// QA wave-4 blind seam hunt (2026-10-11) - parallel-brewing seam:
-// 2+ concurrent orders of DIFFERENT recipes must keep independent
-// unitsDone/progress/rollSeed streams when one order cancels
-// mid-flight, and cancel-refund must count the right units after
-// merges. Same betaScope unlock as the sibling queue-seam suite.
+// Single-kiln scheduling: cancellation promotes waiting orders without
+// changing their quantity or random stream, and every unfinished unit refunds.
 
 vi.mock('../betaScope', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../betaScope')>()),
@@ -59,11 +56,13 @@ function buildContext() {
     bag.add(registry.get(id), 500)
   }
 
-  return { bag, registry, system: new AlchemySystem() }
+  const system = new AlchemySystem()
+  system.setRecipeLookup((id) => [RECIPE_A, RECIPE_B].find((recipe) => recipe.id === id))
+  return { bag, registry, system }
 }
 
-describe('SEAM-2 parallel brewing — cross-order independence', () => {
-  it('two different-recipe orders occupy two slots with independent anchors', () => {
+describe('SEAM-2 single-kiln scheduling and order isolation', () => {
+  it('two recipes reserve separate orders and nonoverlapping kiln times', () => {
     const { bag, registry, system } = buildContext()
 
     expect(system.enqueueJob(RECIPE_A, 'herb_decade', bag, registry, 0, 1, 0, 2).ok).toBe(true)
@@ -77,10 +76,11 @@ describe('SEAM-2 parallel brewing — cross-order independence', () => {
     // collide for any quantity <= the cap.
     expect(a!.rollSeedBase).toBe(0)
     expect(b!.rollSeedBase).toBe(1000)
-    expect(b!.completesAtMs).not.toBe(a!.completesAtMs)
+    expect(b!.startedAtMs).toBe(a!.completesAtMs)
+    expect(b!.completesAtMs).toBeGreaterThan(a!.completesAtMs)
   })
 
-  it('cancelling order A mid-flight leaves order B progress + stream untouched', () => {
+  it('cancelling active order A promotes waiting B without changing its quantity or random stream', () => {
     const { bag, registry, system } = buildContext()
 
     system.enqueueJob(RECIPE_A, 'herb_decade', bag, registry, 0, 1, 0, 2)
@@ -88,20 +88,25 @@ describe('SEAM-2 parallel brewing — cross-order independence', () => {
     // Merge B once: order B is quantity 2 now.
     system.enqueueJob(RECIPE_B, 'herb_red', bag, registry, 0, 1, 0, 2)
 
-    // t = 70_000: A's single unit is started (60s/unit), B's unit 0 is
-    // started (120s/unit) - neither deadline reached.
+    // Cancel before A settles; B is waiting for the single kiln.
     const jobA = system.getJobs().find((job) => job.recipeId === 'recipe_a')!
     const before = system.getJobs().find((job) => job.recipeId === 'recipe_b')!
-    const bSnapshot = JSON.parse(JSON.stringify(before))
+    const bSnapshot = { ...before }
+    const bDuration = before.completesAtMs - before.startedAtMs
 
-    const cancelled = system.cancelJob(jobA.jobId, bag, registry, 70_000)
-    expect(cancelled).toEqual({ ok: true, unprocessedUnits: 0 })
+    const cancelled = system.cancelJob(jobA.jobId, bag, registry, 59_999)
+    expect(cancelled).toEqual({ ok: true, unprocessedUnits: 1 })
 
     const after = system.getJobs().find((job) => job.recipeId === 'recipe_b')!
-    expect(JSON.parse(JSON.stringify(after))).toEqual(bSnapshot)
+    expect(after.quantity).toBe(bSnapshot.quantity)
+    expect(after.unitsDone).toBe(bSnapshot.unitsDone)
+    expect(after.rollSeedBase).toBe(bSnapshot.rollSeedBase)
+    expect(after.startedAtMs).toBe(59_999)
+    expect(after.completesAtMs).toBe(59_999 + bDuration)
+    expect(system.getJobs()).toHaveLength(1)
   })
 
-  it('cancel-refund counts unstarted units after a merge (quantity 3, 1 started)', () => {
+  it('cancel-refund includes the active unit after a merge (quantity 3, none settled)', () => {
     const { bag, registry, system } = buildContext()
 
     for (let i = 0; i < 3; i += 1) {
@@ -116,13 +121,12 @@ describe('SEAM-2 parallel brewing — cross-order independence', () => {
     expect(herbAfterBurn).toBe(500 - 2 * 3)
 
     const jobId = system.getJobs()[0]!.jobId
-    // t = 59_999: only unit 0 is in the cauldron (it starts at t=0;
-    // unit 1 enters at 60_000). units 1-2 unstarted -> refund 2 units.
+    // No unit has settled; active unit plus both waiting units refund.
     const cancelled = system.cancelJob(jobId, bag, registry, 59_999)
-    expect(cancelled).toEqual({ ok: true, unprocessedUnits: 2 })
-    expect(bag.getAmount('herb_decade')).toBe(500 - 2 * 3 + 2 * 2)
-    expect(bag.getAmount(BUI_GO_ID)).toBe(500 - 2 * 3 + 2 * 2)
-    expect(bag.getAmount(LUYEN_DAN_TINH_HOA_ID)).toBe(500 - 1 * 3 + 1 * 2)
+    expect(cancelled).toEqual({ ok: true, unprocessedUnits: 3 })
+    expect(bag.getAmount('herb_decade')).toBe(500)
+    expect(bag.getAmount(BUI_GO_ID)).toBe(500)
+    expect(bag.getAmount(LUYEN_DAN_TINH_HOA_ID)).toBe(500)
   })
 
   it("order B's deterministic mint stream is identical whether order A cancels mid-flight or settles", () => {
