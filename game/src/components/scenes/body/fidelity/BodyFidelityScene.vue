@@ -62,14 +62,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
    sheet rect as skill/equipment scenes; owner ruling 2026-10-09:
    backdrop was oversized/off-center). */
 .body-panel { position:absolute; left:24%; top:12.5%; width:74%; height:75%; padding:14px 26px 12px; border:3px double #b28a43; background-color:#f2e4c8; background-position:center; background-size:cover; background-repeat:no-repeat; box-shadow:0 12px 15px #0009; overflow:hidden; }
-.body-heading { border-bottom:1px solid #b28a43; }
-/* h1 = same treatment as equipment/skill titles (owner ruling 2026-10-09:
-   "giong cac panel tren") - 56px UTM OngDoGia dark-gold gradient inside
-   the 58px box; overrides the shared tien-hiep-ui 72px rule. */
-.body-heading__top { height:58px; display:flex; align-items:center; gap:24px; } .body-heading__col{display:flex;flex-direction:column}.body-heading__top .body-heading__col img{width:200px;margin-top:0;height:auto;object-fit:contain;opacity:.75}
-:is(#app,body) .body-scene .body-heading h1 { margin:0; padding:0; width:370px; height:58px; font-family:'UTM OngDoGia','Ma Shan Zheng','ZCOOL XiaoWei',var(--font-display,Georgia,serif); font-size:56px; font-style:normal; font-weight:400; line-height:58px; text-align:center; color:transparent; background:linear-gradient(100deg,#241a0c 20%,#6b5224 40%,#fff6d8 50%,#6b5224 60%,#241a0c 80%); background-size:220% 100%; background-position:0% 0; -webkit-background-clip:text; background-clip:text; animation:none; }
-.body-heading img { width:170px; height:21px; object-fit:contain; opacity:.65; }
-.body-subtitle { margin:2px 0 4px; font-size:13px; color:#715627; }
 .body-layout { height:calc(100% - 106px); display:grid; grid-template-columns:20% 50% 30%; gap:8px; min-height:0; }
 .body-family { position:relative; display:flex; flex-direction:column; justify-content:flex-start; gap:6px; padding:6px 4px 4px 20px; isolation:isolate; }
 .family-pill { width:100%; }
@@ -84,8 +76,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
 /* Layout instances are relative to the owning panel content. */
 .body-scene :deep(.game-panel__content .body-panel) { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; background: transparent; border: 0; box-shadow: none; }
-.body-scene :deep(.game-panel__content .body-heading) { display: none; }
-.body-scene :deep(.game-panel__content .body-layout) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; }
-.body-scene :deep(.game-panel__content .body-layout) { grid-template-columns: 19% minmax(0,1fr) 29%; }
+.body-scene :deep(.game-panel__content .body-layout) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; grid-template-columns: 19% minmax(0,1fr) 29%; }
 .body-scene :deep(.game-panel__content .body-stage) { transform: none; }
 </style>

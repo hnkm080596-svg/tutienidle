@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import GameCard from '@/components/common/GameCard.vue'
 import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
 import {
   equipmentArt,
@@ -35,7 +35,7 @@ const { t } = useI18n()
         <b>{{ t(`eq.slots.${slot}`) }}</b>
       </div>
     </div>
-    <EquipmentArtCard class="equipment-contributed-stats">
+    <GameCard class="equipment-contributed-stats">
       <h2>{{ t('eq.contributed') }}</h2>
       <dl>
         <div v-for="stat in equipmentStats" :key="stat.id">
@@ -46,7 +46,7 @@ const { t } = useI18n()
           <dd>{{ stat.current }}</dd>
         </div>
       </dl>
-    </EquipmentArtCard>
+    </GameCard>
   </section>
 </template>
 <style scoped>

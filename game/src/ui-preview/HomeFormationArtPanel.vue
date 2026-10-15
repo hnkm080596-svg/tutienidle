@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import GameCard from '@/components/common/GameCard.vue'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
@@ -80,7 +80,7 @@ function reset() {
           </button>
         </div>
       </div>
-      <EquipmentArtCard class="formation-details"
+      <GameCard class="formation-details"
         ><h2>{{ t(tab === 'rank' ? 'fp.rank' : 'fp.choose') }}</h2>
         <div class="formation-choices">
           <button
@@ -118,9 +118,9 @@ function reset() {
             t('fp.rank')
           }}</EquipmentArtButton></template
         >
-      </EquipmentArtCard>
+      </GameCard>
     </div>
-    <EquipmentArtCard class="formation-roster"
+    <GameCard class="formation-roster"
       ><div class="roster-main">
         <h3>{{ t('fp.roster') }}</h3>
         <div class="formation-roster-items">
@@ -142,7 +142,7 @@ function reset() {
           @click="notice = t('fp.preview')"
           >{{ t('fp.confirm') }}</EquipmentArtButton
         ><small role="status">{{ notice }}</small>
-      </div></EquipmentArtCard
+      </div></GameCard
     >
   </section>
 </template>

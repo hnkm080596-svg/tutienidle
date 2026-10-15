@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import GameCard from '@/components/common/GameCard.vue'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
@@ -240,7 +240,7 @@ const galaxy = [
         </div>
         <div v-else class="body-caption">{{ t('bp.cycle') }}</div>
       </div>
-      <EquipmentArtCard class="body-stat-card">
+      <GameCard class="body-stat-card">
         <div class="body-card-title">
           <img :src="bodyArt(`navigation-${tab}-lit`)" alt="" />
           <h2>{{ t(`bp.${tab}`) }}</h2>
@@ -279,7 +279,7 @@ const galaxy = [
         <EquipmentArtButton gold class="body-upgrade" data-testid="body-upgrade" @click="upgrade">{{
           t('bp.upgrade')
         }}</EquipmentArtButton>
-      </EquipmentArtCard>
+      </GameCard>
     </div>
   </section>
 </template>

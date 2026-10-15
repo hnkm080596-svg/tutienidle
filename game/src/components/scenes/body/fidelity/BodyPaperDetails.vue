@@ -2,7 +2,7 @@
 import { inject, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import GameCard from '@/components/common/GameCard.vue'
 import GameActionButton from '@/components/common/GameActionButton.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 import SlotView from '@/components/common/SlotView.vue'
@@ -83,7 +83,7 @@ interface PourMote {
   scale: number
 }
 
-const cardRef = ref<InstanceType<typeof EquipmentArtCard> | null>(null)
+const cardRef = ref<InstanceType<typeof GameCard> | null>(null)
 const pourHave = ref<number | null>(null)
 const pourFill = ref<number | null>(null)
 const pourLabel = ref<string | null>(null)
@@ -283,7 +283,7 @@ function startPour(spec: BodyPaperPour) {
 
 </script>
 <template>
-  <EquipmentArtCard ref="cardRef" class="body-card body-paper-details">
+  <GameCard ref="cardRef" class="body-card body-paper-details">
     <div class="body-card-title">
       <img :src="navIcon" alt="">
       <h2>{{ unit?.title ?? model.chapterLabel }}</h2>
@@ -344,7 +344,7 @@ function startPour(spec: BodyPaperPour) {
       <p class="body-empty-row">{{ model.lockHint ?? t('body.empty') }}</p>
     </template>
     <p class="body-notice" role="status" aria-live="polite">{{ notice }}</p>
-  </EquipmentArtCard>
+  </GameCard>
   <!-- Motes live outside the card (owner ruling 2026-10-10): its
        clip-path swallowed the leftward part of the arc. Viewport coords. -->
   <Teleport to="body">

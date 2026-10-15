@@ -6,10 +6,8 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import ProductionSiteCard from '@/components/panels/production/ProductionSiteCard.vue'
 import ProductionVeinCard from '@/components/panels/production/ProductionVeinCard.vue'
-import { useBuildingHeaderState } from '@/composables/useBuildingHeaderState'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { useUiStore } from '@/stores/ui'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { formatDuration } from '@/core/format/formatDuration'
 import { TERRITORY_THANH_VAN } from '@/core/production/ProductionCatalog'
 
@@ -135,12 +133,6 @@ const rows = computed<SiteRow[]>(() => {
 
 // ================= Linh mach Khai Vat Duong (the Linh Tuyen, 2026-09-02) =================
 
-const OUTPOST_ID = 'gathering_outpost'
-
-// Landscape art port (2026-10-11): panel gio tu chu chrome giay tren
-// SceneDesignCanvas overlay nhu cac paper surface anh em - khong con
-// nam trong imperial scroll. Close contract giong scene khac: click
-// ngoai sheet hoac Escape -> closeHomeOverlays.
 const ui = useUiStore()
 
 const sceneRef = ref<HTMLElement | null>(null)
@@ -150,16 +142,6 @@ useDialogFocus(sceneRef, () => true, { onEscape: () => ui.closeHomeOverlays() })
 function closeScene() {
   ui.closeHomeOverlays()
 }
-
-// Building identity bom thang vao heading trong sheet (preview: icon +
-// ten 'Khai Vat Duong' + 'Cap x/9' + intro) thay dai #header cu cua
-// scroll - cung read-model useBuildingHeaderState.
-const outpostHeader = useBuildingHeaderState(ref(OUTPOST_ID))
-
-const paperSheet = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
-
-const productionIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navigation-production-v2.png')
-
 </script>
 
 <template>
@@ -200,21 +182,6 @@ const productionIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navig
   box-sizing: border-box;
 }
 
-/* SHARED-PANEL-01: cung rect + nen giay voi cac fidelity scene anh em
-   (.equipment-sheet) - 24%/12.5%/74%/75% tren canvas 1440x810. */
-.production-panel__sheet {
-  position: absolute;
-  left: 345px;
-  top: 101px;
-  width: 1065px;
-  height: 608px;
-  background-color: #f2e4c8;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border: 3px double #b28a43;
-}
-
 .production-panel__frame {
   position: absolute;
   left: 345px;
@@ -226,50 +193,6 @@ const productionIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navig
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.production-panel__title {
-  flex: none;
-  height: 44px;
-  border-bottom: 1px solid #b28a4370;
-}
-
-.production-panel__title h1 {
-  margin: 0;
-  font-size: 35px;
-  line-height: 1.15;
-}
-
-.production-heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: none;
-  height: 55px;
-}
-
-.production-heading__icon {
-  width: 50px;
-  height: 50px;
-  object-fit: contain;
-}
-
-.production-heading__text h2 {
-  margin: 0;
-  font-size: 24px;
-}
-
-.production-heading__text span {
-  font-size: 13px;
-}
-
-.production-panel__summary {
-  margin: 0 0 0 20px;
-  max-width: 470px;
-  font-size: 14px;
-  font-style: italic;
-  line-height: 1.5;
-  color: #5a4526;
 }
 
 /* Linh mach Khai Vat Duong */
@@ -436,8 +359,6 @@ const productionIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navig
   cursor: pointer;
 }
 
-
 /* Layout instances are relative to the owning panel content. */
 .production-panel :deep(.game-panel__content .production-panel__frame) { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; background: transparent; border: 0; box-shadow: none; }
-.production-panel :deep(.game-panel__content :is(.production-panel__title,.production-panel__sheet)) { display: none; }
 </style>

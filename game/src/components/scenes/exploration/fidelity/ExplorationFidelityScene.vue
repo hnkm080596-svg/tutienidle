@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import GameCard from "@/components/common/GameCard.vue"
 import GamePanel from '@/components/common/GamePanel.vue'
-import GameTabButton from '@/components/common/GameTabButton.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
@@ -12,8 +11,6 @@ import type { ExplorationPaperModel, ExplorationDetail, ExplorationChapter } fro
 const props = withDefaults(defineProps<{ model: ExplorationPaperModel; stage: ExplorationDetail | null; notice: string; preview?: boolean; chapter?: string }>(), { preview: false, chapter: '' })
 const emit = defineEmits<{ select: [id: string]; zone: [id: string]; back: []; mode: [id: string]; stopFarm: []; openBuild: []; start: []; chapter: [id: string] }>()
 const { t } = useI18n()
-const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
-const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 const card = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 
 // Same dialog contract ImperialScrollScene carried: Escape closes,
@@ -84,11 +81,6 @@ function pickChapter(id: string) {
 </template>
 <style scoped>
 .exploration-scene { position:absolute; inset:0;  color:#44331f; font-family:var(--font-display,Georgia,serif); line-height:1.3; }.exploration-scene :deep(*) { box-sizing:border-box; }
-.map-sheet { position:absolute; left:345px; top:101px; width:1065px; height:608px; background-color:#f2e4c8; background-size:cover; background-position:center; border:3px double #b28a43; box-sizing:border-box; }
-.map-head { position:absolute; left:369px; top:113px; width:1017px; height:52px; border-bottom:1px solid #b28b4680; display:flex; align-items:center; gap:16px; }
-.map-head h1 { margin:0; font:700 38px/1.2 var(--font-display,Georgia,serif); }
-.map-divider { display:block; height:22px; margin-top:2px; }
-.map-identity { margin:0 0 0 auto; font-size:13px; color:#785c31; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:340px; }
 .exploration-zones { display:flex; gap:6px; }
 .exploration-zones button { padding:3px 10px; border:1px solid #a98a4b; border-radius:12px; background:#f2e6c8; color:#5a4a28; font:inherit; font-size:12px; cursor:pointer; }
 .exploration-zones button.active { background:#315f46; border-color:#315f46; color:#f4ead0; }
@@ -107,8 +99,5 @@ function pickChapter(id: string) {
 .preview-label { position:absolute; left:369px; top:693px; margin:0; color:#806b43; font-size:9px; }
 
 /* Layout instances are relative to the owning panel content. */
-.exploration-scene :deep(.game-panel__content .map-sheet) { display: none; }
-.exploration-scene :deep(.game-panel__content .map-head) { left: 0; top: 0; width: 100%; height: 29px; border: 0; }
-.exploration-scene :deep(.game-panel__content .map-head .map-divider) { display: none; }
 .exploration-scene :deep(.game-panel__content .map-grid) { left: 0; top: 0; width: 100%; height: 100%; }
 </style>

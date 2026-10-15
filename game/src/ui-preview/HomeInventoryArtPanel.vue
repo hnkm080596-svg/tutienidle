@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import GameCard from '@/components/common/GameCard.vue'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
 import { equipmentArt, equipmentItems } from './equipment/equipmentPreviewData'
@@ -110,7 +110,7 @@ function chooseTab(id: string) {
           @select="selected = item?.id ?? ''"
         />
       </div>
-      <EquipmentArtCard v-if="tab === 'decompose'" class="decompose-card">
+      <GameCard v-if="tab === 'decompose'" class="decompose-card">
         <h2>{{ t('ip.decompose') }}</h2>
         <p>{{ t('ip.decomposeHint') }}</p>
         <EquipmentArtSlot
@@ -133,7 +133,7 @@ function chooseTab(id: string) {
           @click="notice = t('ip.previewNotice')"
           >{{ t('ip.decompose') }}</EquipmentArtButton
         ><small role="status">{{ notice }}</small>
-      </EquipmentArtCard>
+      </GameCard>
     </div>
     <footer class="inventory-footer">
       <span>{{ t('ip.count', { n: items.length }) }}</span>

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { i18n } from '@/i18n'
 import OverlayPanel from './OverlayPanel.vue'
-import RailPanelDialog from './RailPanelDialog.vue'
+import GamePanel from './GamePanel.vue'
 import GameActionButton from './GameActionButton.vue'
 import GameTabButton from './GameTabButton.vue'
 import GameCard from './GameCard.vue'
@@ -362,7 +362,8 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
 
 <template>
   <Teleport to="body">
-    <component :is="rail ? RailPanelDialog : OverlayPanel"
+    <component :is="rail ? GamePanel : OverlayPanel"
+      :dialog="rail ? true : undefined"
       :open="open"
       :title="title"
       variant="paper"

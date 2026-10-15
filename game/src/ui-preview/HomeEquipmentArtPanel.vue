@@ -2,7 +2,7 @@
 import { shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import GameCard from '@/components/common/GameCard.vue'
 import EquipmentPaperdollPreview from './equipment/EquipmentPaperdollPreview.vue'
 import EquipmentBagPreview from './equipment/EquipmentBagPreview.vue'
 import EquipmentForgePreview from './equipment/EquipmentForgePreview.vue'
@@ -51,7 +51,7 @@ function chooseSlot(id: EquipmentPreviewSlot) {
     </nav>
     <div class="equipment-panel-content">
       <EquipmentPaperdollPreview :selected="selectedSlot" @select="chooseSlot" />
-      <EquipmentArtCard class="equipment-right-workspace" :data-selected-equipment="selectedSlot"
+      <GameCard class="equipment-right-workspace" :data-selected-equipment="selectedSlot"
         ><EquipmentBagPreview
           v-if="tab === 'equipment'"
           @notice="notice = $event" /><EquipmentForgePreview
@@ -59,7 +59,7 @@ function chooseSlot(id: EquipmentPreviewSlot) {
           :key="tab"
           :tab="tab"
           @notice="notice = $event"
-      /></EquipmentArtCard>
+      /></GameCard>
     </div>
     <div v-if="notice" class="equipment-preview-notice" role="status">{{ notice }}</div>
   </section>

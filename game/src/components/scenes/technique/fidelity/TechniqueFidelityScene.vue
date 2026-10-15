@@ -3,7 +3,6 @@ import GamePanel from '@/components/common/GamePanel.vue'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import TechniquePaperInfo from './TechniquePaperInfo.vue'
 import TechniquePaperArtifact from './TechniquePaperArtifact.vue'
 import TechniquePaperUpgrade from './TechniquePaperUpgrade.vue'
@@ -14,7 +13,6 @@ withDefaults(
 )
 const emit = defineEmits<{ back: []; select: [id: string]; advance: [] }>()
 const { t } = useI18n()
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 
 // Same dialog contract ImperialScrollScene carried: Escape closes, focus
 // and pointer interaction stay inside the open surface.
@@ -36,11 +34,9 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </template>
 <style scoped>
 .technique-paper-scene { position:absolute; inset:0;  color:#3c2f1e; font-family:var(--font-display,Georgia,serif); line-height:1.3; }.technique-paper-scene :deep(*) { box-sizing:border-box; }
-.technique-paper { position:absolute; left:94px; top:123px; width:1334px; height:633px; border:0 solid transparent; border-image-slice:300 fill; border-image-width:83px; border-image-repeat:stretch; filter:drop-shadow(0 12px 15px #0009); }
 .technique-preview-label { position:absolute; left:232px; top:702px; width:280px; margin:0; color:#7e6a44; font-size:10px; }
 
 /* Layout instances are relative to the owning panel content. */
-.technique-paper-scene :deep(.game-panel__content .technique-paper) { display: none; }
 .technique-paper-scene :deep(.game-panel__content .technique-info) { left: 0; top: 0; width: 27%; height: 100%; }
 .technique-paper-scene :deep(.game-panel__content .technique-artifact) { left: 28.5%; top: 0; width: 37%; height: 100%; }
 .technique-paper-scene :deep(.game-panel__content .technique-upgrade) { left: auto; right: 0; top: 0; width: 33%; height: 100%; padding-left: 18px; overflow-y: auto; }

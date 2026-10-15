@@ -72,10 +72,10 @@ test.describe('ink-wash UI visual smoke', () => {
       // nine-slice sheet + nav rail + title on the overlay canvas.
       const panel = page.locator('.settings-scene').first()
       await expect(panel).toBeVisible()
-      await expect(panel.locator('.settings-paper')).toBeVisible()
-      const paperBox = await panel.locator('.settings-paper').boundingBox()
+      await expect(panel.locator('.game-panel')).toBeVisible()
+      const paperBox = await panel.locator('.game-panel').boundingBox()
 
-      const headingBox = await panel.locator('.settings-title').boundingBox()
+      const headingBox = await panel.locator('.game-panel__title').boundingBox()
       const settingsBox = await panel.locator('.settings-panel').boundingBox()
       expect(paperBox).not.toBeNull()
       expect(headingBox).not.toBeNull()

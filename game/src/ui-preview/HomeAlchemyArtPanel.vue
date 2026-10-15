@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import GameCard from '@/components/common/GameCard.vue'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
@@ -110,7 +110,7 @@ function choosePill(id: string) {
         </div>
         <p class="alchemy-pill-name">{{ t(`ip.items.${selected}`) }}</p>
       </div>
-      <EquipmentArtCard class="alchemy-progress-card">
+      <GameCard class="alchemy-progress-card">
         <div class="alchemy-card-heading">
           <img :src="pillArt(selected)" alt="" />
           <h2>{{ t(`ip.items.${selected}`) }}</h2>
@@ -137,7 +137,7 @@ function choosePill(id: string) {
           @click="pulse = !pulse"
           >{{ t('ap.start') }}</EquipmentArtButton
         >
-      </EquipmentArtCard>
+      </GameCard>
     </div>
   </section>
 </template>

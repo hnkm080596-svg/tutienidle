@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
-import { AudioManager } from '@/core/audio/AudioManager'
+import { playUiButtonClick } from '@/presentation/audio/buttonClickAudio'
 // Shared chrome primitive (UI/UX rework phase A) - replaces hand-rolled
 // buttons (each panel declaring its own background/color/border) with one
 // component reusing the --gold/--jade/--crimson/--tap-* tokens in theme.css.
@@ -19,6 +19,8 @@ const props = withDefaults(defineProps<{
   type?: 'button' | 'submit'
   /** When false (default true), the button does NOT play ui.click on click. */
   sound?: boolean
+  /** When true (default false), suppresses ui.click on click. */
+  silent?: boolean
 }>(), {
   variant: 'primary',
   size: 'md',
@@ -28,23 +30,13 @@ const props = withDefaults(defineProps<{
   loading: false,
   type: 'button',
   sound: true,
+  silent: false,
 })
 
 const emit = defineEmits<{ click: [MouseEvent] }>()
 
-// Direct AudioManager singleton (not the Pinia store) so GameButton can
-// mount in unit tests without an active Pinia - documented exception to
-// the W7 useAudioStore().cue rule for Pinia-free primitives.
-const audio = AudioManager.getInstance()
-
-// Centralized click handler - plays ui.click SFX + unlocks the AudioContext
-// on the first click (autoplay policy requires a user gesture). The real
-// parent click still fires via emit('click').
 function handleClick(event: MouseEvent) {
-  audio.unlock()
-  if (props.sound) {
-    audio.playCue('ui.click')
-  }
+  playUiButtonClick({ sound: props.sound, silent: props.silent })
   emit('click', event)
 }
 
