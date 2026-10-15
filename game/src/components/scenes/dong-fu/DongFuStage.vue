@@ -374,7 +374,7 @@ onBeforeUnmount(() => {
         </div>
       </header>
       <div class="home-design-currencies" data-df-ui>
-        <PcPaperButton v-for="chip in currencyChips" :key="chip.id" variant="secondary" :aria-label="chip.label" :data-material="chip.id" :data-currency-id="chip.id">
+        <PcPaperButton v-for="chip in currencyChips" :key="chip.id" variant="currency" :aria-label="chip.label" :data-material="chip.id" :data-currency-id="chip.id">
           <img :src="chip.iconFile ? resolveAssetUrl(chip.iconFile) : pcPaperResourceUrl(chip.icon)" alt=""><b>{{ chip.value }}</b><span>＋</span>
         </PcPaperButton>
       </div>

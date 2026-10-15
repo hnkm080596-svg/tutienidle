@@ -50,26 +50,27 @@ function handleClick(event: MouseEvent) {
 .game-tab-button::before {
   content: '';
   position: absolute;
-  inset: 1px;
-  z-index: -1;
-  background: rgba(9, 14, 11, .88);
-  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
-}
-.game-tab-button::after {
-  content: '';
-  position: absolute;
   inset: 0;
   z-index: -1;
   border: 8px solid transparent;
   border-image: var(--tab-frame) 21.4% 3.22% / 8px stretch;
   pointer-events: none;
 }
+.game-tab-button::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: -2;
+  background: rgba(9, 14, 11, .88);
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+  pointer-events: none;
+}
 .game-tab-button[aria-pressed='true'] { color: #30210e; }
-.game-tab-button[aria-pressed='true']::before { background: transparent; }
+.game-tab-button[aria-pressed='true']::before {
+  border-image-source: var(--tab-selected-art);
+}
 .game-tab-button[aria-pressed='true']::after {
-  border: 0;
-  border-image: none;
-  background: var(--tab-selected-art) center / 100% 100% no-repeat;
+  background: linear-gradient(180deg, #f6e7c4 0%, #e7cb92 100%);
 }
 .game-tab-button__glow {
   position: absolute;
@@ -83,7 +84,7 @@ function handleClick(event: MouseEvent) {
 }
 .game-tab-button:not(:disabled):hover .game-tab-button__glow { opacity: 1; }
 .game-tab-button:not(:disabled):active { transform: translateY(1px); }
-.game-tab-button:not(:disabled):active::before { filter: brightness(.8); }
+.game-tab-button:not(:disabled):active::after { filter: brightness(.8); }
 .game-tab-button:focus-visible { outline: 2px solid #d6ad5d; outline-offset: 2px; }
 .game-tab-button:disabled { opacity: .42; cursor: default; }
 </style>

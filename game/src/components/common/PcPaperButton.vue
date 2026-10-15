@@ -3,7 +3,7 @@ import { playUiButtonClick } from '@/presentation/audio/buttonClickAudio'
 
 const props = withDefaults(
   defineProps<{
-    variant?: 'primary' | 'secondary'
+    variant?: 'primary' | 'secondary' | 'currency'
     icon?: boolean
     sound?: boolean
     silent?: boolean

@@ -279,6 +279,7 @@ const style = { '--trial-panel': `url('${art.panel}')` }
    re-arms border-image-source at (0,1,1) and :is(#app,body) game-button
    rules reach (1,1,1) - both must be beaten deterministically. */
 #app .trial-creation-art .trial-begin::before { border: 0; border-image: none; background: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png') center / 100% 100% no-repeat; }
+#app .trial-creation-art .trial-begin::after { content: none; }
 /* Hover takes the clean gold pill (equipment-filter-selected) - the
    stock hover art bakes a black smoke fill over the label. */
 #app .trial-creation-art .trial-begin:not([aria-disabled="true"]):is(:hover, :focus-visible)::before { border-image: none; background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png'); filter: none; }
@@ -289,6 +290,7 @@ const style = { '--trial-panel': `url('${art.panel}')` }
    auth preview): enabled buttons take the gold face + dark ink text. */
 .trial-creation-art .pc-paper-button:not(:disabled):not([aria-disabled="true"]):is(:hover, :focus-visible) { color: #3c2810; filter: none; text-shadow: 0 1px #fff0c2; }
 .trial-creation-art .pc-paper-button:not(:disabled):not([aria-disabled="true"]):is(:hover, :focus-visible)::before { border-image-source: var(--pc-primary-button); filter: brightness(.92) saturate(.85) drop-shadow(0 0 2px #d9b56a40); }
+.trial-creation-art .pc-paper-button:not(:disabled):not([aria-disabled="true"]):is(:hover, :focus-visible)::after { background: linear-gradient(180deg, #f6e7c4 0%, #e7cb92 100%); }
 .trial-notice { position: absolute; bottom: -35px; left: 0; right: 0; text-align: center; color: #543d21; font-size: 16px; margin: 0; min-height: 1.2em; }
 .creation-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>

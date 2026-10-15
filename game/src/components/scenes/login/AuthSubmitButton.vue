@@ -33,6 +33,7 @@ const { t } = useI18n()
    :is(#app,body) .game-button--ghost::before at (1,1,1) - class-only overrides
    lose to it regardless of order. */
 #app .auth-primary-action.pc-paper-button::before { border: 0; border-image: none; background: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png') center / 100% 100% no-repeat; }
+#app .auth-primary-action.pc-paper-button::after { content: none; }
 /* QA fixpoint 2026-10-10: the ghost variant frames a 1px hairline around
    the pill art (GameButton --ghost border) - zero it at the element. */
 #app .auth-primary-action.pc-paper-button { border: 0; }

@@ -41,6 +41,7 @@ const allowSelfSignup =
    #app anchor (1,2,1): tien-hiep-entry.css re-arms border-image-source on
    :is(#app,body) .th-entry-scene .pc-paper-button:hover::before at (1,1,1). */
 #app .login-opening__actions .pc-paper-button::before { border: 0; border-image: none; background: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png') center / 100% 100% no-repeat; }
+#app .login-opening__actions .pc-paper-button::after { content: none; }
 /* Hover takes the clean gold pill (equipment-filter-selected) - the
    stock hover art bakes a black smoke fill over the label, which read
    as a dark blob covering the text on this bright backdrop. */
