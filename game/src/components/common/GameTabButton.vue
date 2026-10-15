@@ -1,19 +1,30 @@
 <script setup lang="ts">
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { playUiButtonClick } from '@/presentation/audio/buttonClickAudio'
 
-withDefaults(defineProps<{ selected?: boolean; disabled?: boolean }>(), {
-  selected: false,
-  disabled: false,
-})
+const props = withDefaults(
+  defineProps<{ selected?: boolean; disabled?: boolean; sound?: boolean; silent?: boolean }>(),
+  {
+    selected: false,
+    disabled: false,
+    sound: true,
+    silent: false,
+  },
+)
 const emit = defineEmits<{ click: [event: MouseEvent] }>()
 const normalFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png')
 const selectedFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-primary-v1.png')
+
+function handleClick(event: MouseEvent) {
+  playUiButtonClick({ sound: props.sound, silent: props.silent })
+  emit('click', event)
+}
 </script>
 
 <template>
   <button type="button" class="game-tab-button" :aria-pressed="selected" :disabled="disabled"
     :style="{ '--tab-frame': `url('${normalFrame}')`, '--tab-selected-art': `url('${selectedFrame}')` }"
-    @click="emit('click', $event)">
+    @click="handleClick">
     <img class="game-tab-button__glow" :src="selected ? selectedFrame : normalFrame" alt="" aria-hidden="true">
     <slot />
   </button>

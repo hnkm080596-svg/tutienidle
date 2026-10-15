@@ -2,7 +2,7 @@
 import { shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import GameCard from '@/components/common/GameCard.vue'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 import SkillNodeArtButton from '@/components/common/art/SkillNodeArtButton.vue'
@@ -52,7 +52,7 @@ const paper = { backgroundImage: `url('${asset('source/shared-paper-page')}')` }
           />
         </div>
       </div>
-      <EquipmentArtCard class="technique-stat-card">
+      <GameCard class="technique-stat-card">
         <div class="technique-card-heading">
           <img
             :src="resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navigation-technique-v2.png')"
@@ -93,7 +93,7 @@ const paper = { backgroundImage: `url('${asset('source/shared-paper-page')}')` }
           @click="gold = !gold"
           >{{ t('tp.advance') }}</EquipmentArtButton
         >
-      </EquipmentArtCard>
+      </GameCard>
     </div>
   </section>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { AudioManager } from '@/core/audio/AudioManager'
+import { playUiButtonClick } from '@/presentation/audio/buttonClickAudio'
 import { dialogArt } from './dialogArt'
 
 // Whole-image ornate button (gold primary / dark secondary) sliced intact
@@ -14,6 +14,7 @@ const props = withDefaults(
     disabled?: boolean
     loading?: boolean
     sound?: boolean
+    silent?: boolean
   }>(),
   {
     variant: 'gold',
@@ -21,22 +22,17 @@ const props = withDefaults(
     disabled: false,
     loading: false,
     sound: true,
+    silent: false,
   },
 )
 
 const emit = defineEmits<{ click: [MouseEvent] }>()
 
-// Pinia-free audio cue, same documented exception as GameButton.
-const audio = AudioManager.getInstance()
-
 const artUrl = computed(() => dialogArt(props.variant === 'gold' ? 'button-gold-v1' : 'button-dark-v1'))
 const aspectRatio = computed(() => (props.variant === 'gold' ? '269 / 120' : '219 / 120'))
 
 function handleClick(event: MouseEvent) {
-  audio.unlock()
-  if (props.sound) {
-    audio.playCue('ui.click')
-  }
+  playUiButtonClick({ sound: props.sound, silent: props.silent })
   emit('click', event)
 }
 </script>

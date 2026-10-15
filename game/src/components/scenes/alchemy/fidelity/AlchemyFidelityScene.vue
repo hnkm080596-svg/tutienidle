@@ -34,8 +34,6 @@ const rootRef = ref<HTMLElement | null>(null)
 
 useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
-const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
-const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 const cauldron = resolveAssetUrl('/assets/ui/huyen-kim/alchemy/alchemy-cauldron-v2.png')
 
 const herb = computed(() => props.recipe?.variants.find(item => item.id === props.variant) ?? null)
@@ -227,16 +225,8 @@ function jobSubline(job: AlchemyJobDisplay) {
 </template>
 
 <style scoped>
-/* Shared paper chrome - same sheet box the other ported panels use
-   (inventory-sheet convention): x345 y101 w1065 h608. */
 .alchemy-scene { position:absolute; inset:0;  font-family:var(--font-display,Georgia,serif); color:#392c1d; line-height:1.3; }
 .alchemy-scene :deep(*) { box-sizing:border-box; }
-.alchemy-sheet { position:absolute; left:345px; top:101px; width:1065px; height:608px; background-color:#f2e4c8; background-size:cover; background-position:center; background-repeat:no-repeat; border:3px double #b28a43; box-shadow:0 12px 22px #0008; }
-.alchemy-head { position:absolute; left:372px; top:123px; width:1011px; height:61px; display:flex; align-items:flex-start; justify-content:flex-start; padding-left:54px; background:linear-gradient(#b28a43,#b28a43) left bottom/64px 1px no-repeat,linear-gradient(#b28a43,#b28a43) right bottom/calc(100% - 448px) 1px no-repeat; }
-.alchemy-head__title { display:flex; flex-direction:column; align-items:center; }
-:is(#app,body) .alchemy-head h1 { margin:0; padding:0; font-family:'UTM OngDoGia','Ma Shan Zheng','ZCOOL XiaoWei',var(--font-display,Georgia,serif); font-size:56px; font-style:normal; font-weight:400; line-height:58px; color:transparent; background:linear-gradient(100deg,#241a0c 20%,#6b5224 40%,#fff6d8 50%,#6b5224 60%,#241a0c 80%); background-size:220% 100%; background-position:0% 0; -webkit-background-clip:text; background-clip:text; }
-.alchemy-divider { width:300px; object-fit:contain; opacity:.9; position:relative; top:-39px; pointer-events:none; }
-.alchemy-subtitle { position:absolute; right:230px; top:50%; transform:translateY(-50%); margin:0; color:#88703e; font-size:15px; width:180px; text-align:right; }
 
 /* Ba cot 20 / 50 / 30 trong vung noi dung cua sheet. */
 .alchemy-cols { position:absolute; left:372px; top:192px; width:1011px; height:500px; display:flex; gap:14px; }
@@ -307,6 +297,5 @@ function jobSubline(job: AlchemyJobDisplay) {
 .alchemy-preview-label { position:absolute; left:372px; top:706px; font-size:10px; color:#7d6c48; }
 
 /* Layout instances are relative to the owning panel content. */
-.alchemy-scene :deep(.game-panel__content :is(.alchemy-sheet,.alchemy-head)) { display: none; }
 .alchemy-scene :deep(.game-panel__content .alchemy-cols) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; }
 </style>

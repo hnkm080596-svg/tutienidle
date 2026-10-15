@@ -8,7 +8,6 @@ import GamePanel from '@/components/common/GamePanel.vue'
 // (its own nav rail + sections) through that slot.
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import SettingsFidelitySection, { type SettingsDisplayControl } from './SettingsFidelitySection.vue'
 
@@ -21,9 +20,6 @@ withDefaults(defineProps<{
 
 const emit = defineEmits<{select: [id: string]; update: [id: string, value: string | number | boolean]; action: [id: string]; back: []}>()
 const { t } = useI18n()
-
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
-const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 
 // Same dialog contract the imperial scroll carried: focus/pointer stay
 // inside the open surface and Escape closes through emit('back').
@@ -51,8 +47,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <style scoped>
 .settings-scene{position:absolute;inset:0;color:#4b3924;font-family:var(--font-display,Georgia,serif)}
 .settings-scene :deep(*){box-sizing:border-box}
-.settings-paper{position:absolute;left:94px;top:123px;width:1334px;height:633px;border:0 solid transparent;border-image-slice:300 fill;border-image-width:83px;filter:drop-shadow(0 12px 15px #0009)}
-.settings-title{position:absolute;left:235px;top:165px;margin:0;font-size:32px;font-weight:700;color:#35250f;text-shadow:0 1px #fff7} .settings-divider{position:absolute;left:237px;top:179px;width:230px;object-fit:contain;opacity:.9}
 /* Interior region: clears the nav-rail column on the left and the
    paper's decorative frame all around (same rect the preview surface
    exposes). */
@@ -71,7 +65,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .settings-notice{position:absolute;left:700px;top:710px;width:675px;height:28px;margin:0;text-align:right;font-size:12px;color:#62512d}
 
 /* Layout instances are relative to the owning panel content. */
-.settings-scene :deep(.game-panel__content :is(.settings-paper,.settings-title,.settings-divider)) { display: none; }
 .settings-scene :deep(.game-panel__content .settings-content) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; }
 .settings-scene :deep(.game-panel__content .settings-notice) { left: 0; right: 0; top: auto; bottom: 0; width: 100%; }
 </style>

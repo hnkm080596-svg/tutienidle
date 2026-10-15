@@ -8,7 +8,6 @@ import GamePanel from '@/components/common/GamePanel.vue'
 // sections + canonical tab state through #toolbar/#grid/#count.
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 // InkNineSlice removed with the bottom count capsule (2026-10-11).
 import type { InventoryDisplay } from './inventoryUi'
@@ -27,17 +26,10 @@ const { t } = useI18n()
 const filters = ['all', 'equipment', 'material', 'pill']
 function search(event: Event) { if (event.target instanceof HTMLInputElement) emit('query', event.target.value) }
 
-const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
-const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
-
 // Same dialog contract the imperial scroll carried: focus/pointer stay
 // inside the open surface and Escape closes through emit('back').
 const rootRef = ref<HTMLElement | null>(null)
 useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
-
-// Title alignment landed (Minh dragged it on 2026-10-11): the glyph
-// sits translate(124px, 4px) so its center reads over the cloud
-// divider's knot - the machinery is gone now that the offset is baked.
 </script>
 
 <template>
@@ -63,11 +55,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <style scoped>
 .inventory-scene{position:absolute;inset:0;color:#4b3924;font-family:var(--font-display,Georgia,serif)}
 .inventory-scene :deep(*){box-sizing:border-box}
-/* Sheet + head = .skill-sheet/.skill-head verbatim (shared redesigned
-   band right of the nav rail, owner ruling: backdrop dong bo). */
-.inventory-sheet{position:absolute;left:345px;top:101px;width:1065px;height:608px;background-color:#f2e4c8;background-size:cover;background-position:center;background-repeat:no-repeat;border:3px double #b28a43}
-.inventory-head{position:absolute;left:372px;top:123px;width:1011px;height:61px;display:flex;align-items:flex-start;justify-content:flex-start;padding-left:54px;background:linear-gradient(#b28a43,#b28a43) left bottom/64px 1px no-repeat,linear-gradient(#b28a43,#b28a43) right bottom/calc(100% - 448px) 1px no-repeat}.inventory-head__title{display:flex;flex-direction:column;align-items:flex-start}.inventory-divider{width:388px;margin-top:0;object-fit:contain;opacity:.9;position:relative;top:-39px;left:8px;pointer-events:none}
-:is(#app,body) .inventory-head h1{margin:0;padding:0;font-family:'UTM OngDoGia','Ma Shan Zheng','ZCOOL XiaoWei',var(--font-display,Georgia,serif);font-size:56px;font-style:normal;font-weight:400;line-height:58px;text-align:center;color:transparent;background:linear-gradient(100deg,#241a0c 20%,#6b5224 40%,#fff6d8 50%,#6b5224 60%,#241a0c 80%);background-size:220% 100%;background-position:0% 0;-webkit-background-clip:text;background-clip:text;animation:none;transform:translate(124px,4px)}
 /* Interior region inside the shared sheet band - clears the head line
    and the paper's bottom decorative edge. */
 /* Owner ruling 2026-10-11: the bag card must occupy the SAME stage
@@ -104,6 +91,5 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .inventory-notice{position:absolute;left:900px;top:670px;width:480px;height:28px;margin:0;text-align:right;font-size:12px;color:#62512d}
 
 /* Layout instances are relative to the owning panel content. */
-.inventory-scene :deep(.game-panel__content :is(.inventory-sheet,.inventory-head)) { display: none; }
 .inventory-scene :deep(.game-panel__content .inventory-content) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; }
 </style>

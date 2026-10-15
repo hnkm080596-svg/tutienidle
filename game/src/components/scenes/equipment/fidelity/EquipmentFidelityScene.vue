@@ -42,8 +42,6 @@ const emptyBagCells = computed(() => {
 // nav rail. Class renamed off `equipment-paper` on purpose: the
 // tien-hiep-ui.css global rules pin *-paper elements to the legacy
 // 156/1272 nine-slice band.
-const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
-const divider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 const darkCard = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 const circleFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-circle-frame-v1.png')
 const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-tab-brush-v1.png')
@@ -92,16 +90,6 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 <style scoped>
 .equipment-scene { position:absolute; inset:0;  color:#30291d; font-family:var(--font-display,Georgia,serif); }
 .equipment-scene :deep(*) { box-sizing:border-box; }
-/* Sheet = .skill-sheet verbatim: the redesigned panels' shared band
-   (24% / 12.5% / 74% / 75% of the 1440x810 design canvas). */
-.equipment-sheet { position:absolute; left:345px; top:101px; width:1065px; height:608px; background-color:#f2e4c8; background-size:cover; background-position:center; background-repeat:no-repeat; border:3px double #b28a43; }
-/* Content inside the sheet keeps the same insets Cong Phap uses
-   (~27px sides): heading row per the Codex preview's 48px line. */
-/* Inner insets mirror HomeEquipmentArtPanel verbatim: sheet padding
-   16px 20px 18px -> content x365-1390, heading top 117, tabs 165,
-   content grid 215. */
-.equipment-heading { position:absolute; left:365px; top:117px; height:61px; display:flex; align-items:flex-start; border-bottom:0; width:1025px; padding-left:54px; box-sizing:border-box; background:linear-gradient(#b28a43,#b28a43) left bottom/64px 1px no-repeat, linear-gradient(#b28a43,#b28a43) right bottom/calc(100% - 448px) 1px no-repeat; } .equipment-heading__title{display:flex;flex-direction:column}.equipment-divider{width:388px;margin-top:0;object-fit:contain;opacity:.9;position:relative;top:-39px;left:8px;pointer-events:none}
-:is(#app,body) .equipment-scene .equipment-heading h1 { margin:0; padding:0; width:370px; height:58px; font-family:'UTM OngDoGia','Ma Shan Zheng','ZCOOL XiaoWei',var(--font-display,Georgia,serif); font-size:56px; font-style:normal; font-weight:400; line-height:58px; text-align:center; color:transparent; background:linear-gradient(100deg,#241a0c 20%,#6b5224 40%,#fff6d8 50%,#6b5224 60%,#241a0c 80%); background-size:220% 100%; background-position:0% 0; -webkit-background-clip:text; background-clip:text; animation:none; }
 .equipment-subtitle { position:absolute; left:365px; top:117px; width:860px; height:61px; margin:0; display:flex; align-items:center; justify-content:flex-end; font-size:13px; color:#715627; }
 /* Columns start below the scene-level tab strip (heading 120-168,
    tabs ~178-220) - same stacking as the Codex preview. */
@@ -113,7 +101,7 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 .equipment-socket :deep(.gear-item) { width:64px; height:64px; border-radius:50%; }
 .equipment-socket > span { font-size:14px; font-weight:600; color:#473315; }
 /* Codex home-equipment stats card: dark nine-slice card under the doll
-   (same character-card art the preview's EquipmentArtCard mounts) -
+   (same character-card art the preview's GameCard mounts) -
    title removed per owner ruling; a single-column name/value list in
    the Tu Si derived-stats pattern, gold values on dark. */
 .equipment-summary { position:absolute; left:365px; top:572px; width:369px; height:119px;}
@@ -148,7 +136,6 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 .equipment-forge nav button[aria-pressed=true] { color:#f7e4b5;border-color:#977337;background:var(--equipment-tab-brush) center/contain no-repeat;border-bottom-color:transparent }
 
 /* Layout instances are relative to the owning panel content. */
-.equipment-scene :deep(.game-panel__content :is(.equipment-sheet,.equipment-heading)) { display: none; }
 .equipment-scene :deep(.game-panel__content :is(.equipment-workspace,.equipment-bag,.equipment-forge)) { left: auto; right: 0; top: 35px; width: 62.5%; height: calc(100% - 35px); }
 .equipment-scene :deep(.game-panel__content .equipment-summary) { left: 0; top: auto; bottom: 0; width: 36%; height: 113px; }
 .equipment-scene :deep(.game-panel__content :is(.equipment-sockets,.equipment-doll)) { left: 0; top: 35px; width: 36%; height: calc(100% - 162px); }

@@ -1,14 +1,33 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ gold?: boolean; disabled?: boolean; filterArt?: boolean; squareArt?: boolean }>(), {
-  gold: false,
-  disabled: false,
-  filterArt: false,
-  squareArt: false,
-})
+import { playUiButtonClick } from '@/presentation/audio/buttonClickAudio'
+
+const props = withDefaults(
+  defineProps<{
+    gold?: boolean
+    disabled?: boolean
+    filterArt?: boolean
+    squareArt?: boolean
+    sound?: boolean
+    silent?: boolean
+  }>(),
+  {
+    gold: false,
+    disabled: false,
+    filterArt: false,
+    squareArt: false,
+    sound: true,
+    silent: false,
+  },
+)
 const emit = defineEmits<{ click: [event: MouseEvent] }>()
+
+function handleClick(event: MouseEvent) {
+  playUiButtonClick({ sound: props.sound, silent: props.silent })
+  emit('click', event)
+}
 </script>
 <template>
-  <button type="button" class="equipment-art-button game-panel__button" :class="{ gold, 'filter-art': filterArt, 'square-art': squareArt }" :disabled="disabled" @click="emit('click', $event)">
+  <button type="button" class="equipment-art-button game-panel__button" :class="{ gold, 'filter-art': filterArt, 'square-art': squareArt }" :disabled="disabled" @click="handleClick">
     <slot />
   </button>
 </template>

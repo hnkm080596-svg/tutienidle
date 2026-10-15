@@ -13,8 +13,6 @@ import CharacterFidelityIdentity from './CharacterFidelityIdentity.vue'
 import CharacterFidelityStats from './CharacterFidelityStats.vue'
 import CharacterFidelityDetails from './CharacterFidelityDetails.vue'
 import { CHARACTER_ART, type CharacterUiModel } from './characterUi'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 withDefaults(defineProps<{
   model: CharacterUiModel
   notice: string
@@ -60,8 +58,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
    so values below are mock screen-px / 1.0889 (mock panel: x376 y166
    w1160 h662, 30px pad). */
 .cf-panel { position: absolute; left: 345px; top: 101px; width: 1065px; height: 608px; padding: 22px 27px 26px; background: #f2e4c8 var(--character-paper) center/cover; border: 3px double #b28a43; overflow: hidden; }
-.cf-panel__header { height: 61px; border-bottom: 0; display: flex; align-items: flex-start; justify-content: flex-start; padding-left: 54px; color: #302519; background: linear-gradient(#b28a43, #b28a43) left bottom/61px 1px no-repeat, linear-gradient(#b28a43, #b28a43) right bottom/calc(100% - 257px) 1px no-repeat; }
-:is(#app, body) .cf-panel__header h1 { margin: 0; font-size: 56px; position: relative; top: 6px; left: -85px; } .cf-head-title{display:flex;flex-direction:column}.cf-divider{width:200px;margin-top:0;object-fit:contain;opacity:.9;position:relative;top:-19px;left:5px;pointer-events:none}
 .cf-panel__content { --character-footer-card-height: 96px; display: grid; grid-template-columns: 28% 39% 1fr; gap: 14px; height: calc(100% - 72px); margin-top: 11px; min-height: 0; }
 .cf-scene :deep(.character-card) { position: relative; }
 /* The power card opts out of the card relative box: it docks to the
@@ -72,7 +68,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
 /* Layout instances are relative to the owning panel content. */
 .cf-scene :deep(.game-panel__content .cf-panel) { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; background: transparent; border: 0; box-shadow: none; }
-.cf-scene :deep(.game-panel__content .cf-panel__header) { display: none; }
 .cf-scene :deep(.game-panel__content .cf-panel__content) { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: 0; padding-top: 12px; box-sizing: border-box; }
 .cf-scene :deep(.game-panel__content .cf-notice) { left: 0; right: 0; top: auto; bottom: 0; width: 100%; }
 </style>

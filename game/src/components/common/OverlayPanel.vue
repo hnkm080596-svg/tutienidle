@@ -1,24 +1,25 @@
 <script setup lang="ts">
-import { computed, ref, useId, type ComponentPublicInstance } from 'vue'
+import { computed, ref, useId } from 'vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { i18n } from '@/i18n'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import GameButton from './GameButton.vue'
 import HuyenKimSymbol from './HuyenKimSymbol.vue'
-import SysPanel from './system/SysPanel.vue'
 
+// Modal overlay shell (D8 boundary): OverlayPanel owns centered modal
+// dialogs/panels over a backdrop scrim, whereas GamePanel owns the shared
+// paper rail-panel sheet.
 const props = withDefaults(defineProps<{
   open: boolean
   title: string
   width?: string
   height?: string
   layer?: number
-  // M-UI-SYSTEM: 'system' renders the card as SysPanel chrome (spec 5).
   // Default 'ink' keeps every caller identical. 'paper' swaps the dark
   // surface for the cream scroll + paper text ramp - for dialogs whose
   // content was authored for paper (FeedbackDialog).
-  variant?: 'ink' | 'system' | 'paper'
+  variant?: 'ink' | 'paper'
 }>(), {
   width: 'min(900px, 94vw)',
   height: 'auto',
@@ -28,15 +29,8 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{ close: [] }>()
 
-// ref on the dynamic card resolves to an element ('ink' section) or the
-// SysPanel instance ('system') - useDialogFocus needs a plain HTMLElement.
-const cardRef = ref<HTMLElement | ComponentPublicInstance | null>(null)
-const cardEl = computed<HTMLElement | null>(() => {
-  const v = cardRef.value
-  if (v instanceof HTMLElement) return v
-  return (v?.$el as HTMLElement | null | undefined) ?? null
-})
-useDialogFocus(cardEl, computed(() => props.open), { onEscape: () => emit('close') })
+const cardRef = ref<HTMLElement | null>(null)
+useDialogFocus(cardRef, computed(() => props.open), { onEscape: () => emit('close') })
 
 // Remediation Task 6 (2026-09-05) - aria-labelledby tham chieu heading
 // that (per-instance useId) thay vi aria-label duplicate.
@@ -51,12 +45,9 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
 <template>
   <Transition name="overlay-fade">
     <div v-if="open" class="overlay-panel" :class="`overlay-panel--${variant}`" :style="{ zIndex: layer }" @click.self="emit('close')">
-      <component
-        :is="variant === 'system' ? SysPanel : 'section'"
-        v-bind="variant === 'system' ? { variant: 'primary', rimActive: open } : {}"
+      <section
         ref="cardRef"
         class="overlay-panel__card"
-        :class="{ 'overlay-panel__card--system': variant === 'system' }"
         tabindex="-1"
         :style="{ width, height }"
         role="dialog"
@@ -65,7 +56,7 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
       >
         <InkNineSlice v-if="variant === 'ink'" chrome-id="surface-m-panel" layer="surface" />
         <InkNineSlice v-if="variant === 'paper'" chrome-id="surface-xl-scroll" layer="surface" />
-        <InkNineSlice v-if="variant !== 'system'" chrome-id="frame-m-modal" layer="frame" />
+        <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
         <header class="overlay-panel__header">
           <div class="overlay-panel__heading">
             <slot name="heading">
@@ -89,7 +80,7 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
           :aria-label="closeLabel"
           @click="emit('close')"
         ><HuyenKimSymbol name="close" /></GameButton>
-      </component>
+      </section>
     </div>
   </Transition>
 </template>
