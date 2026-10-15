@@ -389,6 +389,7 @@ export class GameManagerTurnBattleOps {
     // Optional for B1: direct constructor fixtures keep wall-clock
     // behavior; GameManager always injects the shared TimeAuthority.
     time?: TimeAuthority
+    onStageCompleted?: () => void
    }) {
     this.liveStatModifiers = bindLiveModifiersProvider(deps)
     this.turnBattleSystem = new TurnBattleSystem(
@@ -433,6 +434,7 @@ export class GameManagerTurnBattleOps {
       eventBus: deps.eventBus,
       bankPassiveCarry: deps.bankPassiveCarry,
       time: deps.time,
+      onStageCompleted: deps.onStageCompleted,
     })
 
     this.autoFarmOps = new GameManagerAutoFarmOps({

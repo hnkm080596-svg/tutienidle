@@ -132,26 +132,38 @@ export class GameManagerTickOps {
         this.reconcileQuestLifecycle()
       }
 
-      // Quest daily reset (Quest System plan) - wall-clock day-bucket,
-      // check moi tick nen van reset ke ca khi panel Nhiem Vu dang dong.
-      // BETA SCOPE LOCK v2 (Phase-6): the daily cadence is scope-hidden
-      // - the reset does not run, no "daily refreshed" toast fires,
-      // and the daily board is never rebuilt for beta players.
-      if (
-        isBetaFeature('dailyQuest') &&
-        this.deps.questSystem.checkAndResetDaily(
+      // Quest daily & weekly reset - wall-clock UTC day/week bucket,
+      // checked every tick so boards refresh even while QuestPanel is closed.
+      if (isBetaFeature('dailyQuest')) {
+        const nowMs = this.deps.time?.now() ?? Date.now()
+        const hadDailyStamp = this.deps.questManager.getLastDailyResetAtMs() > 0
+        const dailyReset = this.deps.questSystem.checkAndResetDaily(
           this.deps.questRegistry,
           this.deps.questManager,
           activePlayer,
-          this.deps.time?.now() ?? Date.now(),
+          nowMs,
         )
-      ) {
-        this.deps.notifications.push({ kind: 'craft', message: 'Nhiệm vụ hằng ngày đã làm mới' })
+        if (dailyReset && hadDailyStamp) {
+          this.deps.notifications.push({ kind: 'craft', message: 'Nhiệm vụ hằng ngày đã làm mới' })
+        }
 
-        // R8.1 (AR-09) - daily reset removes daily entries; the
-        // lifecycle command rebuilds today's board immediately so
-        // kills/collects keep counting without opening QuestPanel.
-        this.reconcileQuestLifecycle()
+        const hadWeeklyStamp = this.deps.questManager.getLastWeeklyResetAtMs() > 0
+        const weeklyReset = this.deps.questSystem.checkAndResetWeekly(
+          this.deps.questRegistry,
+          this.deps.questManager,
+          activePlayer,
+          nowMs,
+        )
+        if (weeklyReset && hadWeeklyStamp) {
+          this.deps.notifications.push({ kind: 'craft', message: 'Nhiệm vụ hằng tuần đã làm mới' })
+        }
+
+        if (dailyReset || weeklyReset) {
+          // R8.1 (AR-09) - daily/weekly reset removes expired entries; the
+          // lifecycle command rebuilds the active board immediately so
+          // kills/collects keep counting without opening QuestPanel.
+          this.reconcileQuestLifecycle()
+        }
       }
 
       this.deps.settleAutomaticProduction?.(activePlayer)

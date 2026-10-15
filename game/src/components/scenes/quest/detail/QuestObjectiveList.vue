@@ -23,52 +23,72 @@ const FLAG_LABEL_KEYS: Record<string, string> = {
   [QUEST_FLAG_ALCHEMY_CRAFTED]: 'panels.quest.flags.alchemyCrafted',
 }
 
-const objectiveDone = computed(() => props.row.progress >= props.row.target)
-const objectiveLabel = computed(() => {
-  if (props.row.flagId) {
-    const key = FLAG_LABEL_KEYS[props.row.flagId]
-    return key ? t(key) : props.row.flagId
+function resolveLabel(targetLabel: string | null, flagId?: string): string {
+  if (flagId) {
+    const key = FLAG_LABEL_KEYS[flagId]
+    return key ? t(key) : flagId
   }
-  return props.row.targetLabel ?? t('panels.quest.anyEnemy')
-})
-const objectiveAmount = computed(
-  () => `${Math.min(props.row.progress, props.row.target)} / ${props.row.target}`,
-)
+  return targetLabel ?? t('panels.quest.anyEnemy')
+}
 
-// Turn-in material name resolves through the material registry the same
-// way other panels do (has() + get() - display only).
-const turnInName = computed(() => {
-  const turnIn = props.row.turnIn
-  if (!turnIn) return ''
-  return gameManager.materialRegistry.has(turnIn.materialId)
-    ? gameManager.materialRegistry.get(turnIn.materialId).name
-    : turnIn.materialId
+function resolveTurnInLabel(materialId: string): string {
+  const name = gameManager.materialRegistry.has(materialId)
+    ? gameManager.materialRegistry.get(materialId).name
+    : materialId
+  return t('panels.quest.scene.turnIn', { name })
+}
+
+const objectiveEntries = computed(() => {
+  if (props.row.objectives && props.row.objectives.length > 0) {
+    return props.row.objectives.map((leaf) => ({
+      id: leaf.id,
+      done: leaf.progress >= leaf.target,
+      label: resolveLabel(leaf.targetLabel, leaf.flagId),
+      amount: `${Math.min(leaf.progress, leaf.target)} / ${leaf.target}`,
+      turnIn: leaf.turnIn
+        ? {
+            done: leaf.turnIn.owned >= leaf.turnIn.required,
+            label: resolveTurnInLabel(leaf.turnIn.materialId),
+            amount: `${Math.min(leaf.turnIn.owned, leaf.turnIn.required)} / ${leaf.turnIn.required}`,
+          }
+        : undefined,
+    }))
+  }
+
+  return [
+    {
+      id: 'primary',
+      done: props.row.progress >= props.row.target,
+      label: resolveLabel(props.row.targetLabel, props.row.flagId),
+      amount: `${Math.min(props.row.progress, props.row.target)} / ${props.row.target}`,
+      turnIn: props.row.turnIn
+        ? {
+            done: props.row.turnIn.owned >= props.row.turnIn.required,
+            label: resolveTurnInLabel(props.row.turnIn.materialId),
+            amount: `${Math.min(props.row.turnIn.owned, props.row.turnIn.required)} / ${props.row.turnIn.required}`,
+          }
+        : undefined,
+    },
+  ]
 })
-const turnInLabel = computed(() => t('panels.quest.scene.turnIn', { name: turnInName.value }))
-const turnInAmount = computed(() => {
-  const turnIn = props.row.turnIn
-  if (!turnIn) return ''
-  return `${Math.min(turnIn.owned, turnIn.required)} / ${turnIn.required}`
-})
-const turnInDone = computed(
-  () => (props.row.turnIn?.owned ?? 0) >= (props.row.turnIn?.required ?? 1),
-)
 </script>
 
 <template>
   <section class="quest-objectives">
     <QuestSectionPlaque :text="t('panels.quest.scene.objectives')" />
-    <QuestObjectiveArt
-      :done="objectiveDone"
-      :label="objectiveLabel"
-      :amount="objectiveAmount"
-    />
-    <QuestObjectiveArt
-      v-if="row.turnIn"
-      :done="turnInDone"
-      :label="turnInLabel"
-      :amount="turnInAmount"
-    />
+    <template v-for="entry in objectiveEntries" :key="entry.id">
+      <QuestObjectiveArt
+        :done="entry.done"
+        :label="entry.label"
+        :amount="entry.amount"
+      />
+      <QuestObjectiveArt
+        v-if="entry.turnIn"
+        :done="entry.turnIn.done"
+        :label="entry.turnIn.label"
+        :amount="entry.turnIn.amount"
+      />
+    </template>
   </section>
 </template>
 

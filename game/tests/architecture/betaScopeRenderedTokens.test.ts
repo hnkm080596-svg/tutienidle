@@ -83,7 +83,6 @@ const FORBIDDEN_TOKENS = [
   { id: 'formation', pattern: /formation_slot|tran_phap|Trận Pháp/ },
   { id: 'companion', pattern: /companion_roster|Đồng Hành|Companion\b/ },
   { id: 'worker-lodge', pattern: /worker_lodge|chi_hien_quan|Nhân Công/ },
-  { id: 'daily-quest', pattern: /daily_quest|Nhiệm Vụ Ngày/ },
   { id: 'coming-soon', pattern: /coming_soon|comingSoon|Sắp Ra Mắt|isComingSoon/ },
 ] as const
 
@@ -194,12 +193,12 @@ const FEATURE_TOKEN_MAP: Record<BetaFeatureName, TokenId | null> = {
   formation: 'formation',
   artifact: 'phap-bao',
   manualWorkforce: 'worker-lodge',
-  // Wash, refine and material decomposition ship in beta; their surfaces are
-  // legal, so no corpus token may watch them (null = none expected).
+  // Wash, refine, material decomposition, and daily/weekly quests ship in beta;
+  // their surfaces are legal, so no corpus token may watch them (null = none expected).
   equipmentWash: null,
   equipmentRefine: null,
   equipmentOreDecompose: null,
-  dailyQuest: 'daily-quest',
+  dailyQuest: null,
 }
 
 // ---------------------------------------------------------------------------

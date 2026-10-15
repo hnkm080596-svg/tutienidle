@@ -30,6 +30,12 @@ describe('authored skill presentation recipes', () => {
       expect(cue).toMatchObject({ anchor: 'source', shape: 'impulse', offsetMs: 0, impulsePx: 8 })
       expect(cue!.durationMs).toBeLessThanOrEqual(recipe.castMs)
     }
+    for (const id of ['ram', 'ram_multi'] as const) {
+      const recipe = getSkillPresentationRecipe(id)
+      const cue = recipe.cast.find(c => c.primitive === 'actor-impulse')
+      expect(cue).toMatchObject({ anchor: 'source', shape: 'impulse', offsetMs: 0, impulsePx: 32 })
+      expect(cue!.durationMs).toBeLessThanOrEqual(recipe.castMs)
+    }
   })
   it('keeps Phi Kiem authored and non-impulse recipes free of actor motion', () => {
     expect(getSkillPresentationRecipe('ngu_kiem_flight').cast.every(c => c.primitive !== 'actor-impulse')).toBe(true)

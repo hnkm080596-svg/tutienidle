@@ -896,7 +896,11 @@
       "title": "Nhiệm Vụ",
       "groups": {
         "mainline": "Chính Tuyến",
-        "once": "Nhiệm Vụ"
+        "once": "Nhiệm Vụ",
+        "day": "Ngày",
+        "weekly": "Tuần",
+        "achievement": "Thành Tựu",
+        "expedition": "Thám Hiểm"
       },
       "previewTabs": {
         "day": "Ngày",
@@ -926,7 +930,9 @@
         "all": "Tất Cả"
       },
       "cadence": {
-        "once": "Một Lần"
+        "once": "Một Lần",
+        "daily": "Hằng Ngày",
+        "weekly": "Hằng Tuần"
       },
       "scene": {
         "tabsAria": "Nhóm nhiệm vụ",
@@ -949,9 +955,11 @@
       "groupHints": {
         "mainline": "Hành trình chính tuyến",
         "once": "Nhiệm vụ một lần",
+        "day": "Làm mới mỗi ngày",
         "daily": "Làm mới mỗi ngày",
         "weekly": "Làm mới mỗi tuần",
         "achievement": "Cột mốc tu luyện",
+        "expedition": "Thám hiểm vùng đất",
         "exploration": "Thám hiểm vùng đất"
       },
       "rewardShort": {

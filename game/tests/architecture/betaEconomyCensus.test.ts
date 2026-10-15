@@ -181,6 +181,10 @@ function collectEconomy(): {
 
   // Equipment dissolve is a beta action and pays tinh hoa.
   addSource(LUYEN_KHI_TINH_HOA_ID, 'equipment:dissolve')
+  // Production sites roll 75% dust/essence directly alongside 25% site product.
+  addSource(BUI_GO_ID, 'forest:essence')
+  addSource(LUYEN_KHI_TINH_HOA_ID, 'mine:essence')
+  addSource(LUYEN_DAN_TINH_HOA_ID, 'grotto:essence')
   // Materials economy rework - decompose tab outputs (ore/wood/herb).
   addSource(BUI_GO_ID, 'decompose:wood')
   addSource(LUYEN_DAN_TINH_HOA_ID, 'decompose:herb')

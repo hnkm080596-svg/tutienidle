@@ -270,9 +270,12 @@ function assertScopeSanity(label: string): void {
   expect(gm.buildingOps).not.toHaveProperty('getWorkerLodgeSurfaceModel')
   expect(gm.buildingOps).not.toHaveProperty('assignWorkers')
 
-  // Quests: once-cadence only; no daily cadence exists in beta.
+  // Quests: all three cadences (once, daily, weekly) are supported.
   for (const quest of gm.questOps.getBetaQuestSurfaceModels()) {
-    expect(quest.cadence, `${label}: quest ${quest.id} cadence`).toBe('once')
+    expect(
+      ['once', 'daily', 'weekly'],
+      `${label}: quest ${quest.id} cadence`,
+    ).toContain(quest.cadence)
   }
 
   // Realm ladder: only in-window realms (mortal/qi_refining/

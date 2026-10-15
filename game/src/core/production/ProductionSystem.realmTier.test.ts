@@ -105,7 +105,7 @@ describe('clamp applied at every production entry point (T3-17)', () => {
         }
       }
     }
-    expect(highTierPicks).toBeGreaterThan(250) // high profile 20/40/40 -> ~40%
+    expect(highTierPicks).toBeGreaterThan(60) // 25% product branch * ~40% high profile (20/40/40) -> ~100
   })
 
   it('rollRewards never mints materials more than one realm tier above the collector (F-MAT-REALM ceiling)', () => {
@@ -151,6 +151,6 @@ describe('clamp applied at every production entry point (T3-17)', () => {
         }
       }
     }
-    expect(qiTierPicks).toBeGreaterThan(150) // capped low profile 60/20/0 -> ~25%
+    expect(qiTierPicks).toBeGreaterThan(35) // 25% product branch * ~25% capped low profile (60/20/0) -> ~62
   })
 })

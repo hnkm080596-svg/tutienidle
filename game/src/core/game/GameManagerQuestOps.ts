@@ -19,7 +19,8 @@ import {
   type BetaQuestSurfaceDeps,
   type BetaQuestSurfaceModel,
 } from '../betaScopeQuestDomain'
-import { getRealmIndex } from '../realm/realmSystem'
+import { getCurrentRealm, getRealmIndex } from '../realm/realmSystem'
+import type { Stage } from '../stage/Stage'
 
 export interface GameManagerQuestOpsDeps {
   questSystem: QuestSystem
@@ -35,6 +36,7 @@ export interface GameManagerQuestOpsDeps {
   // (catalogOps owns the template lookup; injected to keep the ops
   // deps explicit, same convention as HiddenBeastSystem's binding).
   getEnemyTemplate: (enemyId: string) => Enemy | undefined
+  getStage?: (stageId: string) => Stage | undefined
   // GameManager giu activePlayer nhu field mutable (setActivePlayer) - doc
   // LIVE qua closure thay vi snapshot tai constructor time, giong
   // GameManagerBuildingOps.
@@ -96,9 +98,6 @@ export class GameManagerQuestOps {
    * ReleasePolicy, never re-derives reward admission, target labels,
    * the collect shortfall, or claimability. Pure query - questOps
    * owns the material/enemy/bag reads; nothing here writes state.
-   * Beta admits once-quests only (getActiveQuests already filters
-   * isBetaQuestEnabled) - the cadence filter is a fail-closed pin, not
-   * a grouping rule.
    */
   getBetaQuestSurfaceModels(): BetaQuestSurfaceModel[] {
     const player = this.deps.getActivePlayer()
@@ -113,13 +112,15 @@ export class GameManagerQuestOps {
       pillRegistry: this.deps.pillRegistry,
       pillBag: this.deps.pillBag,
       enemyName: (enemyId) => this.deps.getEnemyTemplate(enemyId)?.name,
+      stageName: (stageId) => this.deps.getStage?.(stageId)?.name,
+      realmName: (realmId) =>
+        getRealmIndex(realmId) >= 0 ? getCurrentRealm(realmId).name : undefined,
       // 2026-10-05 reward scaling previews the claim-time band
       // resolution (unlock-chain walk) - same registry claim() sees.
       questRegistry: this.deps.questRegistry,
     }
 
     const models = this.getActiveQuests()
-      .filter(({ quest }) => quest.cadence === 'once')
       .map(({ quest, progress }) =>
         betaQuestSurfaceFor(quest, progress, player, surfaceDeps),
       )

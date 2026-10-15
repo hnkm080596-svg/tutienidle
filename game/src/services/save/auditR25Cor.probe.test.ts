@@ -434,8 +434,9 @@ describe('auditR25 COR probe - quest cap and sibling lists (R25-COR-3)', () => {
     expect(flagsResult.issues.some((issue) => issue.path === '.quests.questFlags')).toBe(true)
   })
 
-  it('Q2 honest saves can never reach 1024: the whole authored roster (21 quests) validates clean', () => {
-    expect(QUESTS.length).toBe(21)
+  it('Q2 honest saves can never reach 1024: the whole authored roster validates clean', () => {
+    expect(QUESTS.length).toBeGreaterThanOrEqual(21)
+    expect(QUESTS.length).toBeLessThan(1024)
     const honest = realSave((wire) => {
       ;(wire as { quests?: unknown }).quests = { ...((wire as { quests?: unknown }).quests as object), ...({
         active: QUESTS.map((quest) => ({ questId: quest.id, progress: 0, claimed: false })),
@@ -527,11 +528,7 @@ describe('auditR25 COR probe - quest day-bucket marker (R25-COR-4)', () => {
     const fired = system.checkAndResetDaily(registry, manager, createDefaultPlayer(), currentMs)
     expect(fired).toBe(true)
     expect(manager.getLastDailyResetAtMs()).toBe(currentMs)
-
-    // Dormant arm today: every authored quest is 'once', so the reset
-    // cleared no re-earnable daily board (severity Nit while the roster
-    // stays daily-free).
-    expect(QUESTS.some((quest) => quest.cadence === 'daily')).toBe(false)
+    expect(QUESTS.some((quest) => quest.cadence === 'daily')).toBe(true)
     expect(manager.getActive()).toHaveLength(0)
   })
 })

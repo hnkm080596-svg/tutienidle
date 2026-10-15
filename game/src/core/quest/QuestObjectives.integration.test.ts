@@ -48,19 +48,21 @@ describe('S1 production boundary integration', () => {
     expect(restored.getProgress(quest.id)?.objectives?.kill).toBe(0)
   })
 
-  it('applies actual beta policy to every kill leaf and retains daily suppression', () => {
+  it('applies actual beta policy to every kill leaf and admits daily/weekly cadences', () => {
     const registry = new QuestRegistry()
     registry.register({ ...quest, id: 'off-roster', condition: { kind: 'allOf', objectives: [
       { id: 'kill', kind: 'kill', enemyId: 'not-on-beta-roster', amount: 1 },
     ] } })
     registry.register({ ...quest, id: 'daily', cadence: 'daily' })
+    registry.register({ ...quest, id: 'weekly', cadence: 'weekly' })
     registry.register(quest)
     const manager = new QuestManager()
     const system = new QuestSystem()
     const player = createDefaultPlayer()
     system.reconcileActiveQuests(registry, manager, player)
     expect(manager.getProgress('off-roster')).toBeUndefined()
-    expect(manager.getProgress('daily')).toBeUndefined()
+    expect(manager.getProgress('daily')).toBeDefined()
+    expect(manager.getProgress('weekly')).toBeDefined()
     expect(manager.getProgress(quest.id)).toBeDefined()
     system.onMaterialCollected(registry, manager, 'wood', 2)
     system.onEnemyDefeated(registry, manager, 'mortal_wild_boar', undefined)

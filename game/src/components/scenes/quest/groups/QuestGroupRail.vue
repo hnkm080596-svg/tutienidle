@@ -9,10 +9,6 @@ import { useI18n } from 'vue-i18n'
 import QuestCategoryArtButton from '@/components/common/art/QuestCategoryArtButton.vue'
 import { questGroupIcon } from './questGroupArt'
 
-// Preview cadence tabs shown locked until the cadence ships (beta has
-// 'once' only); order matches the Codex landscape rail.
-const PREVIEW_LOCKED = ['day', 'weekly', 'achievement', 'expedition'] as const
-
 defineProps<{
   groups: readonly string[]
   active: string
@@ -42,15 +38,6 @@ function hint(id: string): string {
       :hint="hint(id)"
       :selected="active === id"
       @click="onSelect(id)"
-    />
-    <QuestCategoryArtButton
-      v-for="id in PREVIEW_LOCKED"
-      :key="id"
-      :icon="questGroupIcon(id)"
-      :label="t(`panels.quest.previewTabs.${id}`)"
-      :hint="t('panels.quest.lockedHint')"
-      :selected="false"
-      locked
     />
   </nav>
 </template>

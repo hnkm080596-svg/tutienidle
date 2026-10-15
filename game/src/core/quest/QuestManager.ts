@@ -10,6 +10,8 @@ export interface QuestManagerState {
 
   lastDailyResetAtMs: number
 
+  lastWeeklyResetAtMs?: number
+
   // Feature-witness flags fired via QuestSystem.onFlag (dedup'd flag
   // ids). Optional - saves written before flag quests lack the slice.
   questFlags?: string[]
@@ -192,6 +194,10 @@ export class QuestManager {
     return this.state.lastDailyResetAtMs
   }
 
+  getLastWeeklyResetAtMs(): number {
+    return this.state.lastWeeklyResetAtMs ?? 0
+  }
+
   /**
    * Feature-witness flag (kind:'flag' quest conditions). Dedup'd - the
    * record is "the flag fired at least once"; progress counting lives
@@ -226,6 +232,18 @@ export class QuestManager {
   }
 
   /**
+   * Removes progress for 'weekly' quests on UTC week rollover and stamps
+   * lastWeeklyResetAtMs. Same contract as resetDaily.
+   */
+  resetWeekly(newActiveWeeklyQuestIds: string[], now: number): void {
+    this.state.active = this.state.active.filter(
+      (progress) => !newActiveWeeklyQuestIds.includes(progress.questId),
+    )
+
+    this.state.lastWeeklyResetAtMs = now
+  }
+
+  /**
    * M1 (ARCH-001) - restore replaces the whole state with a DETACHED
    * copy: the payload is a value, so mutating it afterwards must not
    * leak into live state (A3).
@@ -254,6 +272,16 @@ export class QuestManager {
         Number.isFinite(nowMs) && nowMs >= 0 && nowMs < 2 ** 52
           ? Math.min(state.lastDailyResetAtMs, nowMs)
           : state.lastDailyResetAtMs
+    }
+    let lastWeeklyResetAtMs: number | undefined
+    if (state.lastWeeklyResetAtMs !== undefined) {
+      lastWeeklyResetAtMs = 0
+      if (Number.isFinite(state.lastWeeklyResetAtMs) && state.lastWeeklyResetAtMs >= 0) {
+        lastWeeklyResetAtMs =
+          Number.isFinite(nowMs) && nowMs >= 0 && nowMs < 2 ** 52
+            ? Math.min(state.lastWeeklyResetAtMs, nowMs)
+            : state.lastWeeklyResetAtMs
+      }
     }
     this.state = {
       ...(state.materialReceipts ? { materialReceipts: parseMaterialConsumerCheckpoint(state.materialReceipts) ?? undefined } : {}),
@@ -294,6 +322,7 @@ export class QuestManager {
         : [],
 
       lastDailyResetAtMs,
+      ...(lastWeeklyResetAtMs !== undefined ? { lastWeeklyResetAtMs } : {}),
 
       // Same normalize contract as completedOnceIds - type-filter plus
       // dedup so a bypassed payload cannot self-replicate flag rows.

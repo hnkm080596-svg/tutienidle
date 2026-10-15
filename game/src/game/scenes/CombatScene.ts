@@ -713,6 +713,25 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
             ? uprightVfxDepth(foot.y, this.entityFootMinY, this.entityFootMaxY, fact.column)
             : DEPTH_UPRIGHT_VFX
         },
+        // The impulse slides the sprite's offsetX channel so it never fights
+        // per-frame position writes; direction follows the declared anchor
+        // vector, with the scene facing convention as the no-target fallback.
+        // Direction comes from the playback-scoped cast the driver passes
+        // through (context.cast) - there is deliberately no scene-level copy:
+        // 'complete'-phase resumes never re-deliver onSkillCast, so an
+        // event-scoped field could go stale next to the runner's context.
+        actorImpulse: (fact, durationMs, impulsePx, cast) => {
+          const sprite = this.spriteFor(fact.entityId)
+          if (!sprite) return
+          const origin = cast ? anchorPoint(cast.source) : undefined
+          const destination = cast?.declaredTargets[0]
+            ? anchorPoint(cast.declaredTargets[0])
+            : undefined
+          const direction = origin && destination && destination.x !== origin.x
+            ? Math.sign(destination.x - origin.x)
+            : fact.entityId === PLAYER_ID ? 1 : -1
+          this.playHorizontalImpulse(sprite, direction * impulsePx, durationMs)
+        },
         cameraImpulse: (durationMs, intensity) => applyScreenShake(this.cameras.main, durationMs, intensity, false),
       }, reducedMotion ? 'low' : 'standard', reducedMotion)
       this._skillPlayback = new SkillPresentationRunner(this._skillVfxDriver, getSkillPresentationRecipe,

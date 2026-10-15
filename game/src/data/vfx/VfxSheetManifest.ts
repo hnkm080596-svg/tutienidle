@@ -82,8 +82,8 @@ export const VFX_SHEET_BINDINGS: Partial<Record<CombatVfxPresetId, VfxSheetBindi
   // preset level so the dev lab and the e2e sweep can play them; enemy
   // attackPresetId/specialAttacks presets reference them.
   bite_multi: binding('vfx-sheet-mob-bite-multi', 'bite-multi', 0, 16, 30, 140, false, '/assets/vfx/mob-bite-multi'),
-  ram: binding('vfx-sheet-mob-ram', 'ram', 0, 11, 30, 150, false, '/assets/vfx/mob-ram'),
-  ram_multi: binding('vfx-sheet-mob-ram-multi', 'ram-multi', 0, 16, 30, 150, false, '/assets/vfx/mob-ram-multi'),
+  ram: binding('vfx-sheet-mob-ram', 'ram', 0, 11, 20, 170, false, '/assets/vfx/mob-ram'),
+  ram_multi: binding('vfx-sheet-mob-ram-multi', 'ram-multi', 0, 16, 20, 170, false, '/assets/vfx/mob-ram-multi'),
   stomp: binding('vfx-sheet-mob-stomp', 'stomp', 0, 12, 30, 150, true, '/assets/vfx/mob-stomp'),
   stomp_multi: binding('vfx-sheet-mob-stomp-multi', 'stomp-multi', 0, 17, 30, 160, true, '/assets/vfx/mob-stomp-multi'),
   slash_vertical: binding('vfx-sheet-mob-slash-v', 'slash-vertical', 0, 10, 30, 140, false, '/assets/vfx/mob-slash-vertical'),

@@ -896,7 +896,11 @@
       "title": "Quests",
       "groups": {
         "mainline": "Mainline",
-        "once": "Quests"
+        "once": "Quests",
+        "day": "Daily",
+        "weekly": "Weekly",
+        "achievement": "Achievement",
+        "expedition": "Expedition"
       },
       "previewTabs": {
         "day": "Daily",
@@ -926,7 +930,9 @@
         "all": "All"
       },
       "cadence": {
-        "once": "One-Time"
+        "once": "One-Time",
+        "daily": "Daily",
+        "weekly": "Weekly"
       },
       "scene": {
         "tabsAria": "Quest groups",
@@ -949,9 +955,11 @@
       "groupHints": {
         "mainline": "The main journey",
         "once": "One-time quests",
+        "day": "Refreshes each day",
         "daily": "Refreshes each day",
         "weekly": "Refreshes each week",
         "achievement": "Cultivation milestones",
+        "expedition": "Explore the lands",
         "exploration": "Explore the lands"
       },
       "rewardShort": {

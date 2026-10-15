@@ -24,6 +24,9 @@ import {
   HERB_AGE_WEIGHTS,
   MATERIAL_AGE_AMOUNTS,
   MATERIAL_AGE_WEIGHTS,
+  PRODUCTION_ESSENCE_AMOUNT,
+  PRODUCTION_ESSENCE_BY_KIND,
+  PRODUCTION_OUTCOME_WEIGHTS,
   computeCycleSeconds,
   getSiteSpeedMultiplier,
   getTierWeightProfile,
@@ -624,6 +627,25 @@ export class ProductionSystem {
       return []
     }
 
+    // First roll: 75% dust/essence (index 0) vs 25% site product (index 1).
+    // Only when the product branch is chosen does the site proceed to roll
+    // the product's quality/age tier.
+    const outcomeIndex = rollWeightedIndex(PRODUCTION_OUTCOME_WEIGHTS, random)
+
+    if (outcomeIndex < 0) {
+      return []
+    }
+
+    if (outcomeIndex === 0) {
+      return [
+        {
+          materialId: PRODUCTION_ESSENCE_BY_KIND[definition.kind],
+          amount: PRODUCTION_ESSENCE_AMOUNT,
+          detail: 'essence',
+        },
+      ]
+    }
+
     if (definition.kind === 'forest' || definition.kind === 'mine') {
       const pool = definition.kind === 'forest' ? this.deps.forestRewards : this.deps.mineRewards
       const ageIndex = rollWeightedIndex(HERB_AGES.map(age => MATERIAL_AGE_WEIGHTS[age]), random)
@@ -788,7 +810,7 @@ export class ProductionSystem {
       const realms = this.deps.territory.realmIds.filter((realm, index) =>
         (profile[index] ?? 0) > 0 && getRealmIndex(realm) <= reached,
       )
-      const amounts: number[] = []
+      const amounts: number[] = [PRODUCTION_ESSENCE_AMOUNT]
       if (definition.kind === 'grotto') {
         for (const realm of realms) {
           const hasHerbs = this.deps.grottoHerbs.some(herb => herb.realmId === realm && betaRecipeFamilyOfId(herb.pillRecipeId) !== null)

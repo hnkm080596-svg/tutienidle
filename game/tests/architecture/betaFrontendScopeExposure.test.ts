@@ -191,13 +191,11 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
   )
 
   it(
-    'no shell file exposes a daily quest surface',
+    'only QuestScene references the daily quest cadence',
     () => {
-      // Quest cadence is 'once' only: isBetaQuestEnabled fails closed on
-      // daily and the surface model emits cadence:'once'. Any 'daily'
-      // token in the shell - literal, i18n key, identifier, cadence
-      // string - is a daily surface leaking; the word appears nowhere.
-      const list = offenders(/daily/i)
+      const list = offenders(/daily/i, [
+        'components/scenes/quest/QuestScene.vue',
+      ])
 
       expect(list).toEqual([])
     },

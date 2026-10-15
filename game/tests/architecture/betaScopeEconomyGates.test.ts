@@ -432,9 +432,10 @@ describe('sec.14 companion/formation/artifact - all faucets shut', () => {
   })
 })
 
-describe('sec.15 quest lifecycle - daily gone, targets stay completable', () => {
-  it('no daily-cadence quest remains in the authored set', () => {
-    expect(QUESTS.filter((quest) => quest.cadence === 'daily')).toEqual([])
+describe('sec.15 quest lifecycle - retired legacy daily ids stay absent, targets stay completable', () => {
+  it('retired legacy daily quest ids remain absent while new daily/weekly quests are enabled', () => {
+    expect(QUESTS.filter((quest) => quest.cadence === 'daily').length).toBeGreaterThan(0)
+    expect(QUESTS.filter((quest) => quest.cadence === 'weekly').length).toBeGreaterThan(0)
     for (const removed of [
       'daily_collect_hoi_xuan_thao',
       'daily_kill_bandit_15',
@@ -444,12 +445,18 @@ describe('sec.15 quest lifecycle - daily gone, targets stay completable', () => 
     }
   })
 
-  it('quest authority: daily and off-roster kill quests are not beta-enabled', () => {
-    const daily: Pick<Quest, 'cadence' | 'condition'> = {
+  it('quest authority: off-roster kill quests are not beta-enabled across any cadence', () => {
+    const dailyOffRoster: Pick<Quest, 'cadence' | 'condition'> = {
       cadence: 'daily',
       condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 1 },
     }
-    expect(isBetaQuestEnabled(daily)).toBe(false)
+    expect(isBetaQuestEnabled(dailyOffRoster)).toBe(false)
+
+    const dailyGeneric: Pick<Quest, 'cadence' | 'condition'> = {
+      cadence: 'daily',
+      condition: { kind: 'kill', amount: 1 },
+    }
+    expect(isBetaQuestEnabled(dailyGeneric)).toBe(true)
 
     const offRoster: Pick<Quest, 'cadence' | 'condition'> = {
       cadence: 'once',

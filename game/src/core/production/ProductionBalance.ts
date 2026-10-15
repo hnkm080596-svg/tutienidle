@@ -3,8 +3,25 @@
 // playtest chinh tai day, khong sua system). Engine chi enforce THU TU
 // (pham cao trong so thap hon), khong tu gan con so (sec5.3).
 
+import {
+  BUI_GO_ID,
+  LUYEN_DAN_TINH_HOA_ID,
+  LUYEN_KHI_TINH_HOA_ID,
+} from '../equipment/TinhHoaMaterial'
 import { PRODUCTION_SITE_KINDS } from './ProductionTypes'
 import type { HerbAge, ProductionSiteKind } from './ProductionTypes'
+
+// Primary cycle outcome weights: index 0 = dust/essence (75%), index 1 = product (25%).
+// When index 1 is rolled, the site proceeds to roll product quality/age tier.
+export const PRODUCTION_OUTCOME_WEIGHTS: readonly [number, number] = [75, 25]
+
+export const PRODUCTION_ESSENCE_AMOUNT = 1
+
+export const PRODUCTION_ESSENCE_BY_KIND: Readonly<Record<ProductionSiteKind, string>> = {
+  forest: BUI_GO_ID,
+  mine: LUYEN_KHI_TINH_HOA_ID,
+  grotto: LUYEN_DAN_TINH_HOA_ID,
+}
 
 /**
  * Thoi gian co so theo canh gioi dang thu thap (sec4.2) - baseline tang

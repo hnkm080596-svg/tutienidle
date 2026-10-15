@@ -416,15 +416,78 @@ describe('Reward rolls — phân bố (sanity thống kê)', () => {
       }
 
       for (const reward of system.rollRewards(cycle)) {
-        // Go gio roll theo tuoi (6E C2) - dem MOI bien the Truc Co.
+        // Count Foundation Establishment herb picks within the 25% product branch.
         if (reward.materialId.includes('_foundation_establishment_')) {
           highTierPicks += 1
         }
       }
     }
 
-    // Profile high 20/40/40 -> tier cao ~40%+.
-    expect(highTierPicks).toBeGreaterThan(250)
+    // 25% product branch * ~40% high tier (profile high 20/40/40) -> ~100 picks / 1000 seeds.
+    expect(highTierPicks).toBeGreaterThan(60)
+  })
+
+  it('rolls ~75% dust/essence and ~25% product (+ quality tier) across forest, mine, and grotto', () => {
+    const system = createSystem()
+    const cases = [
+      {
+        siteId: 'thanh_van_lam',
+        essenceId: 'bui_go',
+        productPoolIds: new Set(THANH_VAN_FOREST_REWARDS.map((entry) => entry.materialId)),
+      },
+      {
+        siteId: 'thanh_van_quang',
+        essenceId: 'luyen_khi_tinh_hoa',
+        productPoolIds: new Set(THANH_VAN_MINE_REWARDS.map((entry) => entry.materialId)),
+      },
+      {
+        siteId: 'thanh_van_dong_thien',
+        essenceId: 'luyen_dan_tinh_hoa',
+        productPoolIds: new Set(THANH_VAN_GROTTO_HERBS.map((entry) => entry.materialId)),
+      },
+    ] as const
+
+    for (const { siteId, essenceId, productPoolIds } of cases) {
+      let essenceCount = 0
+      let productCount = 0
+      const productAges = new Set<string>()
+
+      for (let seed = 0; seed < 2000; seed++) {
+        const cycle: ProductionCycle = {
+          cycleId: `${siteId}_${seed}`,
+          siteId,
+          collectionRealmId: 'mortal',
+          siteLevelAtStart: 1,
+          rewardTableVersion: 1,
+          rollSeed: seed * 2654435761 + 17,
+          startedAtMs: 0,
+          completesAtMs: 1,
+        }
+
+        const rewards = system.rollRewards(cycle)
+        expect(rewards).toHaveLength(1)
+        const reward = rewards[0]!
+
+        if (reward.materialId === essenceId) {
+          expect(reward.amount).toBe(1)
+          expect(reward.detail).toBe('essence')
+          essenceCount += 1
+        } else {
+          expect(productPoolIds.has(reward.materialId)).toBe(true)
+          expect(reward.detail).toBeDefined()
+          expect(reward.detail).not.toBe('essence')
+          productAges.add(reward.detail!)
+          productCount += 1
+        }
+      }
+
+      // Expected: ~1500 essence (75%) and ~500 product (25%) out of 2000 cycles.
+      expect(essenceCount).toBeGreaterThan(1350)
+      expect(essenceCount).toBeLessThan(1650)
+      expect(productCount).toBeGreaterThan(350)
+      expect(productCount).toBeLessThan(650)
+      expect(productAges.size).toBeGreaterThanOrEqual(3)
+    }
   })
 })
 
@@ -779,7 +842,14 @@ describe('age-only production resources', () => {
         expect(offline.settleOffline(offlineBag, registry, realmId, 101_000, { offlineSinceMs: 1_000, rng: () => .25 })).toBe(1)
         system.tick(101_000, bag, registry, realmId, () => .25)
         expect(offlineBag.getAll()).toEqual(bag.getAll())
-        expect(bag.getAll().every(stack => stack.material.id.startsWith('material_spirit_'))).toBe(true)
+        expect(
+          bag.getAll().every(
+            stack =>
+              stack.material.id.startsWith('material_spirit_') ||
+              stack.material.id === 'bui_go' ||
+              stack.material.id === 'luyen_khi_tinh_hoa',
+          ),
+        ).toBe(true)
       }
     }
   })

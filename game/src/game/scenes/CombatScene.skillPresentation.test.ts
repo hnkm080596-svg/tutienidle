@@ -116,28 +116,35 @@ describe('CombatScene shared skill playback wiring', () => {
     expect(port.acknowledgeActionComplete).toHaveBeenCalledExactlyOnceWith(ref.token)
     expect(scene.skillVfxDebug.pool.active).toBe(0)
   })
-  it('keeps the actor still while the shared runner admits a melee cast', () => {
+  it('drives the actor impulse toward the declared target on a melee cast', () => {
     const { scene, port } = fixture()
     scene.sprites.set('player', spriteStub(50))
     scene.sprites.set('enemy', spriteStub(400))
     const tweenConfigs: Array<Record<string, unknown>> = []
-    scene.tweens = { add: (cfg: Record<string, unknown>) => tweenConfigs.push(cfg), killTweensOf: vi.fn() }
+    scene.tweens = { timeScale: 1, add: (cfg: Record<string, unknown>) => tweenConfigs.push(cfg), killTweensOf: vi.fn() }
     scene.onSkillCast({ ...cast, presetId: 'slash' })
-    expect(tweenConfigs).toEqual([])
-    expect(scene.sprites.get('player').offsetX).toBe(0)
+    expect(tweenConfigs[0]).toMatchObject({ targets: scene.sprites.get('player'), offsetX: 8, yoyo: true, duration: 180 })
     expect(scene.skillVfxDebug.playback).toMatchObject({ phase: 'cast', faultCount: 0 })
     expect(port.acknowledgeActionImpact).not.toHaveBeenCalled()
   })
-  it('does not restore the retired actor impulse under reduced motion', () => {
+  it('drives the stronger 32px ram impulse toward the player when a boar attacks', () => {
+    const { scene } = fixture()
+    scene.sprites.set('player', spriteStub(50))
+    scene.sprites.set('enemy', spriteStub(400))
+    const tweenConfigs: Array<Record<string, unknown>> = []
+    scene.tweens = { timeScale: 1, add: (cfg: Record<string, unknown>) => tweenConfigs.push(cfg), killTweensOf: vi.fn() }
+    scene.onSkillCast({ ...cast, presetId: 'ram', source: target, declaredTargets: [source] })
+    expect(tweenConfigs[0]).toMatchObject({ targets: scene.sprites.get('enemy'), offsetX: -32, yoyo: true, duration: 180 })
+  })
+  it('still fires the impulse under reduced motion - it is the "who acted" signal', () => {
     const { scene } = fixture()
     vi.stubGlobal('matchMedia', () => ({ matches: true }))
     try {
       scene.sprites.set('player', spriteStub(50))
       const tweenConfigs: Array<Record<string, unknown>> = []
-      scene.tweens = { add: (cfg: Record<string, unknown>) => tweenConfigs.push(cfg), killTweensOf: vi.fn() }
+      scene.tweens = { timeScale: 1, add: (cfg: Record<string, unknown>) => tweenConfigs.push(cfg), killTweensOf: vi.fn() }
       scene.onSkillCast({ ...cast, presetId: 'slash' })
-      expect(tweenConfigs).toEqual([])
-      expect(scene.sprites.get('player').offsetX).toBe(0)
+      expect(tweenConfigs.some(cfg => cfg.offsetX === 8)).toBe(true)
     } finally { vi.unstubAllGlobals() }
   })
   it('resumes a post-impact receipt without replaying damage and returns all pool leases', () => {

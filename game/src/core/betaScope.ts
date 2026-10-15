@@ -22,7 +22,7 @@
 // set a BETA_FEATURES key true or extend an allow-list set.
 import type { CultivationWayId } from './player/CultivationPathKit'
 import type { ElementType } from './element/ElementType'
-import type { Quest } from './quest/Quest'
+import { questObjectives, type Quest } from './quest/Quest'
 import { REALM_TIERS } from './realm/RealmTierMap'
 import {
   SPIRIT_STONE_MATERIAL_ID,
@@ -458,20 +458,26 @@ export function isBetaEquipmentTab(tabId: string): boolean {
 // ---------------------------------------------------------------------------
 
 /**
- * Beta quest admission. Daily cadence is off entirely (dailyQuest flag)
- * - no enabled path. An enemy-specific kill quest is offered only when
- *   its target is on the beta roster. Generic kill quests (no enemyId)
- *   and collect quests stay enabled.
+ * Beta quest admission. Daily and weekly cadences follow the dailyQuest
+ * feature flag. An enemy-specific kill quest is offered only when its
+ * target is on the beta roster. Generic kill quests (no enemyId) and
+ * collect/acquire/flag/realm/stage quests stay enabled.
  */
 export function isBetaQuestEnabled(
   quest: Pick<Quest, 'cadence' | 'condition'>,
 ): boolean {
-  if (quest.cadence === 'daily') return false
-  const condition = quest.condition
-  if (condition.kind === 'kill' && condition.enemyId !== undefined) {
-    return isBetaEnemyId(condition.enemyId)
+  if (
+    (quest.cadence === 'daily' || quest.cadence === 'weekly') &&
+    !isBetaFeature('dailyQuest')
+  ) {
+    return false
   }
-  return true
+  return questObjectives(quest.condition).every((leaf) => {
+    if (leaf.kind === 'kill' && leaf.enemyId !== undefined) {
+      return isBetaEnemyId(leaf.enemyId)
+    }
+    return true
+  })
 }
 
 // ---------------------------------------------------------------------------

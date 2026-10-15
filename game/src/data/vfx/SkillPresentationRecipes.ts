@@ -8,6 +8,7 @@ import { VFX_SHEET_BINDINGS } from './VfxSheetManifest'
 // playtest) - the recipe layer owns them now that the cue-driven impulse is
 // the only consumer.
 const ACTOR_IMPULSE_PX = 8
+export const RAM_ACTOR_IMPULSE_PX = 32
 const ACTOR_IMPULSE_MAX_MS = 350
 
 export const PHI_KIEM_RECIPE: SkillPresentationRecipe = {
@@ -30,6 +31,8 @@ for (const preset of Object.values(COMBAT_VFX_PRESETS) as CombatVfxPreset[]) {
   // Scoped to upright + the arcane_impact fallback (OQ1): hybrid and ground
   // presets keep a static cast until a melee/ranged discriminator exists.
   const impulse = preset.space === 'upright' || preset.id === 'arcane_impact'
+  const isRamPreset = preset.id === 'ram' || preset.id === 'ram_multi'
+  const impulsePx = isRamPreset ? RAM_ACTOR_IMPULSE_PX : ACTOR_IMPULSE_PX
   const castMs = aura ? 220 : ground || burst ? 260 : 180
   // Monster attack VFX sweep (2026-10-04) - a bound spritesheet plays as a
   // 'sheet' cue inside the impact phase alongside the analytic primitives
@@ -52,7 +55,7 @@ for (const preset of Object.values(COMBAT_VFX_PRESETS) as CombatVfxPreset[]) {
     cast: [
       ...(impulse ? [{ primitive: 'actor-impulse' as const, anchor: 'source' as const,
         shape: 'impulse' as const, offsetMs: 0,
-        durationMs: Math.min(ACTOR_IMPULSE_MAX_MS, castMs), impulsePx: ACTOR_IMPULSE_PX }] : []),
+        durationMs: Math.min(ACTOR_IMPULSE_MAX_MS, castMs), impulsePx }] : []),
       { primitive: 'aura' as const, anchor: 'source' as const, shape: 'ring' as const,
         offsetMs: 0, durationMs: castMs },
     ],

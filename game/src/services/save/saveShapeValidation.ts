@@ -3443,6 +3443,13 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
   if (!isNonNegativeBoundedTimestamp(value.lastDailyResetAtMs)) {
     issues.push({ path: `${path}.lastDailyResetAtMs`, message: 'phải là timestamp không âm trong miền |x| < 2^52' })
   }
+
+  if (
+    value.lastWeeklyResetAtMs !== undefined &&
+    !isNonNegativeBoundedTimestamp(value.lastWeeklyResetAtMs)
+  ) {
+    issues.push({ path: `${path}.lastWeeklyResetAtMs`, message: 'phải là timestamp không âm trong miền |x| < 2^52' })
+  }
 }
 
 // Mission A1 - BuildingSystem reads level/lastCollectedAt directly for

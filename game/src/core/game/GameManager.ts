@@ -820,6 +820,7 @@ export class GameManager {
       pillBag: this.pillBag,
       notifications: this.notifications,
       getEnemyTemplate: (enemyId) => this.catalogOps.getEnemyTemplate(enemyId),
+      getStage: (stageId) => this.catalogOps.getStage(stageId),
       getActivePlayer: () => this.activePlayer,
       buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
     })
@@ -929,6 +930,7 @@ export class GameManager {
       // GP-01: perfect-clear timer + auto-farm cycle clock read the
       // authority (forwarded into rewardOps/autoFarmOps inside).
       time: this.time,
+      onStageCompleted: () => this.tickOps.markQuestRealmTransition(),
     })
 
     // Tick orchestration (C3 split) - constructed LAST because it reads

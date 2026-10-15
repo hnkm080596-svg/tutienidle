@@ -271,7 +271,8 @@ function runWoodChain(): WoodChainResult {
     const woodIds = [...produced.keys()].filter(id => WOOD_ID_PATTERN.test(id))
     const decompose = new DecomposeSystem(bag)
     expect(woodIds.length).toBeGreaterThan(0)
-    expect([...produced.keys()]).toEqual(woodIds)
+    expect(produced.get(BUI_GO_ID)).toBeGreaterThan(0)
+    expect([...produced.keys()].every(id => id === BUI_GO_ID || WOOD_ID_PATTERN.test(id))).toBe(true)
     expect(decompose.decomposeWithResult(woodIds)).toEqual({ ok: true })
     const woodProduced = woodIds.reduce((total, id) => total + (produced.get(id) ?? 0), 0)
     return { woodProduced, fuelProduced: bag.getAmount(BUI_GO_ID), overflowTotal }
@@ -324,6 +325,8 @@ function runOreChain(): OreChainResult {
       accumulateEvents(produced, overflow, system.drainSettlementEvents())
 
     }
+
+    tinhHoaProduced += produced.get(LUYEN_KHI_TINH_HOA_ID) ?? 0
 
     // Decompose is now an explicit player command. The balance simulation
     // applies one batch conversion after the production window, rather than

@@ -28,15 +28,24 @@ const ui = useUiStore()
 const gameManager = useGameManager()
 const { bumpState } = useStateVersion()
 
-// Group axis (ruling 2026-10-11): rail shows 'all' + every group id the
-// rows carry. Rows without `group` bucket under their cadence so the
-// existing surface still renders unchanged.
+const CANONICAL_GROUPS = [
+  'mainline',
+  'once',
+  'day',
+  'weekly',
+  'achievement',
+  'expedition',
+] as const
+
+// Group axis: rail shows 'all' + the 6 canonical quest groups (plus any
+// extra group id present on rows). Rows without `group` bucket under
+// their cadence so standalone once quests land in 'once'.
 function rowGroup(row: BetaQuestSurfaceModel): string {
   return row.group ?? row.cadence
 }
 
 const groups = computed(() => {
-  const set = new Set<string>()
+  const set = new Set<string>(CANONICAL_GROUPS)
   for (const row of props.rows) set.add(rowGroup(row))
   return [...set]
 })
@@ -48,22 +57,23 @@ const groupRows = computed(() =>
     : props.rows.filter((row) => rowGroup(row) === activeGroup.value),
 )
 
-function selectGroup(id: string) {
-  if (id !== 'all' && !groups.value.some((g) => g === id)) return
-  activeGroup.value = id
-}
-
-// Cadence strip is model-driven: beta admits 'once' only, so it renders
-// Tat Ca + one tab per cadence actually present (other cadences stay
-// RESERVED - contract DO-NOT-DERIVE). A row claiming a foreign cadence
-// (e.g. 'weekly') is malformed input and mints no tab.
-const MODEL_CADENCES: readonly BetaQuestSurfaceModel['cadence'][] = ['once']
+const MODEL_CADENCES: readonly BetaQuestSurfaceModel['cadence'][] = [
+  'once',
+  'daily',
+  'weekly',
+]
 
 const activeCadence = ref<'all' | BetaQuestSurfaceModel['cadence']>('all')
 
+function selectGroup(id: string) {
+  if (id !== 'all' && !groups.value.some((g) => g === id)) return
+  activeGroup.value = id
+  activeCadence.value = 'all'
+}
+
 const cadences = computed(() => {
   const set = new Set<BetaQuestSurfaceModel['cadence']>()
-  for (const row of props.rows) {
+  for (const row of groupRows.value) {
     if (MODEL_CADENCES.includes(row.cadence)) set.add(row.cadence)
   }
   return [...set]

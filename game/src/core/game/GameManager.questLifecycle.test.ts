@@ -143,4 +143,48 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
       expect(manager.questManager.getProgress(id)).toBeDefined()
     }
   })
+
+  it('weekly rollover mid-session resets weekly progress and repopulates the board', () => {
+    const { manager, player } = makeManager()
+    manager.tickOps.update(1)
+    expect(manager.questManager.getProgress('weekly_thanh_ly_son_yeu_50')).toBeDefined()
+    manager.questSystem.onEnemyDefeated(
+      manager.questRegistry,
+      manager.questManager,
+      'mortal_wild_boar',
+      undefined,
+    )
+    expect(manager.questManager.getProgress('weekly_thanh_ly_son_yeu_50')?.progress).toBe(1)
+
+    const nextWeek = Date.now() + 8 * 24 * 60 * 60 * 1000
+    const reset = manager.questSystem.checkAndResetWeekly(
+      manager.questRegistry,
+      manager.questManager,
+      player,
+      nextWeek,
+    )
+    expect(reset).toBe(true)
+    expect(manager.questManager.getProgress('weekly_thanh_ly_son_yeu_50')).toBeUndefined()
+    manager.tickOps.reconcileQuestLifecycle()
+    expect(manager.questManager.getProgress('weekly_thanh_ly_son_yeu_50')?.progress).toBe(0)
+  })
+
+  it('surface models emit all 6 quest groups and resolve stage/realm target labels', () => {
+    const { manager, player } = makeManager()
+    player.realmId = 'qi_refining'
+    manager.tickOps.update(1)
+
+    const models = manager.questOps.getBetaQuestSurfaceModels()
+    const groups = new Set(models.map((m) => m.group ?? m.cadence))
+    expect(groups.has('mainline')).toBe(true)
+    expect(groups.has('once')).toBe(true)
+    expect(groups.has('day')).toBe(true)
+    expect(groups.has('weekly')).toBe(true)
+    expect(groups.has('achievement')).toBe(true)
+    expect(groups.has('expedition')).toBe(true)
+
+    const realmAch = models.find((m) => m.id === 'ach_buoc_vao_luyen_khi')
+    expect(realmAch?.targetLabel).toBe('Luyện Khí')
+    expect(realmAch?.claim.available).toBe(true)
+  })
 })

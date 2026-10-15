@@ -40,6 +40,7 @@ export class GameManagerBattleRewardOps {
       // Optional for B1: direct constructor fixtures keep wall-clock
       // behavior; TurnBattleOps forwards the shared TimeAuthority.
       time?: TimeAuthority
+      onStageCompleted?: () => void
     },
   ) {}
 
@@ -196,6 +197,7 @@ export class GameManagerBattleRewardOps {
             kind: 'stage_completed',
             stageId: stage.id,
           })
+          this.deps.onStageCompleted?.()
         }
       }
     }

@@ -14,7 +14,7 @@ import {
 import type { RewardReceiver, RewardSystem } from '../reward/RewardSystem'
 import type { Reward } from '../reward/Reward'
 import { stoneCostRealmFactor } from '../economy/EconomyRealmPace'
-import { utcDayBucket } from '../idle/GameClock'
+import { utcDayBucket, utcWeekBucket } from '../idle/GameClock'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PillRegistry } from '../pill/PillRegistry'
@@ -274,6 +274,10 @@ function questIsTokenOnlySource(quest: Quest): boolean {
 
 function dayBucket(ms: number): number {
   return utcDayBucket(ms)
+}
+
+function weekBucket(ms: number): number {
+  return ms <= 0 ? -2 : utcWeekBucket(ms)
 }
 
 /**
@@ -571,6 +575,30 @@ export class QuestSystem {
       .map((quest) => quest.id)
 
     manager.resetDaily(dailyQuestIds, now)
+
+    return true
+  }
+
+  /**
+   * Compare current UTC week-bucket against lastWeeklyResetAtMs - on a
+   * new week, clear active 'weekly' entries and advance the reset stamp.
+   */
+  checkAndResetWeekly(
+    registry: QuestRegistry,
+    manager: QuestManager,
+    player: PlayerData,
+    now: number = Date.now(),
+  ): boolean {
+    if (weekBucket(now) <= weekBucket(manager.getLastWeeklyResetAtMs())) {
+      return false
+    }
+
+    const weeklyQuestIds = registry
+      .getAll()
+      .filter((quest) => quest.cadence === 'weekly' && isUnlocked(quest, player, manager))
+      .map((quest) => quest.id)
+
+    manager.resetWeekly(weeklyQuestIds, now)
 
     return true
   }

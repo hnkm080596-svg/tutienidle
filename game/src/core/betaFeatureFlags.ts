@@ -40,7 +40,7 @@ export const BETA_FEATURES = {
   equipmentWash: true,
   equipmentRefine: true,
   equipmentOreDecompose: true,
-  dailyQuest: false,
+  dailyQuest: true,
 } as const
 
 export type BetaFeatureName = keyof typeof BETA_FEATURES

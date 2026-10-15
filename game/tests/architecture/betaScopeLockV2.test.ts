@@ -98,24 +98,24 @@ describe('beta scope v2 - feature flags and lock classes', () => {
       'formation',
       'artifact',
       'manualWorkforce',
-      'dailyQuest',
     ]) {
       expect(isBetaFeature(name)).toBe(false)
     }
   })
 
-  it('admits the approved wash/refine and instant decomposition features', () => {
+  it('admits the approved wash/refine, instant decomposition, and quest features', () => {
     expect(
       Object.entries(BETA_FEATURES)
         .filter(([, enabled]) => enabled)
         .map(([name]) => name)
         .sort(),
-    ).toEqual(['equipmentOreDecompose', 'equipmentRefine', 'equipmentWash'])
+    ).toEqual(['dailyQuest', 'equipmentOreDecompose', 'equipmentRefine', 'equipmentWash'])
     expect(isBetaFeature('equipmentOreDecompose')).toBe(true)
     expect(betaSurfaceVerdict('equipmentOreDecompose')).toBe('available')
     expect(betaSurfaceVisible('equipmentOreDecompose')).toBe(true)
     expect(isBetaFeature('equipmentWash')).toBe(true)
     expect(isBetaFeature('equipmentRefine')).toBe(true)
+    expect(isBetaFeature('dailyQuest')).toBe(true)
   })
 
   it('classifies gated and unknown features as scope-hidden', () => {
@@ -124,7 +124,6 @@ describe('beta scope v2 - feature flags and lock classes', () => {
       'formation',
       'artifact',
       'hiddenContent',
-      'dailyQuest',
       'swordPath',
       'bodyPath',
       'manualWorkforce',
@@ -326,7 +325,7 @@ describe('beta scope v2 - equipment tabs and quest policy', () => {
     }
   })
 
-  it('disables every daily quest even when the target is in scope', () => {
+  it('admits daily and weekly quests when their targets are in scope', () => {
     expect(
       isBetaQuestEnabled({
         cadence: 'daily',
@@ -338,10 +337,13 @@ describe('beta scope v2 - equipment tabs and quest policy', () => {
         cadence: 'daily',
         condition: { kind: 'collect', materialId: 'tu_linh_thao_qi_refining_decade', amount: 1 },
       }),
-    ).toBe(false)
+    ).toBe(true)
     expect(
       isBetaQuestEnabled({ cadence: 'daily', condition: { kind: 'kill', amount: 20 } }),
-    ).toBe(false)
+    ).toBe(true)
+    expect(
+      isBetaQuestEnabled({ cadence: 'weekly', condition: { kind: 'kill', amount: 50 } }),
+    ).toBe(true)
   })
 
   it('requires enemy-specific once-quests to target the beta roster', () => {
@@ -386,9 +388,7 @@ describe('beta scope v2 - equipment tabs and quest policy', () => {
   it('applies the policy to the live quest table', () => {
     for (const quest of QUESTS) {
       const enabled = isBetaQuestEnabled(quest)
-      if (quest.cadence === 'daily') {
-        expect(enabled, `daily quest ${quest.id} must be off`).toBe(false)
-      }
+      expect(enabled, `quest ${quest.id} must be enabled`).toBe(true)
       if (quest.condition.kind === 'kill' && quest.condition.enemyId !== undefined) {
         expect(enabled).toBe(isBetaEnemyId(quest.condition.enemyId))
       }

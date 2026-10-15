@@ -1,6 +1,14 @@
 import type { Reward } from '../reward/Reward'
 
-export type QuestCadence = 'once' | 'daily'
+export type QuestCadence = 'once' | 'daily' | 'weekly'
+
+export type QuestGroupId =
+  | 'mainline'
+  | 'once'
+  | 'day'
+  | 'weekly'
+  | 'achievement'
+  | 'expedition'
 
 export interface CollectQuestCondition {
   kind: 'collect'
@@ -141,6 +149,7 @@ export interface Quest {
   // completedOnceIds (the durable chain witness).
   unlocksAfterQuestId?: string
 
-  // UI grouping/marker; 'mainline' renders under the Chinh Tuyen group.
-  chainId?: 'mainline'
+  // UI grouping/marker; 'mainline' renders under the Chinh Tuyen group,
+  // and other group ids map directly onto the QuestGroupRail tabs.
+  chainId?: 'mainline' | 'day' | 'weekly' | 'achievement' | 'expedition'
 }

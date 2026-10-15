@@ -13,7 +13,7 @@ import type { MaterialRegistry } from './material/MaterialRegistry'
 import type { PillBag } from './pill/PillBag'
 import type { PillRegistry } from './pill/PillRegistry'
 import type { PlayerData } from './player/Player'
-import type { Quest, QuestObjective } from './quest/Quest'
+import type { Quest, QuestCadence, QuestObjective } from './quest/Quest'
 import { questObjectives } from './quest/Quest'
 import type { QuestProgress } from './quest/QuestProgress'
 import {
@@ -72,14 +72,12 @@ export interface BetaQuestSurfaceModel {
   id: string
   name: string
   description: string
-  /** Beta admits once-quests only (isBetaQuestEnabled) - no daily
-   *  grouping exists on this surface. */
-  cadence: 'once'
+  /** Quest cadence ('once' | 'daily' | 'weekly'). */
+  cadence: QuestCadence
   /** Thematic group id for the Nhiem Vu rail (Codex landscape preview's
-   *  group axis). Derived from chainId today ('mainline'); quests with
-   *  no group yet emit undefined and the UI buckets them under its
-   *  fallback group. Real group assignment stays a domain decision
-   *  (owner) - the surface only renders what the field carries. */
+   *  group axis). Derived from chainId ('mainline' | 'day' | 'weekly' |
+   *  'achievement' | 'expedition') or cadence fallback; standalone once
+   *  quests emit undefined and the UI buckets them under 'once'. */
   group?: string
   /** Per-quest vista/thumb art for the list row and detail banner.
    *  Unassigned today - the UI falls back to the shared warm vista;
@@ -103,10 +101,9 @@ export interface BetaQuestSurfaceModel {
   claim: BetaQuestClaim
   /** Collect quests only: the turn-in requirement vs live bag count. */
   turnIn?: BetaQuestTurnIn
-  /** Chain membership - 'mainline' rows render with the Chinh Tuyen
-   *  chip and sort before non-chain rows (getBetaQuestSurfaceModels
-   *  orders the walk). */
-  chainId?: 'mainline'
+  /** Chain/group membership ('mainline' rows render with the Chinh Tuyen
+   *  chip and sort before non-chain rows). */
+  chainId?: Quest['chainId']
   /** Locked-chain preview only: this row previews the next unmet
    *  mainline step - read-only, no claim path. */
   lockedPreview?: BetaQuestLockedPreview
@@ -138,6 +135,10 @@ export interface BetaQuestSurfaceDeps {
   /** Registry-resolved enemy display name; undefined = unknown id
    *  (the label falls back to the raw id, mirroring the old panel). */
   enemyName: (enemyId: string) => string | undefined
+  /** Optional stage display name resolver for stage_clear objectives. */
+  stageName?: (stageId: string) => string | undefined
+  /** Optional realm display name resolver for realm_reached objectives. */
+  realmName?: (realmId: string) => string | undefined
   /** 2026-10-05 realm-band reward scaling: resolves an ungated quest's
    *  era through its unlocksAfterQuestId chain; absent = ungated quests
    *  preview as mortal-era (factor 1). */
@@ -152,8 +153,12 @@ function targetLabelFor(condition: QuestObjective, deps: BetaQuestSurfaceDeps): 
       : condition.materialId
   }
 
-  if (condition.kind === 'realm_reached') return condition.realmId
-  if (condition.kind === 'stage_clear') return condition.stageId
+  if (condition.kind === 'realm_reached') {
+    return deps.realmName?.(condition.realmId) ?? condition.realmId
+  }
+  if (condition.kind === 'stage_clear') {
+    return deps.stageName?.(condition.stageId) ?? condition.stageId
+  }
 
   if (condition.kind !== 'kill') {
     return null
@@ -260,11 +265,19 @@ export function betaQuestSurfaceFor(
     } : undefined,
   }))
 
+  const group =
+    quest.chainId ??
+    (quest.cadence === 'daily'
+      ? 'day'
+      : quest.cadence === 'weekly'
+        ? 'weekly'
+        : undefined)
+
   return {
     id: quest.id,
     name: quest.name,
     description: quest.description,
-    cadence: 'once',
+    cadence: quest.cadence,
     progress: condition.kind === 'allOf'
       ? objectives.filter((leaf) => leaf.progress >= leaf.target).length : progress.progress,
     target: condition.kind === 'allOf' ? leaves.length : condition.amount,
@@ -282,10 +295,6 @@ export function betaQuestSurfaceFor(
           }
         : undefined,
     chainId: quest.chainId,
-    // Group axis (2026-10-11 landscape port): the only existing
-    // group-ish signal is chainId - mainline members land in the
-    // 'mainline' group; everything else stays unassigned until the
-    // owner writes real grouping rules.
-    group: quest.chainId === 'mainline' ? 'mainline' : undefined,
+    group,
   }
 }
