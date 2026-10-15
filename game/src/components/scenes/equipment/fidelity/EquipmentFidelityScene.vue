@@ -2,8 +2,6 @@
 import GameCard from "@/components/common/GameCard.vue"
 import GamePanel from '@/components/common/GamePanel.vue'
 import { computed, ref, shallowRef } from 'vue'
-import ForgeFidelityWorkspace from './ForgeFidelityWorkspace.vue'
-import ForgeBatchBag from './ForgeBatchBag.vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
@@ -81,7 +79,7 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
          workspace (detail + beta op tabs + canonical BagGrid). -->
     <slot name="workspace">
       <GameCard as="section" v-if="mode==='bag'" class="equipment-bag" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }" :aria-label="t('equipment.bag')"><header><h2>{{ t('equipment.bag') }}</h2><button @click="mode='enhance'">{{t('equipment.forgeTitle')}}</button></header><div class="bag-tabs"><span class="active">{{ t('equipment.bagTabs.all') }}</span><span>{{ t('equipment.bagTabs.weapons') }}</span><span>{{ t('equipment.bagTabs.armor') }}</span><span>{{ t('equipment.bagTabs.accessories') }}</span></div><div class="bag-grid" @scroll="inspecting = null"><EquipmentPaperItem v-for="item in items" :key="item.id" :item="item" :label="item.slot" @click="selected=item;mode='enhance'" @inspect="inspecting = $event" @leave="inspecting = null" /><div v-for="n in emptyBagCells" :key="`empty-${n}`" class="empty-bag-cell" aria-hidden="true" /></div><footer><button @click="emit('action', 'sort')">{{ t('equipment.sort') }}</button><button @click="emit('action', 'filter')">{{ t('equipment.filter') }}</button></footer></GameCard>
-      <GameCard as="section" v-if="mode!=='bag'" class="equipment-forge" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }"><header><h2>{{t('equipment.forgeTitle')}}</h2><button @click="mode='bag';inspecting=null">{{t('equipment.bag')}}</button></header><nav><button v-for="id in modes" :key="id" :aria-pressed="mode===id" @click="mode=id;inspecting=null">{{t(`panels.equipmentHall.tabs.${id}`)}}</button></nav><ForgeBatchBag v-if="mode==='dissolve'||mode==='decompose'" :mode="mode" :items="items" @submit="emit('action',$event.mode+':'+$event.itemIds.join(',')+':submit')"/><ForgeFidelityWorkspace v-else-if="forgeItem" compact :mode="mode" :item="forgeItem" @action="emit('action',mode+':'+forgeItem.id+':'+$event)"/></GameCard>
+      <GameCard as="section" v-if="mode!=='bag'" class="equipment-forge" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }"><header><h2>{{t('equipment.forgeTitle')}}</h2><button @click="mode='bag';inspecting=null">{{t('equipment.bag')}}</button></header><nav><button v-for="id in modes" :key="id" :aria-pressed="mode===id" @click="mode=id;inspecting=null">{{t(`panels.equipmentHall.tabs.${id}`)}}</button></nav><slot name="forge" :mode="mode" :items="items" :forge-item="forgeItem" /></GameCard>
     </slot>
 
 

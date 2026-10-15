@@ -207,35 +207,6 @@ export const useUiStore = defineStore('ui', {
       })
     },
 
-    // Bam lai chuc nang dang mo se dong, bam chuc nang khac tu thay
-    // the (khong can tu dong cai cu thu cong).
-    toggleLeft(mode: Exclude<LeftPanelMode, null>) {
-      // BETA SCOPE LOCK v2 (Phase-6): a scope-hidden mode (worker_lodge)
-      // toggles nothing - deep links fail closed.
-      if (!isBetaLeftPanelMode(mode)) {
-        return
-      }
-
-      if (mode === 'character' || mode === 'inventory') {
-        const shouldClose =
-          this.characterOverlayOpen && this.characterSceneTab === mode
-        this.closeHomeOverlays()
-        this.characterOverlayOpen = !shouldClose
-        if (this.characterOverlayOpen) {
-          this.characterSceneTab = mode
-          this.activeBagTab = 'material'
-        }
-        return
-      }
-      const shouldClose = this.leftPanelMode === mode
-
-      this.closeHomeOverlays()
-
-      if (!shouldClose) {
-        this.leftPanelMode = mode
-      }
-    },
-
     openLeftPanel(mode: Exclude<LeftPanelMode, null>) {
       // BETA SCOPE LOCK v2 (Phase-6): scope-hidden mode no-ops.
       if (!isBetaLeftPanelMode(mode)) {
@@ -332,22 +303,6 @@ export const useUiStore = defineStore('ui', {
       sort.mode = 'default'
 
       sort.direction = 'asc'
-    },
-
-    // Cung pattern toggleLeft() - bam lai panel dang mo se dong, bam
-    // panel khac tu thay the (Ky Nang/Tam Phap loai tru lan nhau, khong
-    // mo dong thoi).
-    toggleStandalonePanel(panel: Exclude<StandalonePanel, null>) {
-      // BETA SCOPE LOCK v2 (Phase-6): a scope-hidden panel can only
-      // close (never open).
-      if (!isBetaStandalonePanel(panel)) {
-        if (this.standalonePanel === panel) {
-          this.standalonePanel = null
-        }
-        return
-      }
-
-      this.standalonePanel = this.standalonePanel === panel ? null : panel
     },
 
     setBattleRunMode(mode: BattleRunMode) {

@@ -15,7 +15,7 @@ import { useStateVersion, useGameManager } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
-import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
+import { CULTIVATION_PATH_MODULES, CULTIVATION_PATH_WAY_IDS } from '@/core/player/CultivationPathKit'
 import { getActiveElement } from '@/core/player/CultivationPathSystem'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
@@ -27,7 +27,7 @@ import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { ELEMENT_LABELS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { getTalentDefinition } from '@/data/talent/Talents'
-import { isBetaStatLabelVisible, isBetaTalentId } from '@/core/betaScope'
+import { isBetaStatLabelVisible, isBetaTalentId, isBetaWay } from '@/core/betaScope'
 import type { Stats } from '@/core/stats/StatBlock'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import CharacterFidelityScene from './fidelity/CharacterFidelityScene.vue'
@@ -48,7 +48,7 @@ let noticeTimer: ReturnType<typeof setTimeout> | undefined
 function flashNotice(text: string) {
   notice.value = text
   if (noticeTimer !== undefined) clearTimeout(noticeTimer)
-  noticeTimer = window.setTimeout(() => { noticeTimer = undefined; notice.value = '' }, 3200)
+  noticeTimer = setTimeout(() => { noticeTimer = undefined; notice.value = '' }, 3200)
 }
 onBeforeUnmount(() => { if (noticeTimer !== undefined) clearTimeout(noticeTimer) })
 
@@ -130,23 +130,31 @@ const combatPower = computed(() => {
 // element comes through the canonical accessor - the shell never
 // reconstructs it from player state.
 // Dao identity is generic over every committed way (Minh ruling) -
-// the plate reads the dao table, not a Ly Hoa special case.
+// the plate reads the dao table, not a Ly Hoa special case. Carried
+// dormant ways/paths collapse to undefined under beta scope lock.
+const isWayAdmitted = computed(() => {
+  const pathId = player.cultivationPath as CultivationPathId | undefined
+  if (pathId === undefined) return false
+  if (player.cultivationWay !== undefined) return isBetaWay(player.cultivationWay)
+  return CULTIVATION_PATH_WAY_IDS[pathId]?.some((way) => isBetaWay(way)) ?? false
+})
+
 const daoIdentity = computed(() =>
-  daoIdentityFor(player.cultivationWay, getActiveElement(player.$state)),
+  isWayAdmitted.value ? daoIdentityFor(player.cultivationWay, getActiveElement(player.$state)) : undefined,
 )
 
 const pathName = computed(() => {
+  if (!isWayAdmitted.value) {
+    // The plate shows CURRENT beta-admitted state only: a mortal or
+    // carried dormant-way save reads 'Pham Nhan' with no dormant dao label.
+    return undefined
+  }
   if (daoIdentity.value) {
     return t(daoIdentity.value.nameKey)
   }
 
   const pathId = player.cultivationPath as CultivationPathId | undefined
-  if (pathId === undefined) {
-    // The plate shows CURRENT state only (Minh ruling): a mortal reads
-    // 'Pham Nhan' - the dao name appears only after the way is
-    // committed at the promotion ritual, not as a declared destiny.
-    return undefined
-  }
+  if (pathId === undefined) return undefined
 
   return CULTIVATION_PATH_MODULES[pathId]?.name ?? t('character.daoUndecided')
 })

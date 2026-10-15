@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import '@/assets/pc-paper-scene.css'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import PcPaperScene from '@/components/common/PcPaperScene.vue'
 import PcPaperDialog from '@/components/common/PcPaperDialog.vue'
 import PcPaperTabs from '@/components/common/PcPaperTabs.vue'
 import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { pcPaperControlStyles } from '@/presentation/assets/PcPaperControls'
 import { pcPaperIconUrl, type PcPaperIcon } from '@/presentation/assets/PcPaperIcons'
 
 const { t } = useI18n()
@@ -25,7 +26,9 @@ const art = {
   stone: resolveAssetUrl('/assets/materials/linh_khoang.png'),
   herb: resolveAssetUrl('/assets/materials/herbs/tu_linh_thao/decade.png'),
   paper: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png'),
+  titleCloud: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png'),
 }
+const controls = pcPaperControlStyles()
 const positions = [{ x: 50, y: 10 }, { x: 82, y: 39 }, { x: 70, y: 77 }, { x: 30, y: 77 }, { x: 18, y: 39 }]
 </script>
 
@@ -40,9 +43,11 @@ const positions = [{ x: 50, y: 10 }, { x: 82, y: 39 }, { x: 70, y: 77 }, { x: 30
       <p class="aux-stage-note">{{ t('static') }}</p>
     </div>
 
-    <PcPaperScene v-else :title="t(example)" :navigation="false" :data-auxiliary-example="example">
-      <template #tabs><PcPaperTabs v-if="example !== 'settings'" :items="tabs" :selected="tabs[0]!.id" :label="t('tabs')" /></template>
-
+    <div v-else class="pc-paper-scene" :style="{ backgroundImage: `url('${art.paper}')`, ...controls }" :data-auxiliary-example="example">
+      <div class="pc-paper-scene__frame" aria-hidden="true" />
+      <header class="pc-paper-scene__header"><div class="pc-paper-scene__heading"><h1>{{ t(example) }}</h1><img class="pc-paper-scene__title-flourish pc-paper-scene__title-flourish--left" :src="art.titleCloud" alt="" aria-hidden="true"><img class="pc-paper-scene__title-flourish pc-paper-scene__title-flourish--right" :src="art.titleCloud" alt="" aria-hidden="true"></div></header>
+      <div class="pc-paper-scene__tabs"><PcPaperTabs v-if="example !== 'settings'" :items="tabs" :selected="tabs[0]!.id" :label="t('tabs')" /></div>
+      <main class="pc-paper-scene__workspace">
       <div v-if="example === 'formation'" class="aux-formation-layout">
         <section class="aux-formation-map"><h2>{{ t('nguHanh') }}</h2><p>{{ t('formationHint') }}</p><div class="aux-formation-diagram"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="46" rx="34" ry="38" /><ellipse cx="50" cy="46" rx="32" ry="36" /><path d="M50 10 82 39 70 77 30 77 18 39Z M50 10 70 77 18 39 82 39 30 77Z" /></svg><div class="aux-formation-seal"><img :src="pcPaperIconUrl('formation')" alt=""></div><div v-for="(position,index) in positions" :key="index" class="aux-position" :style="{ left: `${position.x}%`, top: `${position.y}%` }"><span class="pc-paper-slot"><img :src="index % 2 ? art.crown : art.sword" alt=""></span><b>{{ t('position', { n: index + 1 }) }}</b><small>{{ t('equipped') }}</small></div></div><p class="aux-map-caption">{{ t('formationNote') }}</p></section>
         <aside class="pc-paper-inspector aux-formation-inspector"><h2>{{ t('nguHanh') }}</h2><p>{{ t('formationHint') }}</p><h3>{{ t('effects') }}</h3><dl><div v-for="(id,index) in ['attack','defense','speed']" :key="id"><dt>{{ t(id) }}</dt><dd>+{{ [6,6,4][index] }}%</dd></div></dl><h3>{{ t('costs') }}</h3><div class="aux-materials"><span class="pc-paper-slot"><img :src="art.stone" alt=""></span><span>{{ t('stone') }}<b>120 / 50</b></span></div><PcPaperButton class="aux-bottom-action">{{ t('apply') }}</PcPaperButton></aside>
@@ -63,8 +68,9 @@ const positions = [{ x: 50, y: 10 }, { x: 82, y: 39 }, { x: 70, y: 77 }, { x: 30
           <template v-if="category === 'support'"><p>{{ t('supportHint') }}</p><img class="aux-support-art" :src="pcPaperIconUrl('feedback')" alt=""><PcPaperButton class="aux-bottom-action">{{ t('feedback') }}</PcPaperButton></template>
         </section>
       </div>
-      <template #footer><div class="aux-footer"><span>{{ t('static') }}</span><PcPaperButton v-if="example === 'tooltip'" variant="secondary">{{ t('sort') }}</PcPaperButton></div></template>
-    </PcPaperScene>
+      </main>
+      <footer class="pc-paper-scene__footer"><div class="aux-footer"><span>{{ t('static') }}</span><PcPaperButton v-if="example === 'tooltip'" variant="secondary">{{ t('sort') }}</PcPaperButton></div></footer>
+    </div>
   </SceneDesignCanvas>
 </template>
 

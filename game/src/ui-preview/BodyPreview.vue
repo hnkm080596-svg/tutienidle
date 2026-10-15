@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
+import DongFuVista from './scenes/dong-fu/fidelity/DongFuVista.vue'
 import BodyFidelityScene from '@/components/scenes/body/fidelity/BodyFidelityScene.vue'
 import type { BodyPaperModel } from '@/components/scenes/body/fidelity/bodyUi'
 const { t, tm } = useI18n()

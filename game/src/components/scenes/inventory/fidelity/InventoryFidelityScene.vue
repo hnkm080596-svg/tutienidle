@@ -12,7 +12,6 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 // InkNineSlice removed with the bottom count capsule (2026-10-11).
 import type { InventoryDisplay } from './inventoryUi'
-import InventoryFidelityDetail from './InventoryFidelityDetail.vue'
 
 withDefaults(defineProps<{
   items: readonly InventoryDisplay[]
@@ -49,7 +48,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
     <div class="inventory-content">
       <slot name="toolbar"><div class="toolbar"><nav><button v-for="id in filters" :key="id" :aria-pressed="filter===id" @click="emit('filter',id)">{{ t(`inventoryPreview.${id}`) }}</button></nav><input type="search" :value="query" :placeholder="t('inventoryPreview.search')" :aria-label="t('inventoryPreview.searchLabel')" @input="search"><button class="sort" @click="emit('sort')">{{ t('inventoryPreview.sort') }}</button></div></slot>
-      <div class="workspace"><div class="bag"><slot name="grid"><div class="item-grid"><button v-for="item in items" :key="item.id" :aria-label="`${item.name} × ${item.amount}`" :aria-pressed="selected?.id===item.id" @click="emit('select',item.id)"><span class="corners" aria-hidden="true" /><img :src="item.icon" alt=""><b>{{ item.amount }}</b></button></div><p v-if="!items.length">{{ t('inventoryPreview.empty') }}</p></slot></div><InventoryFidelityDetail v-if="selected" :item="selected" @use="emit('use',$event)" /></div>
+      <div class="workspace"><div class="bag"><slot name="grid"><div class="item-grid"><button v-for="item in items" :key="item.id" :aria-label="`${item.name} × ${item.amount}`" :aria-pressed="selected?.id===item.id" @click="emit('select',item.id)"><span class="corners" aria-hidden="true" /><img :src="item.icon" alt=""><b>{{ item.amount }}</b></button></div><p v-if="!items.length">{{ t('inventoryPreview.empty') }}</p></slot></div><slot name="detail" /></div>
       <!-- Panel-level count removed (owner ruling 2026-10-11: the
            toolbar's "N loai" label inside the dark card is the single
            counter, matching the equipment bag's layout). -->

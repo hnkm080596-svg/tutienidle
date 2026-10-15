@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { DEFAULT_THANH_VAN_VARIANT, thanhVanLoadList } from '@/presentation/background/ThanhVanBackdropArt'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import CombatFidelityScene from '@/components/scenes/combat/fidelity/CombatFidelityScene.vue'
-import type { CombatDisplayModel } from '@/components/scenes/combat/fidelity/combatUi'
+import CombatFidelityScene from './scenes/combat/fidelity/CombatFidelityScene.vue'
+import type { CombatDisplayModel } from './scenes/combat/fidelity/combatUi'
 const { t } = useI18n()
 const selectedStrategy = shallowRef('nearest')
 const auto = shallowRef(true)

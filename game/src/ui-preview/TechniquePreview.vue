@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
+import DongFuVista from './scenes/dong-fu/fidelity/DongFuVista.vue'
 import TechniqueFidelityScene from '@/components/scenes/technique/fidelity/TechniqueFidelityScene.vue'
 import type { TechniqueUiModel } from '@/components/scenes/technique/fidelity/techniqueUi'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'

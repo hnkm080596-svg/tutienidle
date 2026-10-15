@@ -38,7 +38,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { vTooltip } from '@/directives/tooltip'
 import FunctionOverlayPanel from '@/components/layout/FunctionOverlayPanel.vue'
-import AutoFarmIndicator from '@/components/game/AutoFarmIndicator.vue'
+import ExpeditionBattleStage from '@/components/game/ExpeditionBattleStage.vue'
 import { buildings } from '@/data/building/buildings'
 import { materials } from '@/data/materials/materials'
 import { STAGES } from '@/data/stage/Stages'
@@ -255,19 +255,15 @@ describe('carried dormant auto-farm lease (save boundary)', () => {
 })
 
 describe('auto-farm indicator honesty', () => {
-  // F-B-CONS-4 - Low, deferred per Medium+-only ruling (human exception).
-  it.skip('a farm whose stage id no longer resolves renders nothing actionable (no phantom name)', async () => {
+  it('a farm whose stage id no longer resolves renders nothing actionable (no phantom name)', async () => {
     const gameManager = realGameManager()
 
-    const view = mountPanel(AutoFarmIndicator, undefined, gameManager, (p) => {
+    const view = mountPanel(ExpeditionBattleStage, undefined, gameManager, (p) => {
       p.$state.autoFarmStage = { stageId: 'ghost_stage_beta', lastCheckedMs: 1 }
     })
 
     await nextTick()
 
-    // The fallback prints the raw stage id - a carried corrupt lease
-    // would read 'ghost_stage_beta' as a running farm. Assert the
-    // indicator stays silent for unresolvable stages.
     expect(view.container.textContent).not.toContain('ghost_stage_beta')
 
     view.unmount()

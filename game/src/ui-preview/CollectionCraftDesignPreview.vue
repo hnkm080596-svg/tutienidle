@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import '@/assets/pc-paper-scene.css'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import PcPaperScene from '@/components/common/PcPaperScene.vue'
 import PcPaperTabs from '@/components/common/PcPaperTabs.vue'
 import PcPaperButton from '@/components/common/PcPaperButton.vue'
-import { pcPaperResourceUrl } from '@/presentation/assets/PcPaperControls'
+import { pcPaperControlStyles, pcPaperResourceUrl } from '@/presentation/assets/PcPaperControls'
 import { pcPaperIconUrl } from '@/presentation/assets/PcPaperIcons'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
@@ -19,16 +19,19 @@ const quantity = ref(10)
 const tabIds: Record<Example, string[]> = { alchemy: ['recipes','queue','herbs'], forge: ['enhance','refine','wash'], companion: ['roster','feeding','constellation'], artifact: ['owned','path'], vendor: ['sell'], quest: ['main','daily','ready'] }
 const tabs = computed(() => tabIds[example].map(id => ({ id, label: t(id) })))
 const asset = (path: string) => resolveAssetUrl(`/assets/${path}`)
-const art = { sword: asset('equipment/items/base-kiem/kiem-01.png'), crown: asset('equipment/items/base-quan/quan-01.png'), pearl: asset('equipment/items/base-chau/chau-05.png'), ore: asset('materials/linh_khoang.png'), fuel: asset('materials/linh_moc.png'), herb: asset('materials/herbs/tu_linh_thao/decade.png'), pill: asset('pills/tu_linh_dan.png'), healing: asset('pills/hoi_xuan_dan.png'), bonePill: asset('pills/to_cot_dan.png'), cauldron: asset('ui/huyen-kim/alchemy/alchemy-cauldron-prop@2x.png'), landscape: asset('ui/tien-hiep-2026-10/source/shared-paper-page-v1.png') }
+const art = { sword: asset('equipment/items/base-kiem/kiem-01.png'), crown: asset('equipment/items/base-quan/quan-01.png'), pearl: asset('equipment/items/base-chau/chau-05.png'), ore: asset('materials/linh_khoang.png'), fuel: asset('materials/linh_moc.png'), herb: asset('materials/herbs/tu_linh_thao/decade.png'), pill: asset('pills/tu_linh_dan.png'), healing: asset('pills/hoi_xuan_dan.png'), bonePill: asset('pills/to_cot_dan.png'), cauldron: asset('ui/huyen-kim/alchemy/alchemy-cauldron-prop@2x.png'), landscape: asset('ui/tien-hiep-2026-10/source/shared-paper-page-v1.png'), titleCloud: asset('ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png') }
+const controls = pcPaperControlStyles()
 const stats = ['hp','attack','defense','speed']
 const materialRows = [{ id: 'herb', image: art.herb, amount: '12 / 5' }, { id: 'fuel', image: art.fuel, amount: '25 / 5' }]
 const forgeRows = [{ id: 'ore', image: art.ore, amount: '120 / 50' }]
 </script>
 
 <template>
-  <SceneDesignCanvas><PcPaperScene :title="t(example)" :navigation="false" :data-collection-craft-example="example">
-    <template #tabs><PcPaperTabs :items="tabs" :selected="selectedTab || tabs[0]!.id" :label="t('tabs')" @select="selectedTab = $event" /></template>
-
+  <SceneDesignCanvas><div class="pc-paper-scene" :style="{ backgroundImage: `url('${art.landscape}')`, ...controls }" :data-collection-craft-example="example">
+    <div class="pc-paper-scene__frame" aria-hidden="true" />
+    <header class="pc-paper-scene__header"><div class="pc-paper-scene__heading"><h1>{{ t(example) }}</h1><img class="pc-paper-scene__title-flourish pc-paper-scene__title-flourish--left" :src="art.titleCloud" alt="" aria-hidden="true"><img class="pc-paper-scene__title-flourish pc-paper-scene__title-flourish--right" :src="art.titleCloud" alt="" aria-hidden="true"></div></header>
+    <div class="pc-paper-scene__tabs"><PcPaperTabs :items="tabs" :selected="selectedTab || tabs[0]!.id" :label="t('tabs')" @select="selectedTab = $event" /></div>
+    <main class="pc-paper-scene__workspace">
     <div v-if="example === 'alchemy'" class="cc-alchemy">
       <section class="cc-catalog"><h2>{{ t('recipes') }}</h2><button v-for="(id,index) in ['tuLinh','hoiXuan','toCot']" :key="id" class="cc-row" :class="{ 'cc-row-selected': index === 0 }"><span class="pc-paper-slot"><img :src="[art.pill,art.healing,art.bonePill][index]" alt=""></span><span><b>{{ t(id) }}</b><small>{{ t('grade') }}</small></span></button></section>
       <section class="cc-cauldron"><h2>{{ t('tuLinh') }}</h2><p>{{ t('tuLinhHint') }}</p><img class="cc-cauldron-art" :src="art.cauldron" alt=""><div class="cc-chosen-herb"><span class="pc-paper-slot"><img :src="art.herb" alt=""></span><div><small>{{ t('selectedHerb') }}</small><b>{{ t('herb') }}</b><span>{{ t('decade') }}</span></div></div></section>
@@ -61,9 +64,9 @@ const forgeRows = [{ id: 'ore', image: art.ore, amount: '120 / 50' }]
       <section class="cc-quest-list"><h2>{{ t('main') }}</h2><button v-for="(id,index) in ['mountain','herbQuest','practiceQuest']" :key="id" class="cc-quest-row" :class="{ 'cc-row-selected': index === 0 }"><img :src="pcPaperIconUrl(index ? 'quest' : 'exploration')" alt=""><span><b>{{ t(id) }}</b><small>{{ t(index ? 'inProgress' : 'complete') }}</small></span><strong>{{ ['1 / 1','3 / 5','240 / 500'][index] }}</strong></button></section>
       <aside class="pc-paper-inspector cc-inspector cc-quest-detail"><div class="cc-quest-banner" :style="{ backgroundImage: `url('${art.landscape}')` }"><h2>{{ t('mountain') }}</h2><span>{{ t('complete') }}</span></div><p>{{ t('questHint') }}</p><h3>{{ t('objectives') }}</h3><dl><div><dt>✓ {{ t('exploreObjective') }}</dt><dd>1 / 1</dd></div></dl><h3>{{ t('rewards') }}</h3><div class="cc-rewards"><div v-for="(id,index) in ['ore','tuLinh']" :key="id"><span class="pc-paper-slot"><img :src="index ? art.pill : art.ore" alt=""></span><b>{{ t(id) }}</b><small>× {{ index ? 3 : 8 }}</small></div></div><PcPaperButton class="cc-cta">{{ t('claim') }}</PcPaperButton></aside>
     </div>
-
-    <template #footer><p class="cc-static">{{ t('static') }}</p></template>
-  </PcPaperScene></SceneDesignCanvas>
+    </main>
+    <footer class="pc-paper-scene__footer"><p class="cc-static">{{ t('static') }}</p></footer>
+  </div></SceneDesignCanvas>
 </template>
 
 <style scoped>

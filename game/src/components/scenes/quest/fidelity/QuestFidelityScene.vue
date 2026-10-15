@@ -20,14 +20,12 @@ import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue
 import QuestCategoryArtButton from '@/components/common/art/QuestCategoryArtButton.vue'
 import { questGroupIcon } from '../groups/questGroupArt'
 import type { QuestDisplay } from './questUi'
-import type { VictoryRewardDisplay } from '@/components/scenes/victory/fidelity/victoryUi'
-import QuestFidelityDetail from './QuestFidelityDetail.vue'
 
 withDefaults(defineProps<{
   quests: readonly QuestDisplay[]
   selected?: QuestDisplay
   filter: string
-  rewards: readonly VictoryRewardDisplay[]
+  rewards?: readonly unknown[]
   notice: string
   preview?: boolean
 }>(), { preview: false })
@@ -94,9 +92,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
       </EquipmentArtCard>
 
       <EquipmentArtCard class="quest-detail-card">
-        <slot name="detail">
-          <QuestFidelityDetail v-if="selected" :quest="selected" :rewards="rewards" @action="emit('action', $event)" />
-        </slot>
+        <slot name="detail" />
       </EquipmentArtCard>
     </div>
 

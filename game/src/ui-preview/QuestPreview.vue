@@ -2,8 +2,9 @@
 import {computed,shallowRef} from 'vue'
 import {useI18n} from 'vue-i18n'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
+import DongFuVista from './scenes/dong-fu/fidelity/DongFuVista.vue'
 import QuestFidelityScene from '@/components/scenes/quest/fidelity/QuestFidelityScene.vue'
+import QuestFidelityDetail from './scenes/quest/fidelity/QuestFidelityDetail.vue'
 import {questFixtures} from './finalPreviewFixtures'
 import {previewRoutes} from './previewRoutes'
 import {resolveAssetUrl} from '@/presentation/assets/AssetBaseUrl'
@@ -14,5 +15,5 @@ const selected=computed(()=>quests.value.find(q=>q.id===selectedId.value)??quest
 const rewards=computed(()=>[{id:'ore',name:t('items.ore'),amount:'8',icon:resolveAssetUrl('/assets/materials/linh_khoang.png'),tone:'#9ac7b0'},{id:'pill',name:t('items.pill'),amount:'3',icon:resolveAssetUrl('/assets/pills/tu_linh_dan.png'),tone:'#e0bc73'},{id:'stone',name:t('items.stone'),amount:'100',motif:'jade' as const,tone:'#76d5b0'}])
 function back(){window.location.assign('/legacy/ui-dong-fu.html')}
 </script>
-<template><SceneDesignCanvas><div class="quest-preview-host"><DongFuVista /><QuestFidelityScene :quests="quests" :selected="selected" :filter="filter" :rewards="rewards" :notice="notice" preview @back="back" @filter="filter=$event;notice=''" @select="selectedId=$event;notice=''" @action="notice=t('notice')"/></div></SceneDesignCanvas></template>
+<template><SceneDesignCanvas><div class="quest-preview-host"><DongFuVista /><QuestFidelityScene :quests="quests" :selected="selected" :filter="filter" :rewards="rewards" :notice="notice" preview @back="back" @filter="filter=$event;notice=''" @select="selectedId=$event;notice=''" @action="notice=t('notice')"><template #detail><QuestFidelityDetail v-if="selected" :quest="selected" :rewards="rewards" @action="notice=t('notice')" /></template></QuestFidelityScene></div></SceneDesignCanvas></template>
 <style scoped>.quest-preview-host{position:relative;width:100%;height:100%}</style>

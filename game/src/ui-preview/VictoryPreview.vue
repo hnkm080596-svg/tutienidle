@@ -5,8 +5,8 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { stableSymbolUrl } from '@/presentation/huyenKim/StableSceneArt'
 import { DEFAULT_THANH_VAN_VARIANT, thanhVanLoadList } from '@/presentation/background/ThanhVanBackdropArt'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import VictoryFidelityScene from '@/components/scenes/victory/fidelity/VictoryFidelityScene.vue'
-import type { VictoryDisplayModel } from '@/components/scenes/victory/fidelity/victoryUi'
+import VictoryFidelityScene from './scenes/victory/fidelity/VictoryFidelityScene.vue'
+import type { VictoryDisplayModel } from './scenes/victory/fidelity/victoryUi'
 const { t } = useI18n()
 const notice = shallowRef('')
 const existing = thanhVanLoadList(DEFAULT_THANH_VAN_VARIANT)

@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
+import DongFuVista from './scenes/dong-fu/fidelity/DongFuVista.vue'
 import SkillFidelityScene from '@/components/scenes/skill/fidelity/SkillFidelityScene.vue'
 import type { SkillUiNode, SkillUiEdge } from '@/components/scenes/skill/fidelity/skillUi'
 import { SKILL_CONSTELLATION_LAYOUTS } from '@/data/progression/SkillConstellationLayouts'

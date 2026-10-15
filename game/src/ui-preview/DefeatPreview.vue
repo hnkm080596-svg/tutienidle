@@ -4,7 +4,7 @@ import {useI18n} from 'vue-i18n'
 import {resolveAssetUrl} from '@/presentation/assets/AssetBaseUrl'
 import {DEFAULT_THANH_VAN_VARIANT,thanhVanLoadList} from '@/presentation/background/ThanhVanBackdropArt'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DefeatFidelityScene from '@/components/scenes/defeat/fidelity/DefeatFidelityScene.vue'
+import DefeatFidelityScene from './scenes/defeat/fidelity/DefeatFidelityScene.vue'
 const {t}=useI18n()
 const notice=shallowRef('')
 const existing=thanhVanLoadList(DEFAULT_THANH_VAN_VARIANT)

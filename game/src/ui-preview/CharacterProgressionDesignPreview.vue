@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
+import '@/assets/pc-paper-scene.css'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import PcPaperScene from '@/components/common/PcPaperScene.vue'
 import PcPaperTabs from '@/components/common/PcPaperTabs.vue'
 import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import PcBodyDiagram from '@/components/common/PcBodyDiagram.vue'
 import PcPaperLock from '@/components/common/PcPaperLock.vue'
 
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { pcPaperControlStyles } from '@/presentation/assets/PcPaperControls'
 import { pcPaperIconUrl } from '@/presentation/assets/PcPaperIcons'
 
 const { t } = useI18n()
@@ -19,6 +20,9 @@ const selected = shallowRef(example === 'meridian' || example === 'zhou' ? examp
 const talent = shallowRef(1)
 const tabs = computed(() => (example === 'meridian' || example === 'zhou' ? ['body', 'meridian', 'zhou'] : example === 'character' ? ['basic', 'combat', 'other'] : []).map(id => ({ id, label: t(id) })))
 const title = computed(() => t(example === 'meridian' || example === 'zhou' ? 'body' : example))
+const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
+const titleCloud = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png')
+const controls = pcPaperControlStyles()
 const hero = resolveAssetUrl('/assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png')
 const ore = resolveAssetUrl('/assets/materials/linh_khoang.png')
 const herb = resolveAssetUrl('/assets/materials/herbs/tu_linh_thao/decade.png')
@@ -32,8 +36,11 @@ const elementArt = (name: string) => resolveAssetUrl(`/assets/ui/elements/el-${n
 </script>
 
 <template>
-  <SceneDesignCanvas><PcPaperScene :title="title" :data-character-design="example">
-    <template #tabs><PcPaperTabs v-if="tabs.length" :items="tabs" :selected="selected" :label="t('tabs')" @select="selected = $event" /></template>
+  <SceneDesignCanvas><div class="pc-paper-scene" :style="{ backgroundImage: `url('${paper}')`, ...controls }" :data-character-design="example">
+    <div class="pc-paper-scene__frame" aria-hidden="true" />
+    <header class="pc-paper-scene__header"><div class="pc-paper-scene__heading"><h1>{{ title }}</h1><img class="pc-paper-scene__title-flourish pc-paper-scene__title-flourish--left" :src="titleCloud" alt="" aria-hidden="true"><img class="pc-paper-scene__title-flourish pc-paper-scene__title-flourish--right" :src="titleCloud" alt="" aria-hidden="true"></div></header>
+    <div class="pc-paper-scene__tabs"><PcPaperTabs v-if="tabs.length" :items="tabs" :selected="selected" :label="t('tabs')" @select="selected = $event" /></div>
+    <main class="pc-paper-scene__workspace">
     <div v-if="example === 'character'" class="cp-character">
       <section class="cp-identity"><h2>{{ t('sampleName') }}</h2><p>{{ t('identity') }}</p><div class="cp-hero-ring" /><img class="cp-hero" :src="hero" alt=""><p class="cp-path"><img :src="pcPaperIconUrl('technique')" alt="">{{ t('pathway') }} · {{ t('swordPath') }}</p><div class="pc-paper-inspector cp-power"><h3>{{ t('power') }}</h3><b>125.680</b></div></section>
       <section class="cp-character-center"><div class="pc-paper-inspector cp-stats"><h2>{{ t('mainStats') }}</h2><p>{{ t('points') }}</p><dl><div v-for="(name,index) in statNames" :key="name"><dt>{{ t(name) }}</dt><dd>{{ [18,25,16,20,14][index] }}<button type="button" :aria-label="t(name)">+</button></dd></div></dl></div><div class="pc-paper-inspector cp-talents"><h2>{{ t('talent') }}</h2><div><span v-for="n in 3" :key="n"><img v-if="n === 1" :src="pcPaperIconUrl('body-arm')" alt=""><PcPaperLock v-else /><b>{{ t(n === 1 ? 'talentName1' : 'unopened') }}</b></span></div></div><div class="pc-paper-inspector cp-elements"><h2>{{ t('elements') }}</h2><div><span v-for="name in elementNames" :key="name"><img :src="elementArt(name)" alt=""><b>{{ t(name) }}</b><small>15</small></span></div></div></section>
@@ -42,8 +49,9 @@ const elementArt = (name: string) => resolveAssetUrl(`/assets/ui/elements/el-${n
     <section v-else-if="example === 'creation'" class="cp-creation"><p class="cp-creation-intro">{{ t('creationIntro') }}</p><div class="cp-creation-name"><label for="design-name">{{ t('name') }}</label><input id="design-name" :placeholder="t('enterName')" :value="t('sampleName')"></div><h2>{{ t('choosePath') }}</h2><div class="cp-path-choices"><article v-for="(name,index) in ['swordPath','spellPath','bodyPath']" :key="name" :class="{ selected: index === 0 }"><img :src="pcPaperIconUrl(index === 0 ? 'equipment' : index === 1 ? 'skill' : 'body-arm')" alt=""><h3>{{ t(name) }}</h3><small>{{ t(`pathDescription${index + 1}`) }}</small></article></div><div class="cp-creation-talent-heading"><h2>{{ t('chooseTalent') }}</h2><PcPaperButton variant="secondary">{{ t('reroll') }}</PcPaperButton></div><div class="cp-talent-choices"><button v-for="n in 3" :key="n" :class="{ selected: talent === n }" @click="talent = n"><img :src="pcPaperIconUrl(n === 1 ? 'body-arm' : n === 2 ? 'body-flame' : 'body-brain')" alt=""><div><h3>{{ t(`talentName${n}`) }}</h3><p>{{ t(`talentDescription${n}`) }}</p></div></button></div><div class="cp-creation-actions"><PcPaperButton variant="secondary">{{ t('back') }}</PcPaperButton><PcPaperButton>{{ t('begin') }}</PcPaperButton></div></section>
     <div v-else-if="example === 'technique'" class="cp-technique"><nav class="cp-technique-catalog"><h2>{{ t('catalog') }}</h2><button v-for="(name,index) in ['manual','manual2','manual3']" :key="name" :class="{ selected: index === 0 }"><img :src="manual" alt=""><b>{{ t(name) }}</b><small>{{ t('grade') }} · Lv.1</small></button></nav><section class="cp-technique-art"><div class="cp-hero-ring" /><img :src="manual" alt=""><h2>{{ t('manual') }}</h2><p>{{ t('grade') }} · Lv.1</p></section><aside class="pc-paper-inspector cp-progression-inspector"><h2>{{ t('manual') }}</h2><p>{{ t('manualDescription') }}</p><h3>{{ t('effects') }}</h3><div class="cp-compare-heading"><b>{{ t('current') }}</b><b>{{ t('next') }}</b></div><dl><div v-for="(name,index) in ['hp','attack','defense','mana']" :key="name"><dt>{{ t(name) }}</dt><dd>{{ ['+120','+12','+10','+30'][index] }} <strong>» {{ ['+160','+16','+14','+40'][index] }}</strong></dd></div></dl><h3>{{ t('costs') }}</h3><div class="cp-materials"><span class="pc-paper-slot"><img :src="ore" alt=""></span><span>{{ t('stone') }}<b>12/5</b></span><span class="pc-paper-slot"><img :src="herb" alt=""></span><span>{{ t('herb') }}<b>3/2</b></span></div><PcPaperButton>{{ t('upgrade') }}</PcPaperButton></aside></div>
     <div v-else class="cp-body-scene"><section class="cp-body-figure" :class="{ 'cp-body-figure--cycle': example === 'zhou' }"><PcBodyDiagram class="cp-body-diagram" /><template v-if="example === 'meridian'"><div v-for="(name,index) in ['ren','du','yin']" :key="name" class="cp-meridian-mark" :class="{ active: index === 2 }" :style="{ left: index === 0 ? '1%' : '79%', top: index === 2 ? '45%' : '7%' }"><span><svg viewBox="0 0 50 70" fill="none" aria-hidden="true"><path :d="index === 0 ? 'M25 5V65M25 7C0 20 50 24 25 36C0 47 50 51 25 63' : index === 1 ? 'M25 7V62M5 35Q25 15 45 35Q25 55 5 35M25 15Q10 35 25 55Q40 35 25 15' : 'M16 7Q40 25 20 36Q0 45 30 63M28 7Q5 25 29 36Q50 45 18 63'" stroke="#f0cb7b" stroke-width="2" /></svg></span><h3>{{ t(name) }}</h3><b>{{ t(index === 2 ? 'nextMeridian' : 'opened') }}</b></div><div class="cp-body-caption"><h2>{{ t('meridianTitle') }}</h2><div class="cp-progress-bar"><span style="width:25%" /></div><p>{{ t('meridianSummary') }}</p></div></template><template v-else><div class="cp-cycle-milestones"><div v-for="(name,index) in ['capacity','smallCycle','largeCycle']" :key="name"><img :src="pcPaperIconUrl(index === 0 ? 'body-flame' : index === 1 ? 'skill' : 'body')" alt=""><b>{{ index === 2 ? 36 : 18 }}</b><small>{{ t(name) }}</small></div></div><div class="cp-cycle-ring" /><span v-for="(node,index) in cycleNodes" :key="index" class="cp-cycle-node" :class="{ active: index < 12 }" :style="{ left: `${node.x}%`, top: `${node.y}%` }"><PcPaperLock v-if="index >= 12" /></span><div class="cp-body-caption"><h2>12/36</h2><p>{{ t('zhouSummary') }}</p></div></template></section><aside class="pc-paper-inspector cp-progression-inspector"><h2>{{ t(example === 'meridian' ? 'yin' : 'zhou') }}</h2><p>{{ t(example === 'meridian' ? 'meridianDescription' : 'zhouDescription') }}</p><template v-if="example === 'meridian'"><h3>{{ t('effects') }}</h3><dl><div><dt>{{ t('regen') }}</dt><dd>+8%</dd></div></dl><h3>{{ t('conditions') }}</h3><p class="cp-condition">{{ t('realmGate') }} <strong>✓</strong></p><h3>{{ t('costs') }}</h3><div class="cp-materials"><span class="pc-paper-slot"><img :src="pill" alt=""></span><span>{{ t('pill') }}<b>5 / 4</b></span></div><PcPaperButton>{{ t('openMeridian') }}</PcPaperButton></template><template v-else><h3>{{ t('step') }}</h3><div class="cp-step-strip"><i v-for="n in 18" :key="n" :class="{ active: n <= 13 }" /></div><p>{{ t('stepCount') }}</p><h3>{{ t('stepRewards') }}</h3><dl><div v-for="(name,index) in ['hp','attack','defense','regen']" :key="name"><dt>{{ t(name) }}</dt><dd>{{ ['+34','+5','+3','+1'][index] }}</dd></div></dl><h3>{{ t('costs') }}</h3><div class="cp-materials"><span class="pc-paper-slot"><img :src="pcPaperIconUrl('body-flame')" alt=""></span><span>{{ t('essence') }}<b>120 / 75</b></span></div><PcPaperButton>{{ t('circulate') }}</PcPaperButton></template></aside></div>
-    <template #footer><p class="cp-design-note">{{ t('designOnly') }}</p></template>
-  </PcPaperScene></SceneDesignCanvas>
+    </main>
+    <footer class="pc-paper-scene__footer"><p class="cp-design-note">{{ t('designOnly') }}</p></footer>
+  </div></SceneDesignCanvas>
 </template>
 
 <style>

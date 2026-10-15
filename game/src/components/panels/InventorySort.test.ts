@@ -11,7 +11,6 @@ import { createApp, defineComponent, h, ref } from 'vue'
 import { createPinia } from 'pinia'
 import MaterialBagSection from './bag-sections/MaterialBagSection.vue'
 import EquipmentBagSection from './bag-sections/EquipmentBagSection.vue'
-import BagGrid from './BagGrid.vue'
 import { GameManager } from '@/core/game/GameManager'
 import {
   BUMP_STATE_KEY,
@@ -39,7 +38,6 @@ function mountSections(gameManager: GameManager) {
         h('div', [
           h(MaterialBagSection),
           h(EquipmentBagSection),
-          h(BagGrid),
         ])
     },
   })

@@ -167,14 +167,6 @@ const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: s
     tokens: ['ultimate'],
     reason: 'human cards use the beta-filtered TurnCombatSkillBar; the other branch is companion-only and CombatBuild emits no companions while scope-hidden',
   },
-  {
-    // Path moved under legacy/ with the realm surface port - same
-    // verdict: the node renders props only.
-    file: 'components/scenes/realm/legacy/RealmAscentNode.vue',
-    tokens: ['coming-soon'],
-    reason:
-      'the node renders props only; betaRealmLadderNodes() (betaScopeSurface) flattens comingSoon to false for every emitted node, so the comingSoon branch is unreachable - BetaJourney pins the guarantee',
-  },
   // Dev-only preview of a deliberately scope-hidden formation surface.
   {
     file: 'ui-preview/SecondaryPreview.vue',

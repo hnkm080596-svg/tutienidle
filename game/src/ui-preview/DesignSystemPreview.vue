@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
+import '@/assets/pc-paper-scene.css'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import PcPaperScene from '@/components/common/PcPaperScene.vue'
 import PcPaperTabs from '@/components/common/PcPaperTabs.vue'
 import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import PcBodyDiagram from '@/components/common/PcBodyDiagram.vue'
@@ -11,6 +11,7 @@ import PcBodyDiagram from '@/components/common/PcBodyDiagram.vue'
 import PaperArchetypePreview from './PaperArchetypePreview.vue'
 import PaperSceneDesigns from './PaperSceneDesigns.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { pcPaperControlStyles } from '@/presentation/assets/PcPaperControls'
 import { pcPaperIconUrl, type PcPaperIcon } from '@/presentation/assets/PcPaperIcons'
 
 const { t } = useI18n()
@@ -21,9 +22,9 @@ const selected = shallowRef('equipment')
 const title = computed(() => t(example.value))
 const tabs = computed(() => (example.value === 'progression' ? [] : example.value === 'graph' ? ['pathway', 'fiveElements'] : example.value === 'map' ? ['mortalWorld', 'spiritWorld', 'immortalWorld'] : examples.slice(3).includes(example.value) ? ['designOverview', 'designDetails'] : example.value === 'inventory' ? ['equipment', 'material', 'pill'] : example.value === 'body' ? ['body', 'meridian', 'essence'] : ['equipment', 'enhance', 'refine', 'bag']).map(id => ({ id, label: t(id === 'material' ? 'materialTab' : id === 'pill' ? 'pillTab' : id) })))
 const activeTab = computed(() => tabs.value.some(item => item.id === selected.value) ? selected.value : tabs.value[0]?.id ?? '')
-const nav = ['character', 'realm', 'technique', 'skill', 'body', 'bag', 'map']
-const iconNames: readonly PcPaperIcon[] = ['character', 'realm', 'technique', 'skill', 'body', 'inventory', 'exploration']
-const icon = pcPaperIconUrl
+const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
+const titleCloud = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png')
+const controls = pcPaperControlStyles()
 const sword = resolveAssetUrl('/assets/equipment/items/base-kiem/kiem-01.png')
 const crown = resolveAssetUrl('/assets/equipment/items/base-quan/quan-01.png')
 const robe = resolveAssetUrl('/assets/equipment/items/base-bao/bao-01.png')
@@ -32,24 +33,15 @@ const herb = resolveAssetUrl('/assets/materials/herbs/tu_linh_thao/decade.png')
 const playerArt = resolveAssetUrl('/assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png')
 const bodyUnits = ['skin', 'flesh', 'bone', 'blood', 'organ', 'channels'] as const
 const slotLabels = ['weapon', 'robe', 'crown', 'shoes', 'ring', 'pearl']
-function navigate(id: string) {
-  if (id === 'body' || id === 'equipment') example.value = id
-  else if (id === 'bag') example.value = 'inventory'
-}
 </script>
 
 <template>
   <SceneDesignCanvas>
-    <PcPaperScene :title="title" :navigation="false" :data-design-example="example">
-      <template #navigation>
-        <button class="design-back" :aria-label="t('back')">‹</button>
-        <nav class="design-nav">
-          <button v-for="(id, index) in nav" :key="id" :class="{ active: id === (example === 'inventory' ? 'bag' : example) }" @click="navigate(id)"><img :src="icon(iconNames[index]!)" alt=""><span>{{ t(id) }}</span></button>
-          <button v-if="example === 'equipment'" class="active" @click="navigate('equipment')"><img :src="icon('equipment')" alt=""><span>{{ t('equipment') }}</span></button>
-        </nav>
-      </template>
-      <template #tabs><PcPaperTabs v-if="tabs.length" :items="tabs" :selected="activeTab" :label="t('tabs')" @select="selected = $event" /></template>
-
+    <div class="pc-paper-scene" :style="{ backgroundImage: `url('${paper}')`, ...controls }" :data-design-example="example">
+      <div class="pc-paper-scene__frame" aria-hidden="true" />
+      <header class="pc-paper-scene__header"><div class="pc-paper-scene__heading"><h1>{{ title }}</h1><img class="pc-paper-scene__title-flourish pc-paper-scene__title-flourish--left" :src="titleCloud" alt="" aria-hidden="true"><img class="pc-paper-scene__title-flourish pc-paper-scene__title-flourish--right" :src="titleCloud" alt="" aria-hidden="true"></div></header>
+      <div class="pc-paper-scene__tabs"><PcPaperTabs v-if="tabs.length" :items="tabs" :selected="activeTab" :label="t('tabs')" @select="selected = $event" /></div>
+      <main class="pc-paper-scene__workspace">
       <PaperSceneDesigns v-if="['graph','map','progression'].includes(example)" :kind="example" />
       <PaperArchetypePreview v-else-if="examples.slice(3).includes(example)" :kind="example" />
       <div v-else-if="example === 'inventory'" class="design-inventory">
@@ -70,9 +62,9 @@ function navigate(id: string) {
         <div class="design-equipment-figure"><img :src="playerArt" alt=""><div v-for="(id,index) in slotLabels" :key="id" class="design-equipment-slot" :style="{ left: index % 2 ? '78%' : '1%', top: `${4 + Math.floor(index / 2) * 29}%` }"><span class="pc-paper-slot"><img v-if="index < 3" :src="index === 0 ? sword : index === 1 ? robe : crown" alt=""></span><b>{{ t(id) }}</b></div><h3>{{ t('equipmentStats') }}</h3></div>
         <aside class="pc-paper-inspector design-equipment-inspector"><h2>{{ t('equipmentBag') }}</h2><div class="design-equipment-grid"><span v-for="n in 24" :key="n" class="pc-paper-slot"><img v-if="n < 4" :src="n === 2 ? crown : sword" alt=""></span></div><p>{{ t('equipmentHint') }}</p><PcPaperButton variant="secondary">{{ t('sort') }}</PcPaperButton></aside>
       </div>
-
-      <template #footer><div v-if="example === 'inventory'" class="design-pagination"><span>{{ t('count') }}</span><div><PcPaperButton variant="secondary" icon>‹</PcPaperButton><PcPaperButton icon>1</PcPaperButton><PcPaperButton variant="secondary" icon>›</PcPaperButton></div><PcPaperButton variant="secondary">↕ {{ t('sort') }}</PcPaperButton></div></template>
-    </PcPaperScene>
+      </main>
+      <footer class="pc-paper-scene__footer"><div v-if="example === 'inventory'" class="design-pagination"><span>{{ t('count') }}</span><div><PcPaperButton variant="secondary" icon>‹</PcPaperButton><PcPaperButton icon>1</PcPaperButton><PcPaperButton variant="secondary" icon>›</PcPaperButton></div><PcPaperButton variant="secondary">↕ {{ t('sort') }}</PcPaperButton></div></footer>
+    </div>
   </SceneDesignCanvas>
 </template>
 

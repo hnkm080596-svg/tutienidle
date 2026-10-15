@@ -3,8 +3,8 @@ import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import { stableSceneArtUrl, stableSymbolUrl } from '@/presentation/huyenKim/StableSceneArt'
-import TribulationFidelityScene from '@/components/scenes/tribulation/fidelity/TribulationFidelityScene.vue'
-import type { TribulationUiModel } from '@/components/scenes/tribulation/fidelity/tribulationUi'
+import TribulationFidelityScene from './scenes/tribulation/fidelity/TribulationFidelityScene.vue'
+import type { TribulationUiModel } from './scenes/tribulation/fidelity/tribulationUi'
 const { t } = useI18n()
 const chapterId = shallowRef('mind')
 const selected = shallowRef<string | null>(null)

@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
+import DongFuVista from './scenes/dong-fu/fidelity/DongFuVista.vue'
 import SettingsFidelityScene from '@/components/scenes/settings/fidelity/SettingsFidelityScene.vue'
 import type {SettingsDisplayControl} from '@/components/scenes/settings/fidelity/SettingsFidelitySection.vue'
 const {t}=useI18n()

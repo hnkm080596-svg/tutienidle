@@ -3,7 +3,7 @@ import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
+import DongFuVista from './scenes/dong-fu/fidelity/DongFuVista.vue'
 import AlchemyFidelityScene from '@/components/scenes/alchemy/fidelity/AlchemyFidelityScene.vue'
 import type { AlchemyRecipeDisplay, AlchemyJobDisplay } from '@/components/scenes/alchemy/fidelity/alchemyUi'
 const { t } = useI18n()

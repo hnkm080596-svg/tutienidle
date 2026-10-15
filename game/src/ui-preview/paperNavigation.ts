@@ -1,9 +1,20 @@
-import { PAPER_NAV_IDS } from '@/composables/usePaperNavigation'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 // Preview rails consume the canonical cross-scene nav order
-// (character-first, quest + settings included) - derived, never forked.
-export const paperNavigationIds = PAPER_NAV_IDS
+// (character-first, quest + settings included).
+export const paperNavigationIds = [
+  'character',
+  'realm',
+  'technique',
+  'skill',
+  'body',
+  'exploration',
+  'alchemy',
+  'equipment',
+  'inventory',
+  'quest',
+  'settings',
+] as const
 
 export function previewPaperNavigation(t: (key: string) => string, lockedIds: readonly string[] = []) {
   return paperNavigationIds.map(id => ({

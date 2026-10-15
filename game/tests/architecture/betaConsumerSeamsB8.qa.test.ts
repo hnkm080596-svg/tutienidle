@@ -33,10 +33,9 @@ import { i18n } from '@/i18n'
 import SkillPathPanel from '@/components/panels/SkillPathPanel.vue'
 import TechniquePanel from '@/components/panels/TechniquePanel.vue'
 import PillBagSection from '@/components/panels/bag-sections/PillBagSection.vue'
-import BagGrid from '@/components/panels/BagGrid.vue'
 import BreakthroughRequirementPanel from '@/components/common/BreakthroughRequirementPanel.vue'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
-import CharacterPanel from '@/components/panels/CharacterPanel.vue'
+import CharacterSurface from '@/components/scenes/character/CharacterSurface.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
@@ -221,14 +220,14 @@ describe('F-B8-2: PillBagSection must not render scope-hidden pill stacks', () =
     gameManager.catalogOps.registerPills(pills)
     gameManager.pillBag.add(gameManager.pillRegistry.get('phi_van_dan_mortal'), 3)
 
-    const view = mountPanel(BagGrid, gameManager, (player, pinia) => {
+    const view = mountPanel(PillBagSection, gameManager, (player, pinia) => {
       player.$state.realmId = 'mortal'
       useUiStore(pinia).setActiveBagTab('pill')
     })
     gameManager.setActivePlayer(view.player.$state)
     await nextTick()
 
-    const count = view.container.querySelector('.bag-grid__count')
+    const count = view.container.querySelector('.bag-section__count-label')
     expect(count?.textContent?.trim().startsWith('0')).toBe(true)
 
     view.unmount()
@@ -314,13 +313,13 @@ describe('F-B8-3: TechniquePanel must not render a dormant way technique', () =>
 // F-B8-4 - character sheet
 // ---------------------------------------------------------------------------
 
-describe('F-B8-4: CharacterPanel must not render dormant talent/way identity', () => {
+describe('F-B8-4: CharacterSurface must not render dormant talent/way identity', () => {
   // F-B8-4 talent half promoted to Medium (B10-002) and fixed: the
   // roster is now filtered through isBetaTalentId, so the pin is live.
   it('a carried save lists only beta-admitted talents', async () => {
     const gameManager = new GameManager()
 
-    const view = mountPanel(CharacterPanel, gameManager, (player) => {
+    const view = mountPanel(CharacterSurface, gameManager, (player) => {
       player.$state.realmId = 'qi_refining'
       // 'lk_linh_mach' is a beta-admitted breakthrough talent;
       // 'kd_thanh_dan' lives in the golden_core pool - authored but
@@ -331,7 +330,7 @@ describe('F-B8-4: CharacterPanel must not render dormant talent/way identity', (
     })
     await nextTick()
 
-    const names = Array.from(view.container.querySelectorAll('.talent-seal__name'))
+    const names = Array.from(view.container.querySelectorAll('.character-talent span'))
       .map(el => el.textContent?.trim() ?? '')
 
     expect(names).toContain('Linh Mạch')
@@ -340,23 +339,18 @@ describe('F-B8-4: CharacterPanel must not render dormant talent/way identity', (
     view.unmount()
   })
 
-  // F-B8-4 - Low, deferred per Medium+-only ruling (human exception).
-  it.skip('a carried dormant-way save renders no dormant element aura', async () => {
+  it('a carried dormant-way save renders no dormant dao identity on the realm line', async () => {
     const gameManager = new GameManager()
 
-    const view = mountPanel(CharacterPanel, gameManager, (player) => {
+    const view = mountPanel(CharacterSurface, gameManager, (player) => {
       player.$state.realmId = 'qi_refining'
       player.$state.cultivationPath = 'sword'
       player.$state.cultivationWay = 'sword_pathway'
     })
     await nextTick()
 
-    const figure = view.container.querySelector<HTMLElement>('.character-panel__figure')
-    const style = figure?.getAttribute('style') ?? ''
-    // Contract: the dormant way contributes no visual identity - the
-    // neutral chrome fallback is the expected read-model.
-    expect(style).not.toContain(ELEMENT_COLOR_VARS.metal)
-    expect(style).toContain('chrome-500')
+    const realmLine = view.container.querySelector<HTMLElement>('[data-testid="character-realm-line"]')
+    expect(realmLine?.textContent).not.toContain('Kiếm Tu')
 
     view.unmount()
   })

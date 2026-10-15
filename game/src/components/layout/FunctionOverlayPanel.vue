@@ -2,7 +2,6 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
-import ImperialScrollScene from '@/components/common/ImperialScrollScene.vue'
 import { useBuildingHeaderState } from '@/composables/useBuildingHeaderState'
 import ProductionPanel from '@/components/panels/ProductionPanel.vue'
 import SettingsSurface from '@/components/scenes/settings/SettingsSurface.vue'
@@ -32,24 +31,8 @@ const TITLE_KEYS: Record<FunctionMode, string> = {
   stage_select: 'layout.functionOverlay.titles.stage_select',
 }
 
-// Huyen Kim rebuild: these left-panel modes are imperial-scroll scenes
-// (layout spec scenes 10/11/12/17) - except most now own their paper
-// chrome and mount outside the scroll (see PAPER_MODES). Scripture
-// pavilion stays on the legacy micro-overlay shell until its own
-// redesign lands.
-const IMPERIAL_MODES: ReadonlySet<FunctionMode> = new Set([
-  'stage_select',
-  'pill_room',
-  'equipment_hall',
-  'exploration',
-  'settings',
-])
-
 // Modes whose fidelity surface owns the shared paper chrome on its own
-// overlay design canvas - mounted outside the scroll like the other
-// migrated tabs. 'exploration' joined them 2026-10-11: the landscape
-// production preview gave the outpost an approved paper sheet
-// (ProductionPanel renders its own chrome now).
+// overlay design canvas - mounted outside the legacy shell.
 const PAPER_MODES: ReadonlySet<FunctionMode> = new Set([
   'architecture',
   'stage_select',
@@ -80,11 +63,8 @@ const mode = computed<FunctionMode | null>(() => {
 const paperMode = computed<FunctionMode | null>(() =>
   mode.value && PAPER_MODES.has(mode.value) ? mode.value : null,
 )
-const scrollMode = computed<FunctionMode | null>(() =>
-  mode.value && IMPERIAL_MODES.has(mode.value) && !PAPER_MODES.has(mode.value) ? mode.value : null,
-)
 const legacyMode = computed<FunctionMode | null>(() =>
-  mode.value && !IMPERIAL_MODES.has(mode.value) && !PAPER_MODES.has(mode.value) ? mode.value : null,
+  mode.value && !PAPER_MODES.has(mode.value) ? mode.value : null,
 )
 
 const buildingId = computed(() => (mode.value ? BUILDINGS[mode.value] : undefined))
@@ -109,7 +89,7 @@ function close() {
   <!-- Scene 10/11/12/17 fidelity: stage_select + pill_room +
        equipment_hall + settings own their paper chrome (Son Ha Do /
        Luyen Dan / Khi Duong / Cai Dat scene) - they mount outside the
-       imperial scroll while keeping the same mode/beta-gate/close
+       legacy overlay while keeping the same mode/beta-gate/close
        contract. -->
   <Transition name="th-panel-swap">
     <StageSelectPanel v-if="paperMode === 'stage_select'" />
@@ -119,37 +99,6 @@ function close() {
     <ArchitectureSurface v-else-if="paperMode === 'architecture'" />
     <ProductionPanel v-else-if="paperMode === 'exploration'" />
   </Transition>
-
-  <!-- Imperial scroll scenes: no current mode mounts here - the shell
-       stays for future scroll surfaces (San Xuat moved to paper chrome
-       2026-10-11). -->
-  <ImperialScrollScene
-    :open="scrollMode !== null"
-    :title="scrollMode ? t(TITLE_KEYS[scrollMode]) : ''"
-    :scene="scrollMode ?? undefined"
-    data-testid="function-overlay-panel"
-    @close="close"
-  >
-    <!-- Building identity + upgrade keep their canonical behavior; the
-         scroll's header band replaces the old modal title row. -->
-    <template v-if="header.template.value" #header>
-      <div class="building-heading building-heading--imperial">
-        <img
-          v-if="!artBroken"
-          class="building-heading__art"
-          :src="header.artPath.value"
-          alt=""
-          @error="artBroken = true"
-        />
-        <div class="building-heading__text">
-          <p class="building-heading__name">{{ header.template.value.name }}</p>
-          <small class="building-heading__level">{{ t('layout.functionOverlay.levelRange', { level: header.instance.value?.level ?? 0, max: header.template.value.maxLevel }) }}</small>
-        </div>
-      </div>
-    </template>
-
-    <div v-if="scrollMode" class="function-overlay" />
-  </ImperialScrollScene>
 
   <!-- Legacy micro-overlay surfaces (not part of the scene redesign). -->
   <OverlayPanel
@@ -207,18 +156,6 @@ function close() {
   background: var(--paper-200);
   filter: saturate(.9) contrast(1.08);
 }
-
-.building-heading--imperial {
-  justify-content: space-between;
-  padding: 0 4px;
-}
-/* The imperial scroll interior is PALE paper - the on-dark ramp used by
-   OverlayPanel's ink header would render the name as washed-out glyphs
-   (audit: "Truyen Tong Tran" read as clipped text). Use the paper ramp. */
-.building-heading--imperial .building-heading__name { color: var(--paper-text); }
-.building-heading--imperial .building-heading__level { color: color-mix(in srgb, var(--hk-gold, var(--jade)) 55%, var(--paper-text)); }
-.building-heading--imperial .building-heading__text { margin-right: auto; }
-.building-heading--imperial .building-heading__upgrade-area { flex-direction: row; align-items: center; gap: 10px; }
 
 .building-heading__text { min-width: 0; }
 /* Name/cost sit on the DARK ink header of OverlayPanel -- they must use

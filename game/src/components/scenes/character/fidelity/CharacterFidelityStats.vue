@@ -39,6 +39,7 @@ const talentIconError = (event: Event) => {
         v-for="stat in model.stats"
         :key="stat.id"
         class="character-stat-row"
+        :data-stat="stat.id"
         v-tooltip="statTooltip(stat)"
       >
         <span class="character-stat-name">

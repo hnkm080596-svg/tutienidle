@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
+import DongFuVista from './scenes/dong-fu/fidelity/DongFuVista.vue'
 import CharacterFidelityScene from '@/components/scenes/character/fidelity/CharacterFidelityScene.vue'
 import Tooltip from '@/components/common/Tooltip.vue'
 import type { CharacterUiModel } from '@/components/scenes/character/fidelity/characterUi'

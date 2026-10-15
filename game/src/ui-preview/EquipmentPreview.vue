@@ -4,8 +4,10 @@ import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
+import DongFuVista from './scenes/dong-fu/fidelity/DongFuVista.vue'
 import EquipmentFidelityScene from '@/components/scenes/equipment/fidelity/EquipmentFidelityScene.vue'
+import ForgeBatchBag from './scenes/equipment/fidelity/ForgeBatchBag.vue'
+import ForgeFidelityWorkspace from './scenes/equipment/fidelity/ForgeFidelityWorkspace.vue'
 import type { EquipmentDisplay, EquipmentSocket } from '@/components/scenes/equipment/fidelity/equipmentUi'
 const { t } = useI18n()
 const notice = shallowRef('')
@@ -29,5 +31,5 @@ function action(id:string) {
   else notice.value=t('notice')
 }
 </script>
-<template><SceneDesignCanvas><div class="equipment-preview-host" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><EquipmentFidelityScene :sockets="sockets" :items="items" :notice="notice" :character-image="characterImage" preview @back="back" @action="action" /></div></SceneDesignCanvas></template>
+<template><SceneDesignCanvas><div class="equipment-preview-host" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><EquipmentFidelityScene :sockets="sockets" :items="items" :notice="notice" :character-image="characterImage" preview @back="back" @action="action"><template #forge="{ mode, items: bagItems, forgeItem }"><ForgeBatchBag v-if="mode==='dissolve'||mode==='decompose'" :mode="mode" :items="bagItems" @submit="action($event.mode+':'+$event.itemIds.join(',')+':submit')" /><ForgeFidelityWorkspace v-else-if="forgeItem" compact :mode="mode" :item="forgeItem" @action="(emitId: string) => action(mode+':'+forgeItem.id+':'+emitId)" /></template></EquipmentFidelityScene></div></SceneDesignCanvas></template>
 <style scoped>.equipment-preview-host { position:relative; width:100%; height:100%; }</style>

@@ -2,8 +2,9 @@
 import {computed,shallowRef} from 'vue'
 import {useI18n} from 'vue-i18n'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
+import DongFuVista from './scenes/dong-fu/fidelity/DongFuVista.vue'
 import InventoryFidelityScene from '@/components/scenes/inventory/fidelity/InventoryFidelityScene.vue'
+import InventoryFidelityDetail from './scenes/inventory/fidelity/InventoryFidelityDetail.vue'
 import {inventoryFixtures} from './finalPreviewFixtures'
 import {previewRoutes} from './previewRoutes'
 const {t}=useI18n()
@@ -12,5 +13,5 @@ const items=computed(()=>{const result=inventoryFixtures(t).filter(item=>(filter
 const selected=computed(()=>items.value.find(i=>i.id===selectedId.value)??items.value[0])
 function back(){window.location.assign('/legacy/ui-dong-fu.html')}
 </script>
-<template><SceneDesignCanvas><div class="inventory-preview-host"><DongFuVista /><InventoryFidelityScene :items="items" :selected="selected" :filter="filter" :query="query" :notice="notice" preview @back="back" @filter="filter=$event;notice=''" @query="query=$event;notice=''" @select="selectedId=$event;notice=''" @sort="sorted=!sorted" @use="notice=t('notice')"/></div></SceneDesignCanvas></template>
+<template><SceneDesignCanvas><div class="inventory-preview-host"><DongFuVista /><InventoryFidelityScene :items="items" :selected="selected" :filter="filter" :query="query" :notice="notice" preview @back="back" @filter="filter=$event;notice=''" @query="query=$event;notice=''" @select="selectedId=$event;notice=''" @sort="sorted=!sorted" @use="notice=t('notice')"><template #detail><InventoryFidelityDetail v-if="selected" :item="selected" @use="notice=t('notice')" /></template></InventoryFidelityScene></div></SceneDesignCanvas></template>
 <style scoped>.inventory-preview-host{position:relative;width:100%;height:100%}</style>

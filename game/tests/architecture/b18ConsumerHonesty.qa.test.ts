@@ -17,8 +17,7 @@ import LoreCodex from '@/components/panels/scripture/LoreCodex.vue'
 import MaterialBagSection from '@/components/panels/bag-sections/MaterialBagSection.vue'
 import SkillPathPanel from '@/components/panels/SkillPathPanel.vue'
 import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
-import CharacterPanel from '@/components/panels/CharacterPanel.vue'
-import BagGrid from '@/components/panels/BagGrid.vue'
+import CharacterSurface from '@/components/scenes/character/CharacterSurface.vue'
 import { getCultivateTexture, PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { GameManager } from '@/core/game/GameManager'
 import { usePlayerStore } from '@/stores/player'
@@ -114,11 +113,11 @@ describe('B18 hostile persisted state -> read-model honesty', () => {
     expect(html).toContain('Nhật Ký Tu Sĩ')
   })
 
-  it('DEFECT: BagGrid material tab count includes the suppressed token', async () => {
+  it('DEFECT: MaterialBagSection count label excludes the suppressed token', async () => {
     const gameManager = realGameManager()
     const pinia = createPinia()
     setActivePinia(pinia)
-    const app = createSSRApp(BagGrid)
+    const app = createSSRApp(MaterialBagSection)
     app.use(i18n)
     app.use(pinia)
     app.directive('tooltip', ssrTooltip)
@@ -129,11 +128,10 @@ describe('B18 hostile persisted state -> read-model honesty', () => {
     const ui = useUiStore()
     ui.setActiveBagTab('material')
     // Hostile bag: only the suppressed token, so an honest header count
-    // is 0 (the pill tab's own comment requires the count to agree with
-    // what the grid can render).
+    // is 0 (the count label agrees with what the grid can render).
     gameManager.materialBag.add(gameManager.materialRegistry.get('chieu_hien_lenh'), 5)
     const html = await renderToString(app)
-    const countMatch = html.match(/bag-grid__count[^>]*>(\d+)/)
+    const countMatch = html.match(/bag-section__count-label[^>]*>(\d+)/)
     expect(countMatch?.[1]).toBe('0')
   })
 
@@ -225,11 +223,11 @@ describe('B18 hostile persisted state -> read-model honesty', () => {
     expect(texture.key).not.toContain('phap-tu-an')
   })
 
-  it('observed (Low): character-panel aura tints from a dormant way element', async () => {
+  it('CharacterSurface collapses a carried dormant sword way without rendering dormant dao branding', async () => {
     const gameManager = realGameManager()
     const pinia = createPinia()
     setActivePinia(pinia)
-    const app = createSSRApp(CharacterPanel)
+    const app = createSSRApp(CharacterSurface)
     app.use(i18n)
     app.use(pinia)
     app.directive('tooltip', ssrTooltip)
@@ -244,9 +242,6 @@ describe('B18 hostile persisted state -> read-model honesty', () => {
       cultivationWay: 'sword_pathway',
     })
     const html = await renderToString(app)
-    // chosenKit drives --aura from the way's fixed element (metal) with
-    // no beta-way gate - a subtle dormant cue, no branding text.
-    // Documented as a deferred Low surface, not a blocking defect.
-    expect(html).toContain('--el-metal')
+    expect(html).not.toContain('Kiếm Tu')
   })
 })

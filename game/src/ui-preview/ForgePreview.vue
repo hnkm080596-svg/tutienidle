@@ -2,7 +2,7 @@
 import {computed,shallowRef} from 'vue'
 import {useI18n} from 'vue-i18n'
 import PaperPreviewSurface from './PaperPreviewSurface.vue'
-import ForgeFidelityScene from '@/components/scenes/equipment/fidelity/ForgeFidelityScene.vue'
+import ForgeFidelityScene from './scenes/equipment/fidelity/ForgeFidelityScene.vue'
 import {resolveAssetUrl} from '@/presentation/assets/AssetBaseUrl'
 const {t}=useI18n()
 const mode=shallowRef('enhance'),selected=shallowRef('sword'),notice=shallowRef('')

@@ -1,18 +1,20 @@
 import { installTienHiepUiAssets } from '@/presentation/assets/TienHiepUiAssets'
 // @vitest-environment jsdom
 import {expect,it} from 'vitest'
-import {createApp,nextTick,type Component} from 'vue'
+import {createApp,h,nextTick,type Component} from 'vue'
 import {createI18n} from 'vue-i18n'
 import {remainingMessages} from './remainingMessages'
 import {inventoryFixtures,questFixtures} from './finalPreviewFixtures'
 import InventoryFidelityScene from '@/components/scenes/inventory/fidelity/InventoryFidelityScene.vue'
+import InventoryFidelityDetail from './scenes/inventory/fidelity/InventoryFidelityDetail.vue'
 import QuestFidelityScene from '@/components/scenes/quest/fidelity/QuestFidelityScene.vue'
+import QuestFidelityDetail from './scenes/quest/fidelity/QuestFidelityDetail.vue'
 import SettingsFidelitySection from '@/components/scenes/settings/fidelity/SettingsFidelitySection.vue'
-import DefeatFidelityScene from '@/components/scenes/defeat/fidelity/DefeatFidelityScene.vue'
+import DefeatFidelityScene from './scenes/defeat/fidelity/DefeatFidelityScene.vue'
 
-function mount(component:Component,props:Record<string,unknown>){
+function mount(component:Component,props:Record<string,unknown>,slots?:Record<string,()=>unknown>){
  const container=document.createElement('div')
- const app=createApp(component,props)
+ const app=createApp({ render: () => h(component, props, slots) })
  app.use(createI18n({legacy:false,locale:'vi',messages:remainingMessages})).mount(container)
  return {container,close:()=>app.unmount()}
 }
@@ -20,7 +22,7 @@ function mount(component:Component,props:Record<string,unknown>){
 it('inventory emits item identity, filter and search without consuming displayed items',()=>{
  const items=Object.freeze(inventoryFixtures(key=>key).map(item=>Object.freeze(item)))
  const events:unknown[]=[]
- const view=mount(InventoryFidelityScene,{items,selected:items[0],filter:'all',query:'',navigation:[],notice:'',onSelect:(id:string)=>events.push(id),onUse:(id:string)=>events.push(id),onQuery:(query:string)=>events.push(query)})
+ const view=mount(InventoryFidelityScene,{items,selected:items[0],filter:'all',query:'',navigation:[],notice:'',onSelect:(id:string)=>events.push(id),onUse:(id:string)=>events.push(id),onQuery:(query:string)=>events.push(query)},{detail:()=>h(InventoryFidelityDetail,{item:items[0]!,onUse:(id:string)=>events.push(id)})})
  try {
   view.container.querySelector<HTMLButtonElement>('.item-grid button')!.click()
   view.container.querySelector<HTMLButtonElement>('.item-detail button')!.click()
@@ -34,7 +36,7 @@ it('inventory emits item identity, filter and search without consuming displayed
 it('quest requests a claim by identity without changing reward or completion state',()=>{
  const quests=questFixtures(key=>key),quest=Object.freeze(quests[1]!)
  const events:string[]=[]
- const view=mount(QuestFidelityScene,{quests,selected:quest,filter:'all',rewards:[],navigation:[],notice:'',onAction:(id:string)=>events.push(id)})
+ const view=mount(QuestFidelityScene,{quests,selected:quest,filter:'all',rewards:[],navigation:[],notice:'',onAction:(id:string)=>events.push(id)},{detail:()=>h(QuestFidelityDetail,{quest,rewards:[],onAction:(id:string)=>events.push(id)})})
  try{view.container.querySelector<HTMLButtonElement>('.action')!.click();expect(events).toEqual(['herb']);expect(quest.status).toBe('ready')}finally{view.close()}
 })
 

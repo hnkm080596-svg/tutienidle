@@ -9,7 +9,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createApp, h, ref } from 'vue'
 import { createPinia } from 'pinia'
-import CharacterDetailCard from '@/components/panels/CharacterDetailCard.vue'
+import CharacterSurface from '@/components/scenes/character/CharacterSurface.vue'
 import MaterialBagSection from '@/components/panels/bag-sections/MaterialBagSection.vue'
 import LoreCodex from '@/components/panels/scripture/LoreCodex.vue'
 import { GameManager } from '@/core/game/GameManager'
@@ -51,17 +51,12 @@ beforeEach(() => {
 })
 
 describe('b19 consumer scope honesty', () => {
-  // LEAK-1: CharacterDetailCard iterates every BASE_STAT_LABELS entry in
-  // the combat/survival/special/defense_advanced categories with no
-  // scope filter. defense_advanced contains counterChance /
-  // protectChance / followUpChance - the hidden body way (The Tu An)
-  // reactive chances whose own labels say "The Tu An" - and special
-  // contains reactionEffectPercent, which StatDomain marks as hidden
-  // spell-path only. A fresh mortal save renders dormant hidden-way
-  // stat rows by name. Mint path: panels.character.actions.details
-  // opens this card on the live Character panel for any player.
-  it('character detail card renders no hidden-way stat rows', () => {
-    const mounted = mountComponent(CharacterDetailCard)
+  // LEAK-1: CharacterSurface detail cards must filter BASE_STAT_LABELS
+  // through isBetaStatLabelVisible so hidden-way reactive chances
+  // (counterChance / protectChance / followUpChance / reactionEffectPercent)
+  // never render on a mortal/beta character surface.
+  it('character surface detail cards render no hidden-way stat rows', () => {
+    const mounted = mountComponent(CharacterSurface)
     const text = mounted.container.textContent ?? ''
 
     const hiddenLabels = BASE_STAT_LABELS.filter(

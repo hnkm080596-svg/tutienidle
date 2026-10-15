@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import DongFuFidelityScene from '@/components/scenes/dong-fu/fidelity/DongFuFidelityScene.vue'
+import DongFuFidelityScene from './scenes/dong-fu/fidelity/DongFuFidelityScene.vue'
 import type { DongFuUiModel } from '@/components/scenes/dong-fu/fidelity/dongFuUi'
 const { t } = useI18n()
 const selected = shallowRef<string | null>(null)

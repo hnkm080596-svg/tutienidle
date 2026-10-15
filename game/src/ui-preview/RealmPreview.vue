@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
+import DongFuVista from './scenes/dong-fu/fidelity/DongFuVista.vue'
 import RealmFidelityScene from '@/components/scenes/realm/fidelity/RealmFidelityScene.vue'
 import type { RealmUiModel } from '@/components/scenes/realm/fidelity/realmUi'
 const { t } = useI18n()
