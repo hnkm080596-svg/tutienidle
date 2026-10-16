@@ -1,0 +1,9 @@
+{
+  "source": "shared-item-slot-v1.png",
+  "width": 1022,
+  "height": 1002,
+  "alphaMin": 0,
+  "alphaMax": 255,
+  "opaque": false,
+  "operation": "tight crop only; authored alpha preserved"
+}

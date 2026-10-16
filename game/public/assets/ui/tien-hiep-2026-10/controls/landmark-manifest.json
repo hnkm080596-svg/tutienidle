@@ -1,0 +1,9 @@
+{
+  "source": "shared-landmark-v1.png",
+  "width": 599,
+  "height": 1748,
+  "alphaMin": 0,
+  "alphaMax": 255,
+  "opaque": false,
+  "operation": "tight crop only"
+}

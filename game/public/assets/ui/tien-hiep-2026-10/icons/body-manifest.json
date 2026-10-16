@@ -1,0 +1,77 @@
+{
+  "source": "body-glyphs-atlas-v1.png",
+  "entries": [
+    {
+      "name": "body-flame",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 512,
+        "height": 512
+      },
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    },
+    {
+      "name": "body-brain",
+      "sourceRect": {
+        "left": 512,
+        "top": 0,
+        "width": 512,
+        "height": 512
+      },
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    },
+    {
+      "name": "body-lungs",
+      "sourceRect": {
+        "left": 1024,
+        "top": 0,
+        "width": 512,
+        "height": 512
+      },
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    },
+    {
+      "name": "body-heart",
+      "sourceRect": {
+        "left": 0,
+        "top": 512,
+        "width": 512,
+        "height": 512
+      },
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    },
+    {
+      "name": "body-foot",
+      "sourceRect": {
+        "left": 512,
+        "top": 512,
+        "width": 512,
+        "height": 512
+      },
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    },
+    {
+      "name": "body-arm",
+      "sourceRect": {
+        "left": 1024,
+        "top": 512,
+        "width": 512,
+        "height": 512
+      },
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    }
+  ]
+}
