@@ -26,7 +26,7 @@ const KIND_GLYPH: Record<VictorySlotView['kind'], string> = {
     :title="props.slot.name"
   >
     <span class="victory-slot__tile">
-      <InkNineSlice chrome-id="frame-s-slot" layer="surface" />
+      <InkNineSlice chrome-id="frame-s-slot" layer="surface" :thickness="15" />
       <HuyenKimSymbol v-if="props.slot.symbol" class="victory-slot__symbol" :name="props.slot.symbol" />
       <img
         v-else-if="props.slot.icon"

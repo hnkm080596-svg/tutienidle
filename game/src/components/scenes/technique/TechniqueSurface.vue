@@ -13,8 +13,10 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { techniqueCodexUrl } from '@/presentation/technique/techniqueArt'
-import { getActiveElement } from '@/core/player/CultivationPathSystem'
+import { getActivePath } from '@/core/player/CultivationPathSystem'
+import { ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { TECHNIQUE_TIER_LABELS } from '@/core/technique/TechniqueProgression'
 import { ITEM_QUALITY_LABELS } from '@/core/item/ItemQuality'
 import type { TechniqueTier } from '@/core/technique/Technique'
@@ -25,11 +27,43 @@ import type { TechniqueUiModel } from './fidelity/techniqueUi'
 
 const TIER_ORDER: readonly TechniqueTier[] = ['so_nhap', 'tieu_thanh', 'dai_thanh', 'vien_man']
 
+// Placeholder signature colors for non-element pathways (Kiem Tu / The Tu).
+const PATHWAY_PROGRESS_COLORS: Record<string, string> = {
+  sword: '#38b6c8',
+  body: '#d9822b',
+}
+
+const MATERIAL_CATEGORY_ART: Record<string, string> = {
+  essence: '/assets/ui/tien-hiep-2026-10/controls/resource-essence-v1.png',
+  spirit_stone: '/assets/ui/tien-hiep-2026-10/controls/resource-crystal-v1.png',
+}
+
 const { t } = useI18n()
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
+
+function formatTechniqueGrade(grade: number | undefined): string {
+  if (grade === undefined) return '—'
+  if (grade >= 1 && grade <= 10) {
+    return t(`panels.skillPath.technique.grades.${grade}`)
+  }
+  return t('panels.skillPath.technique.gradeNode', { grade })
+}
+
+function materialIconFor(materialId: string | undefined): string | undefined {
+  if (!materialId) return undefined
+  try {
+    const material = gameManager.materialRegistry?.get?.(materialId) as
+      | { icon?: string; category?: string }
+      | undefined
+    const art = material?.icon ?? (material?.category ? MATERIAL_CATEGORY_ART[material.category] : undefined)
+    return art ? resolveAssetUrl(art) : undefined
+  } catch {
+    return undefined
+  }
+}
 
 const selected = ref('')
 const notice = ref('')
@@ -57,6 +91,21 @@ function disabledReasonLabel(reason: BetaTechniqueGradeAdvanceDisabledReason | n
   }
 }
 
+function resolveProgressColor(element: TechniqueUiModel['progressColor'] | undefined): string {
+  const activePath = getActivePath(player.$state)
+  const activeElement = surface.value.element
+  if (activePath === 'spell') {
+    return activeElement ? ELEMENT_COLOR_VARS[activeElement] : 'var(--el-primordial)'
+  }
+  if (activePath && PATHWAY_PROGRESS_COLORS[activePath]) {
+    return PATHWAY_PROGRESS_COLORS[activePath]
+  }
+  if (activeElement && ELEMENT_COLOR_VARS[activeElement]) {
+    return ELEMENT_COLOR_VARS[activeElement]
+  }
+  return element ?? '#d4a548'
+}
+
 const model = computed<TechniqueUiModel>(() => {
   const m = surface.value
   const advance = m.gradeAdvance
@@ -67,9 +116,10 @@ const model = computed<TechniqueUiModel>(() => {
     hasTechnique: m.state === 'available',
     name: m.name ?? '',
     quality: m.quality !== undefined ? ITEM_QUALITY_LABELS[m.quality] : '',
+    qualityKey: m.quality,
     description: m.description ?? t('panels.skillPath.technique.emptyNoTechnique'),
     // The codex is shared decorative art; technique identity stays in the model.
-    art: techniqueCodexUrl(m.element ?? getActiveElement(player.$state)),
+    art: techniqueCodexUrl(m.element),
     sections: m.sections.map((section, s) => ({
       id: `section-${s}`,
       title: section.label,
@@ -83,7 +133,7 @@ const model = computed<TechniqueUiModel>(() => {
           state: i < tierIndex ? 'reached' : i === tierIndex ? 'current' : 'next',
         })),
     rankLabel: m.grade !== undefined && m.rank !== undefined
-      ? t('panels.skillPath.technique.rankLine', { grade: m.grade, rank: m.rank })
+      ? t('panels.skillPath.technique.rankLine', { grade: formatTechniqueGrade(m.grade), rank: m.rank })
       : '—',
     masteryLabel: m.rankCapped
       ? (m.tier !== undefined ? TECHNIQUE_TIER_LABELS[m.tier] : '—')
@@ -91,16 +141,22 @@ const model = computed<TechniqueUiModel>(() => {
         ? '—'
         : `${formatNumber(m.mastery ?? 0)} / ${formatNumber(m.masteryForNextRank)}`,
     masteryPercent: m.rankCapped ? 100 : masteryMax > 0 ? ((m.mastery ?? 0) / masteryMax) * 100 : 0,
-    currentGrade: m.grade !== undefined ? t('panels.skillPath.technique.gradeNode', { grade: m.grade }) : '—',
-    nextGrade: advance.targetGrade !== undefined ? t('panels.skillPath.technique.gradeNode', { grade: advance.targetGrade }) : '—',
+    currentGrade: formatTechniqueGrade(m.grade),
+    nextGrade: formatTechniqueGrade(advance.targetGrade),
     material: {
+      id: advance.materialId,
       name: advance.materialName ?? '—',
+      icon: materialIconFor(advance.materialId),
       amountLabel: advance.cost !== undefined ? `${formatNumber(advance.owned ?? 0)} / ${formatNumber(advance.cost)}` : '—',
+      have: advance.owned,
+      need: advance.cost,
+      met: advance.cost !== undefined ? (advance.owned ?? 0) >= advance.cost : true,
     },
     materialNote: '',
     advanceDisabled: !advance.available,
     disabledReason: disabledReasonLabel(advance.disabledReason),
     artTemporary: false,
+    progressColor: resolveProgressColor(undefined),
   }
 })
 
@@ -117,7 +173,7 @@ function onAdvance() {
     bumpState()
     flashNotice(
       target !== undefined
-        ? t('technique.advanceNotice', { grade: t('panels.skillPath.technique.gradeNode', { grade: target }) })
+        ? t('technique.advanceNotice', { grade: formatTechniqueGrade(target) })
         : t('technique.advanceNotice', { grade: '' }),
     )
   }

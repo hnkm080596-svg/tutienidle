@@ -149,4 +149,54 @@ describe('PillBagSection - filter bar', () => {
     useTooltip().dismissTooltip()
     mounted.unmount()
   })
+
+  it('decomposes lower-realm pills into Luyen Dan Tinh Hoa on double-click and on autoDecomposeLowerRealmPills', async () => {
+    const mounted = mountSection((manager) => {
+      const mortalPill: Pill = {
+        id: 'tu_linh_dan_mortal',
+        name: 'Tụ Linh Đan',
+        type: 'cultivation',
+        grade: 'hoang',
+        realmId: 'mortal',
+        effects: [{ type: 'cultivation', cultivationPercent: 0.03 }],
+      }
+      const qiPill: Pill = {
+        id: 'tu_linh_dan_qi_refining',
+        name: 'Tụ Linh Đan (Luyện Khí)',
+        type: 'cultivation',
+        grade: 'hoang',
+        realmId: 'qi_refining',
+        effects: [{ type: 'cultivation', cultivationPercent: 0.03 }],
+      }
+      manager.pillBag.add(mortalPill, 3, 'huyen')
+      manager.pillBag.add(qiPill, 2, 'hoang')
+    })
+
+    const { usePlayerStore } = await import('@/stores/player')
+    const player = usePlayerStore()
+    player.realmId = 'qi_refining'
+    await nextTick()
+
+    const slots = filledSlots(mounted.container)
+    expect(slots).toHaveLength(2)
+
+    // Double-click the mortal pill slot -> decomposes into Luyen Dan Tinh Hoa
+    slots[0]!.dispatchEvent(new Event('click', { bubbles: true }))
+    await nextTick()
+    slots[0]!.dispatchEvent(new Event('click', { bubbles: true }))
+    await nextTick()
+
+    expect(mounted.manager.pillBag.getAmount('tu_linh_dan_mortal')).toBe(0)
+    expect(mounted.manager.pillBag.getAmount('tu_linh_dan_qi_refining')).toBe(2)
+    expect(mounted.manager.materialBag.getAmount('luyen_dan_tinh_hoa')).toBeGreaterThan(0)
+
+    // Advance to foundation_establishment and run autoDecomposeLowerRealmPills
+    player.realmId = 'foundation_establishment'
+    const autoRes = mounted.manager.realmAdvanceOps.autoDecomposeLowerRealmPills(player.$state)
+    expect(autoRes.decomposedPills).toBe(2)
+    expect(autoRes.essenceGained).toBe(4)
+    expect(mounted.manager.pillBag.getAmount('tu_linh_dan_qi_refining')).toBe(0)
+
+    mounted.unmount()
+  })
 })

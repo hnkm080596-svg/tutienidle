@@ -170,7 +170,7 @@ describe('AlchemySurface - failure surface + disabled brew (T4-32)', () => {
     const button = mounted.brewButton()!
     expect(button.disabled).toBe(true)
 
-    expect(mounted.blockReasonText()).toBeNull()
+    expect(mounted.blockReasonText()).toBe(i18n.global.t('alchemy.reason.room_not_built'))
 
     mounted.unmount()
   })

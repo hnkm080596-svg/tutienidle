@@ -200,26 +200,28 @@ const galaxy = [
             />
           </template>
           <template v-if="tab === 'dan'">
+            <template v-for="(piece, i) in galaxy" :key="i">
+              <img
+                v-if="i < danStep"
+                class="body-galaxy-piece"
+                :class="{ orbiting: piece.id.startsWith('orbit') }"
+                :style="{
+                  left: `${piece.x}%`,
+                  top: `${piece.y}%`,
+                  width: `${piece.w}%`,
+                  '--orbit-angle': `${piece.angle}deg`,
+                  animationDuration: `${piece.duration}s`,
+                  animationDirection: piece.reverse ? 'reverse' : 'normal',
+                  animationDelay: `${-i * 7}s`,
+                }"
+                :src="bodyArt(`galaxy-${piece.id}-lit`)"
+                alt=""
+              />
+            </template>
             <img
-              v-for="(piece, i) in galaxy"
-              :key="i"
-              class="body-galaxy-piece"
-              :class="{ orbiting: i < danStep && piece.id.startsWith('orbit') }"
-              :style="{
-                left: `${piece.x}%`,
-                top: `${piece.y}%`,
-                width: `${piece.w}%`,
-                '--orbit-angle': `${piece.angle}deg`,
-                animationDuration: `${piece.duration}s`,
-                animationDirection: piece.reverse ? 'reverse' : 'normal',
-                animationDelay: `${-i * 7}s`,
-              }"
-              :src="bodyArt(`galaxy-${piece.id}-${i < danStep ? 'lit' : 'unlit'}`)"
-              alt=""
-            />
-            <img
+              v-if="danStep > 4"
               class="body-galaxy-stars"
-              :src="bodyArt(`galaxy-stars-${danStep > 4 ? 'lit' : 'unlit'}`)"
+              :src="bodyArt('galaxy-stars-lit')"
               alt=""
             />
           </template>

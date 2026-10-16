@@ -317,6 +317,7 @@ export class TribulationOutcomeService {
 
     gameManager.equipmentOps.unequipAllEquipment()
     player.setEquipmentModifiers(gameManager.equipmentOps.getEquipmentModifiers())
+    gameManager.realmAdvanceOps.autoDecomposeLowerRealmPills?.(player)
 
     // Spec dot-pha-loi-kiep SS4.2/SS4.4: foundation grade recorded on
     // entry; highestFoundationAchieved feeds the foundation passive.

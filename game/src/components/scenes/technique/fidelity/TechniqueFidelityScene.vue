@@ -41,31 +41,24 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .technique-codex-grid { display:grid; grid-template-columns:minmax(0,.94fr) minmax(0,1.1fr) minmax(0,.95fr); gap:20px; height:100%; min-height:0; }
 .technique-codex-grid.is-empty { grid-template-columns:1fr; }
 .technique-codex-grid :deep(.technique-info),.technique-codex-grid :deep(.technique-artifact),.technique-codex-grid :deep(.technique-upgrade) { position:relative; inset:auto; width:auto; height:100%; min-height:0; }
-.technique-codex-grid :deep(.technique-info) { padding:16px 14px 20px; background:#f7edd9ed; border:1px solid #b79c6455; border-radius:4px; }
-.technique-codex-grid :deep(.technique-eyebrow) { margin-bottom:10px; font-size:11px; letter-spacing:.16em; }
-.technique-codex-grid :deep(.technique-info h1) { font-size:30px; font-style:normal; line-height:1.3; color:#26483a; margin-bottom:12px; }
-.technique-codex-grid :deep(.technique-quality) { border-radius:2px; background:#a98a3b13; letter-spacing:.08em; }
-.technique-codex-grid :deep(.technique-description) { font-size:14px; line-height:1.75; margin:16px 0; }
+.technique-codex-grid :deep(.technique-info) { padding:18px 16px 20px; }
+.technique-codex-grid :deep(.technique-info.game-card--titled) { padding:38px 16px 20px; }
+.technique-codex-grid :deep(.technique-description) { font-size:14px; line-height:1.75; margin:6px 0 14px; }
 .technique-codex-grid :deep(.technique-section h2) { font-size:17px; }
 .technique-codex-grid :deep(.technique-section dl) { font-size:13px; }
 .technique-codex-grid :deep(.technique-section dl > div) { align-items:baseline; padding:8px 0; }
-.technique-codex-grid :deep(.technique-artifact) { overflow:hidden; border:1px solid #c6aa6b; border-radius:5px; background:radial-gradient(ellipse at 50% 34%,#3d5544,#162c24 65%,#14251f); box-shadow:inset 0 0 0 4px #c7ab6322,0 6px 12px #5d472919; }
-.technique-codex-grid :deep(.technique-artifact .technique-book) { left:5%; top:3%; width:90%; height:61%; filter:drop-shadow(0 12px 12px #0007); }
-.technique-codex-grid :deep(.technique-orbit) { left:10%; top:8%; width:80%; height:48%; opacity:.65; }
-.technique-codex-grid :deep(.technique-track) { left:18px; right:18px; bottom:22px; color:#e5d5ac; }
-.technique-codex-grid :deep(.technique-track h2) { font-size:14px; color:#e1cd9a; letter-spacing:.1em; }
-.technique-codex-grid :deep(.technique-mastery-label) { color:#d8cba9; font-size:12px; }
-.technique-codex-grid :deep(.technique-stage) { color:#b2b89c; font-size:12px; padding:0 2px; }
-.technique-codex-grid :deep(.technique-stage-seal) { width:34px; height:34px; font-size:20px; background:#193b2e; color:#d2bf89; border-color:#8d804d; }
-.technique-codex-grid :deep(.current .technique-stage-seal) { background:#a4803d; color:#fff1c4; border-color:#e6c57f; }
-.technique-codex-grid :deep(.technique-upgrade) { display:flex; flex-direction:column; gap:14px; padding:16px 14px; overflow-y:auto; background:#f7edd9ed; border:1px solid #b79c6455; border-radius:4px; }
-.technique-codex-grid :deep(.technique-upgrade h2) { margin:0; font-size:25px; }
-.technique-codex-grid :deep(.technique-compare) { padding:16px 10px; border:1px solid #b6975e55; background:#9b7f4310; gap:8px; }
-.technique-codex-grid :deep(.technique-compare strong) { font-size:21px; color:#365c43; }
-.technique-codex-grid :deep(.technique-upgrade-hint) { margin:0; font-size:13px; line-height:1.7; }
+.technique-codex-grid :deep(.technique-artifact) { overflow:hidden; background:#f4e7ce; border:18px solid transparent; border-image:url('/assets/ui/tien-hiep-2026-10/realm/active-card-frame-v1.svg') 24 / 18px stretch; box-shadow:0 2px 5px #53351630; color:#241708; }
+.technique-codex-grid :deep(.technique-slot-wrap) { top:2%; width:min(88%, 296px); }
+.technique-codex-grid :deep(.technique-track) { left:12px; right:12px; bottom:10px; color:#241708; }
+.technique-codex-grid :deep(.technique-track h2) { font-size:14px; color:#3b2810; letter-spacing:.1em; }
+.technique-codex-grid :deep(.technique-mastery-label) { color:#3b2810; font-size:12px; }
+.technique-codex-grid :deep(.technique-stage) { font-size:12px; padding:0 2px; }
+.technique-codex-grid :deep(.technique-upgrade) { display:flex; flex-direction:column; gap:14px; padding:18px 16px; overflow-y:auto; }
+.technique-codex-grid :deep(.technique-compare) { padding:14px 10px; border:1px solid #b6975e55; background:#19261e88; border-radius:4px; gap:16px; }
+.technique-codex-grid :deep(.technique-compare strong) { font-size:21px; color:#a3d793; }
 .technique-codex-grid :deep(.technique-upgrade h3) { margin:0; padding-top:12px; font-size:16px; }
 .technique-codex-grid :deep(.technique-material) { padding:0; }
 .technique-codex-grid :deep(.technique-material p) { font-size:15px; }
-.technique-codex-grid :deep(.technique-advance) { position:relative; left:auto; bottom:auto; width:100%; flex:0 0 48px; margin-top:auto; font-size:20px; }
-.technique-codex-grid :deep(.technique-notice) { position:relative; inset:auto; width:auto; height:auto; min-height:36px; margin:0; padding:0 2px; font-size:12px; }
+.technique-codex-grid :deep(.technique-advance.game-action-button) { position:relative; left:auto; bottom:auto; width:240px; height:calc(240px * 324 / 1225); min-height:46px; flex:none; margin:auto auto 0; font-size:21px; }
+.technique-codex-grid :deep(.technique-notice) { position:relative; inset:auto; width:auto; height:auto; min-height:24px; margin:0; padding:0 2px; font-size:12px; text-align:center; }
 </style>

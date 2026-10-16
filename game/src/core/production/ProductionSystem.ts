@@ -29,7 +29,6 @@ import {
   PRODUCTION_OUTCOME_WEIGHTS,
   computeCycleSeconds,
   getSiteSpeedMultiplier,
-  getTierWeightProfile,
   mulberry32,
   rollWeightedIndex,
 } from './ProductionBalance'
@@ -46,7 +45,6 @@ import {
   type GrottoChannel,
 } from '../../data/drop/HiddenMaterialChannels'
 import { getRealmIndex } from '../realm/realmSystem'
-import { getRealmTier, PRODUCIBLE_REALM_TIER_LEAD } from '../realm/RealmTierMap'
 import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 import { betaRecipeFamilyOfId, isScopeHidden } from '../betaScope'
 
@@ -661,39 +659,9 @@ export class ProductionSystem {
       cycle.collectionRealmId,
     )
 
-    const profile = getTierWeightProfile(
-      collectionRealmId,
-      this.deps.territory.realmIds,
-    )
-
-    // F-MAT-REALM (saveShapeValidation): a holding more than
-    // PRODUCIBLE_REALM_TIER_LEAD realm tiers above the collector fails
-    // producibility, so the tier roll caps at the same ceiling - a
-    // mortal cycle can still pull qi_refining materials but can never
-    // mint foundation_establishment ones (the un-capped low profile
-    // leaked them ~11% of the time and corrupted mortal saves). The
-    // bound compares real realm tiers, not realmIds positions, so a
-    // territory ladder with gaps stays inside the validator window.
-    const collectionTier = getRealmTier(collectionRealmId)
-
-    const cappedProfile = profile.map((weight, index) => {
-      const candidateRealmId = this.deps.territory.realmIds[index]
-      return candidateRealmId !== undefined &&
-        getRealmTier(candidateRealmId) <= collectionTier + PRODUCIBLE_REALM_TIER_LEAD
-        ? weight
-        : 0
-    })
-
-    const tierIndex = rollWeightedIndex(cappedProfile, random)
-
-    // r14-INT-4: the all-zero pool returns the -1 sentinel - guard it
-    // explicitly like the ageIndex sites below instead of relying on
-    // realmIds[-1] -> undefined.
-    if (tierIndex < 0) {
-      return []
-    }
-
-    const tierRealmId = this.deps.territory.realmIds[tierIndex]
+    // Owner ruling 2026-10-16: Dong Thien drops herbs for the collector's
+    // current realm tier directly (no cross-realm tier roll).
+    const tierRealmId = collectionRealmId
 
     if (!tierRealmId) {
       return []
@@ -814,18 +782,16 @@ export class ProductionSystem {
     }
 
     if (view.cycleTotalMs && view.cycleTotalMs > 0) {
-      const rateRealmId = earliest?.collectionRealmId ?? fallbackRealmId
-      const profile = getTierWeightProfile(rateRealmId, this.deps.territory.realmIds)
-      const reached = getRealmIndex(rateRealmId)
-      const realms = this.deps.territory.realmIds.filter((realm, index) =>
-        (profile[index] ?? 0) > 0 && getRealmIndex(realm) <= reached,
+      const rateRealmId = resolveTerritoryTier(
+        this.deps.territory,
+        earliest?.collectionRealmId ?? fallbackRealmId,
       )
       const amounts: number[] = [PRODUCTION_ESSENCE_AMOUNT]
       if (definition.kind === 'grotto') {
-        for (const realm of realms) {
-          const hasHerbs = this.deps.grottoHerbs.some(herb => herb.realmId === realm && betaRecipeFamilyOfId(herb.pillRecipeId) !== null)
-          amounts.push(hasHerbs ? GROTTO_HERB_AMOUNT : 0)
-        }
+        const hasHerbs = this.deps.grottoHerbs.some(
+          herb => herb.realmId === rateRealmId && betaRecipeFamilyOfId(herb.pillRecipeId) !== null,
+        )
+        amounts.push(hasHerbs ? GROTTO_HERB_AMOUNT : 0)
       } else {
         const pool = definition.kind === 'forest' ? this.deps.forestRewards : this.deps.mineRewards
         for (const age of HERB_AGES) {

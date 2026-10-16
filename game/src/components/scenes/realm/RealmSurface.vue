@@ -67,6 +67,9 @@ const model = computed<RealmUiModel>(() => {
       ? t('panels.realm.labels.foundation')
       : (nextRealmName.value || t('panels.realm.labels.majorFallback'))
 
+  const unmetChapterClear = (gameManager.realmAdvanceOps.getBreakthroughRequirements?.(player.$state) ?? [])
+    .some((row) => row.key === 'chapterClear' && !row.met)
+
   return {
     name: realm.name,
     currentFloor: displayedFloor.value ?? player.realmLevel,
@@ -90,7 +93,9 @@ const model = computed<RealmUiModel>(() => {
     passives: realmStatPassiveRows.value,
     nextRealmName: nextRealmName.value,
     ctaLabel: majorLabel,
+    ctaVisible: Boolean(nextRealmSurface.value),
     ctaEnabled: canBreakthrough.value,
+    ctaLockReason: unmetChapterClear ? t('panels.realm.requirements.chapterClear') : undefined,
     // R13 ruling (2026-10-06): the sword-path Quan Khi re-entry moved
     // out of Nhan Vat into Canh Gioi - same gate it carried there.
     // Ruling (2026-10-11): the merged ritual button re-opens the Quan

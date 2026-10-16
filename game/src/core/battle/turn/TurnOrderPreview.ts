@@ -15,6 +15,26 @@ export interface BattleLogEntry {
   targetIds: string[]
 
   ccBlocked: boolean
+
+  totalDamage?: number
+
+  hpDamage?: number
+
+  wardDamage?: number
+
+  healed?: number
+
+  hitCount?: number
+
+  critCount?: number
+
+  crit?: boolean
+
+  dodged?: boolean
+
+  damageKind?: 'physical' | 'magic' | 'true'
+
+  element?: string
 }
 
 /**

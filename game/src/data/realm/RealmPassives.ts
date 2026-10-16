@@ -78,7 +78,7 @@ function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
 // toan voi breakthroughGrade/Realm Pressure (muc XIV - "2 he thong khong
 // chong cheo"). So lieu first pass, tinh chinh sau.
 const KIEN_CO_MAIN_STAT_PERCENT: Record<FoundationType, number> = {
-  human: 0,
+  human: 0.02,
   earth: 0.05,
   heaven: 0.1,
   great_dao: 0.2,

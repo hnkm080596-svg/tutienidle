@@ -86,7 +86,7 @@ describe('RealmPanel', () => {
     // Auto-select: the focus card snapped to the new current floor.
     expect(
       mounted.container.querySelector<HTMLElement>('.realm-floor-line')?.textContent?.trim(),
-    ).toBe(`Tầng ${before + 1} / 18`)
+    ).toBe(`Tầng ${before + 1} / 12`)
 
     // At the realm cap the floor cannot advance - the button hides again
     // even with a full bar (the major transition is the ritual's job).
@@ -132,13 +132,17 @@ describe('RealmPanel', () => {
     mounted.player.realmLevel = 12
     await nextTick()
 
-    // M-QI-02 - Truc Co admission needs the chapter-final clear too.
-    expect(ritualButton()?.classList.contains('btn-hidden')).toBe(true)
+    // M-QI-02 - Truc Co button is visible at floor 12, disabled with
+    // requirement hint until the chapter-final clear lands.
+    expect(ritualButton()?.classList.contains('btn-hidden')).toBe(false)
+    expect(ritualButton()?.disabled).toBe(true)
+    expect(ritualButton()?.textContent?.trim()).toBe('Trúc Cơ')
 
     mounted.player.completedStageIds = ['qi_refining_abyssal_pool']
     await nextTick()
 
-    expect(ritualButton()?.textContent?.trim()).toBe('Dược')
+    expect(ritualButton()?.disabled).toBe(false)
+    expect(ritualButton()?.textContent?.trim()).toBe('Trúc Cơ')
 
     mounted.player.realmId = 'foundation_establishment'
     mounted.player.cultivation = 0

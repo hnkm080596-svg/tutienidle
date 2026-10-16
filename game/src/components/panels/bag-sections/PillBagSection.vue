@@ -27,7 +27,8 @@ import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import { ITEM_GRADE_ORDER, composeItemGradeNameSegments } from '@/core/item/ItemGrade'
 import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
 import type { ItemQuality } from '@/core/item/ItemQuality'
-import { BASE_PILL_QUALITY, pillQualityUplift } from '@/core/pill/PillQuality'
+import { BASE_PILL_QUALITY, pillDecomposeEssencePerUnit, pillQualityUplift } from '@/core/pill/PillQuality'
+import { getRealmIndex } from '@/core/realm/realmSystem'
 import { realmFromGrade } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
 import { gradeLabel, realmLabel } from '@/core/presentation/labels'
@@ -75,6 +76,13 @@ const { gridRef, pageSize, gridStyle } = useBagGridLayout()
 // dung chung Pill/Talisman/Formation, xem useTooltip.ts) -- build TU
 // DUNG PillEffect[] that, khong bia so. Them 4 effect nghe (2026-08-24,
 // resource-professions-rework S5).
+function isOldRealmPill(pill: Pill): boolean {
+  if (!pill.realmId) return false
+  const pillIdx = getRealmIndex(pill.realmId)
+  const playerIdx = getRealmIndex(player.realmId)
+  return pillIdx >= 0 && playerIdx > pillIdx
+}
+
 function buildTooltip(
   pill: Pill,
   owned: number,
@@ -153,10 +161,15 @@ function buildTooltip(
 
   const sections: TooltipSection[] = rows.length > 0 ? [{ label: 'Hiệu Ứng', rows }] : []
 
-  // audit M2: drinkable pills consume on a TWO-click confirm, so the
-  // tooltip must advertise the gesture -- a {label, rows: []} section
-  // renders as one caption line. Material pills stay inert.
-  if (pill.type !== 'material') {
+  // Old-realm pills cannot be consumed at a higher realm; double-clicking
+  // decomposes the stack into Luyen Dan Tinh Hoa.
+  if (isOldRealmPill(pill)) {
+    const essenceGain = Math.max(1, owned) * pillDecomposeEssencePerUnit(pill, quality)
+    sections.push({
+      label: t('bag.pill.decomposeOldRealmHint', { amount: essenceGain }),
+      rows: [],
+    })
+  } else if (pill.type !== 'material') {
     sections.push({ label: t('bag.pill.useHint'), rows: [] })
   }
 
@@ -325,6 +338,14 @@ function onPillClick(pillId: string, name: string, quality: ItemQuality) {
 
   if (armedPillId.value === cellKey) {
     disarmPill()
+    const stack = gameManager.pillBag.get(pillId, quality)
+    if (stack && isOldRealmPill(stack.pill)) {
+      const res = gameManager.realmAdvanceOps.decomposePillStack(pillId, quality, player.realmId)
+      if (res.ok) {
+        bumpState()
+      }
+      return
+    }
     drinkPill(pillId, name, quality)
 
     return
@@ -437,10 +458,11 @@ const entries = computed<PillEntry[]>(() => {
 
         icon: stack.pill.icon,
 
-        // Mission E Task 2 (audit T1-10): material pills have no drink
-        // action - the cell renders without a click affordance.
+        // Mission E Task 2 (audit T1-10): current-realm material pills have
+        // no drink action; old-realm pills (including leftover material pills)
+        // allow double-click decomposition into Luyen Dan Tinh Hoa.
         onClick:
-          stack.pill.type === 'material'
+          stack.pill.type === 'material' && !isOldRealmPill(stack.pill)
             ? undefined
             : () => onPillClick(stack.pill.id, displayName, quality),
 

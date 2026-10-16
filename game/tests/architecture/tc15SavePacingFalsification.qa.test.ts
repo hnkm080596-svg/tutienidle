@@ -92,11 +92,11 @@ describe('F-TC15-MERIDIAN-PACING', () => {
     expect(() => assertBodyProgressionIntegrity(save.player as never)).toThrow()
   })
 
-  it('sibling: rejects 5 opened meridians at qi_refining realmLevel 8', () => {
+  it('sibling: rejects 5 opened meridians at qi_refining realmLevel 6', () => {
     const save = qiRefiningSave()
-    save.player.realmLevel = 8
+    save.player.realmLevel = 6
     withCompletedRefinement(save.player)
-    // 5th meridian requires realmLevel 10 - unproducible at level 8
+    // 5th meridian requires realmLevel 7 - unproducible at level 6
     save.player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.slice(0, 5).map((m) => [m.id, 100]))
     expect(() => assertBodyProgressionIntegrity(save.player as never)).toThrow()
   })

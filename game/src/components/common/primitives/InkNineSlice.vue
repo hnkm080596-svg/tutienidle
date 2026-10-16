@@ -58,15 +58,20 @@ const chromeFallbackClass = computed(() => {
 // tintable:false slots ignore tintVar - the art carries its own colors.
 const chromeArtStyle = computed<Record<string, string> | null>(() => {
   const c = chrome.value
-  if (!c) return null
-  const { left, right, top, bottom } = c.slices
   const meta = chromeMeta.value
-  const fill = meta?.center === 'transparent' ? '' : ' fill'
-  const repeat = meta?.edgeMode === 'tile' ? 'round' : 'stretch'
-  const slice = `${top} ${right} ${bottom} ${left}${fill}`
-  const width = `${top}px ${right}px ${bottom}px ${left}px`
+  if (!c || !meta) return null
+  const { left, right, top, bottom } = c.slices
+  const fill = meta.center === 'transparent' ? '' : ' fill'
+  const repeat = meta.edgeMode === 'tile' ? 'round' : 'stretch'
+  const pct = (v: number, total: number) => `${Number(((v / total) * 100).toFixed(4))}%`
+  const slice = `${pct(top, meta.sourceHeight)} ${pct(right, meta.sourceWidth)} ${pct(bottom, meta.sourceHeight)} ${pct(left, meta.sourceWidth)}${fill}`
+  const wTop = props.thickness ?? top
+  const wRight = props.thickness ?? right
+  const wBottom = props.thickness ?? bottom
+  const wLeft = props.thickness ?? left
+  const width = `${wTop}px ${wRight}px ${wBottom}px ${wLeft}px`
   const source = `image-set(url("${c.url1x}") 1x, url("${c.url2x}") 2x)`
-  const tint = meta?.tintable === false ? undefined : resolvedTint.value
+  const tint = meta.tintable === false ? undefined : resolvedTint.value
   const art: Record<string, string> = tint
     ? {
         background: tint,
@@ -79,7 +84,7 @@ const chromeArtStyle = computed<Record<string, string> | null>(() => {
     : {
         borderStyle: 'solid',
         borderColor: 'transparent',
-        borderWidth: width,
+        borderWidth: '1px',
         borderImageSource: source,
         borderImageSlice: slice,
         borderImageWidth: width,

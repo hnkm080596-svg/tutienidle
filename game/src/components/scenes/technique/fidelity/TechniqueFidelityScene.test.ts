@@ -19,12 +19,56 @@ describe('Technique paper presentation', () => {
     app.use(createI18n({ legacy: false, locale: 'vi', messages: techniqueMessages })).mount(container)
     mounted.push({ app, container })
     expect(container.querySelector('.rail-panel-chrome h1')?.textContent).toBe('Tâm Pháp')
-    expect(container.querySelector('.technique-info h1')?.textContent).toBe('Example')
+    expect(container.querySelector('.technique-info .game-card-title')?.textContent).toBe('Example')
+    expect(container.querySelector('.slot-view--technique')).toBeTruthy()
+    expect(container.querySelector('.technique-stage-seal')?.textContent).toBe('Sơ')
     expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('50')
     container.querySelector<HTMLButtonElement>('.technique-advance')!.click()
     container.querySelector<HTMLButtonElement>('.technique-stage')!.click()
     expect(advances).toBe(1)
     expect(selected).toBe('first')
     expect(JSON.stringify(model)).toBe(original)
+  })
+
+  it('renders calligraphy stage glyphs Sơ, Tiểu, Đại, Viên and applies progressColor', () => {
+    const model: TechniqueUiModel = {
+      hasTechnique: true,
+      name: 'Tiểu Ngũ Hành Quyết',
+      quality: 'Hoàng',
+      qualityKey: 'hoang',
+      description: 'Description',
+      art: '/sample.png',
+      sections: [],
+      stages: [
+        { id: 'so_nhap', label: 'Sơ Nhập', state: 'reached' },
+        { id: 'tieu_thanh', label: 'Tiểu Thành', state: 'current' },
+        { id: 'dai_thanh', label: 'Đại Thành', state: 'next' },
+        { id: 'vien_man', label: 'Viên Mãn', state: 'next' },
+      ],
+      rankLabel: 'Nhất phẩm · Tầng 4',
+      masteryLabel: '60 / 100',
+      masteryPercent: 60,
+      currentGrade: 'Nhất Phẩm',
+      nextGrade: 'Nhị Phẩm',
+      material: { name: 'Linh Thạch', amountLabel: '10 / 5' },
+      materialNote: '',
+      advanceDisabled: false,
+      disabledReason: '',
+      artTemporary: false,
+      progressColor: 'var(--el-fire)',
+    }
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const app = createApp({
+      render: () => h(TechniqueFidelityScene, { model, selected: 'tieu_thanh', notice: '' }),
+    })
+    app.use(createI18n({ legacy: false, locale: 'vi', messages: techniqueMessages })).mount(container)
+    mounted.push({ app, container })
+
+    const seals = Array.from(container.querySelectorAll('.technique-stage-seal')).map((el) => el.textContent)
+    expect(seals).toEqual(['Sơ', 'Tiểu', 'Đại', 'Viên'])
+    expect(container.querySelector('.slot-view--technique .slot-view__chat')).toBeTruthy()
+    const bar = container.querySelector<HTMLElement>('.technique-mastery')
+    expect(bar?.style.getPropertyValue('--mastery-color')).toBe('var(--el-fire)')
   })
 })

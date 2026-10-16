@@ -31,12 +31,15 @@ function mountRow(model: BetaQuestSurfaceModel) {
 }
 
 describe('QuestRow display and interaction', () => {
-  it('shows a ready to claim badge and allows selecting an unlocked quest', async () => {
+  it('shows a ready to claim badge, 100% progress bar fill, no thumbnail, and allows selecting an unlocked quest', async () => {
     const view = mountRow(row(false, true))
     await nextTick()
     expect(view.container.querySelector('.quest-row__badge.ready')?.textContent).toBe(
       i18n.global.t('panels.quest.scene.status.ready'),
     )
+    expect(view.container.querySelector('.quest-row__thumb')).toBeNull()
+    const fillBar = view.container.querySelector<HTMLElement>('.equipment-energy-tube i')
+    expect(fillBar?.style.width).toBe('100%')
     view.container.querySelector<HTMLButtonElement>('.quest-row')?.click()
     expect(view.selected).toBe(1)
     view.unmount()

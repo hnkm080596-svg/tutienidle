@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useNotificationStore, type ChatLogEntry } from '@/stores/notification'
 import type { NotificationKind } from '@/core/notification/NotificationEvent'
 import { isMaxRankTone } from '@/core/profession/slotRank'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import GamePanel from '@/components/common/GamePanel.vue'
 
 const { t } = useI18n()
 const notification = useNotificationStore()
@@ -54,17 +54,15 @@ watch(
 </script>
 
 <template>
-  <section
+  <GamePanel
     class="df-chatbox"
     :class="{ 'is-expanded': expanded }"
+    :title="t('dongFu.chatbox.title')"
     :aria-label="t('dongFu.chatbox.aria')"
     data-df-ui
     data-testid="dong-fu-chatbox"
   >
-    <InkNineSlice chrome-id="surface-l-drawer" layer="surface" />
-
-    <header class="df-chatbox__header">
-      <span class="df-chatbox__title">{{ t('dongFu.chatbox.title') }}</span>
+    <div class="df-chatbox__toolbar">
       <div class="df-chatbox__tabs" role="tablist">
         <button
           type="button"
@@ -118,7 +116,7 @@ watch(
           {{ expanded ? '▼' : '▲' }}
         </button>
       </div>
-    </header>
+    </div>
 
     <div ref="listEl" class="df-chatbox__list" role="log" aria-live="polite" aria-relevant="additions">
       <p v-if="!filteredEntries.length" class="df-chatbox__empty">
@@ -148,42 +146,57 @@ watch(
         <span v-else class="df-chatbox__text">{{ entry.message }}</span>
       </div>
     </div>
-  </section>
+  </GamePanel>
 </template>
 
 <style scoped>
-.df-chatbox {
+.df-chatbox.game-panel {
+  --game-panel-header-top: 8px;
+  --game-panel-line-bottom: 24px;
   position: absolute;
+  left: auto;
+  top: auto;
   right: 30px;
   bottom: 18px;
-  width: 345px;
+  width: 356px;
+  height: 192px;
   z-index: 6;
-  isolation: isolate;
-  padding: 10px 14px 12px;
-  color: #f1e6c5;
-  font-family: var(--pc-font-body, Georgia, serif);
-  transition: max-height 180ms ease;
+  box-shadow: 0 8px 24px rgba(10, 8, 4, 0.55);
+  transition: height 180ms ease;
 }
 
-.df-chatbox > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 2;
+.df-chatbox.game-panel.is-expanded {
+  height: 308px;
 }
 
-.df-chatbox__header {
+.df-chatbox :deep(.game-panel__header) {
+  inset: 8px 12px auto;
+  height: 30px;
+}
+
+.df-chatbox :deep(.game-panel__title) {
+  height: 24px;
+  font-size: 22px;
+  line-height: 24px;
+}
+
+.df-chatbox :deep(.game-panel__line) {
+  bottom: 0;
+}
+
+.df-chatbox :deep(.game-panel__content) {
+  inset: 42px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.df-chatbox__toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(201, 166, 106, 0.42);
-}
-
-.df-chatbox__title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--df-gold-light, #ebd094);
-  white-space: nowrap;
+  flex: none;
 }
 
 .df-chatbox__tabs {
@@ -193,18 +206,18 @@ watch(
 }
 
 .df-chatbox__tab {
-  padding: 2px 7px;
-  border: 1px solid rgba(189, 163, 99, 0.35);
-  background: rgba(24, 21, 15, 0.65);
-  color: #bfb293;
+  padding: 2px 8px;
+  border: 1px solid #b39a68;
+  background: #ede0c4;
+  color: #5c492c;
   font-size: 11px;
   cursor: pointer;
 }
 
 .df-chatbox__tab.is-active {
-  border-color: #d6a852;
-  background: rgba(214, 168, 82, 0.22);
-  color: #ffeab3;
+  border-color: #8a6420;
+  background: #302519;
+  color: #f4e4c1;
   font-weight: 600;
 }
 
@@ -218,52 +231,52 @@ watch(
   width: 22px;
   height: 22px;
   padding: 0;
-  border: 1px solid rgba(189, 163, 99, 0.4);
-  background: rgba(28, 24, 16, 0.75);
-  color: #e4cfa0;
+  border: 1px solid #b39a68;
+  background: #ede0c4;
+  color: #302519;
   font-size: 12px;
   line-height: 1;
   cursor: pointer;
 }
 
 .df-chatbox__icon-btn:hover {
-  color: #fff2cc;
-  border-color: #e4cfa0;
+  background: #decba2;
+  border-color: #8a6420;
 }
 
 .df-chatbox__list {
-  margin-top: 6px;
-  max-height: 98px;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  font-family: var(--pc-font-body, Georgia, serif);
   font-size: 12px;
   line-height: 1.4;
   scrollbar-width: thin;
-}
-
-.df-chatbox.is-expanded .df-chatbox__list {
-  max-height: 215px;
+  scrollbar-color: #a18547 transparent;
 }
 
 .df-chatbox__empty {
   margin: 0;
   padding: 8px 2px;
-  color: #a99f86;
+  color: #675637;
   font-style: italic;
   font-size: 12px;
 }
 
 .df-chatbox__line {
-  padding: 2px 4px;
-  border-radius: 3px;
-  background: rgba(14, 13, 10, 0.36);
+  padding: 3px 6px;
+  border-radius: 2px;
+  background: rgba(178, 138, 67, 0.14);
+  border-left: 2px solid #b28a43;
+  color: #302519;
   overflow-wrap: anywhere;
 }
 
 .df-chatbox__time {
-  color: #93886f;
+  color: #675637;
   margin-right: 4px;
   font-size: 11px;
 }
@@ -271,48 +284,60 @@ watch(
 .df-chatbox__tag {
   font-weight: 700;
   margin-right: 5px;
-  color: #d6a852;
+  color: #8a5a19;
+}
+
+.df-chatbox__line--loot {
+  border-left-color: #287257;
 }
 
 .df-chatbox__line--loot .df-chatbox__tag {
-  color: #7ee2a8;
+  color: #1f6b50;
+}
+
+.df-chatbox__line--warning {
+  border-left-color: #b87314;
 }
 
 .df-chatbox__line--warning .df-chatbox__tag {
-  color: #f3c462;
+  color: #9e5f0b;
+}
+
+.df-chatbox__line--error {
+  border-left-color: #a63628;
 }
 
 .df-chatbox__line--error .df-chatbox__tag {
-  color: #ff7b72;
+  color: #a63628;
 }
 
 .df-chatbox__prefix {
-  color: #cfc2a3;
+  color: #5c492c;
 }
 
 .df-chatbox__loot-item {
   font-weight: 600;
-  color: #f4e6c1;
+  color: #302519;
 }
 
 .df-chatbox__loot-item--max-rank {
-  background: linear-gradient(90deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1, #84fab0);
+  background: linear-gradient(90deg, #b33225, #8a5a19, #287257, #5b3882);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .df-chatbox__loot-grade {
-  color: #b7aa8c;
+  color: #675637;
   font-size: 11px;
 }
 
 .df-chatbox__loot-amount {
-  color: #ffe399;
+  color: #6b3f08;
   font-weight: 700;
 }
 
 .df-chatbox__text {
-  color: #e9dec0;
+  color: #302519;
 }
 </style>

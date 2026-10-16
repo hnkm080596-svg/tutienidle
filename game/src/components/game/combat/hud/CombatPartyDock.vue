@@ -9,7 +9,7 @@ const dock = ref<HTMLElement | null>(null)
 let observer: ResizeObserver | undefined
 onMounted(() => {
   observer = new ResizeObserver(() => {
-    if (dock.value) publishPartyDockHeight(dock.value.getBoundingClientRect().height * 228 / 204)
+    if (dock.value) publishPartyDockHeight(dock.value.getBoundingClientRect().height)
   })
   if (dock.value) observer.observe(dock.value)
 })
@@ -20,6 +20,6 @@ const cards = computed(() => { stateVersion.value; return battlePartyCards(battl
 </script>
 <template><div ref="dock" class="combat-party-dock"><BattleCard v-for="(participant, index) in cards" :key="participant?.id ?? `empty-${index}`" :participant="participant" /></div></template>
 <style scoped>
-.combat-party-dock { position: absolute; left: 24px; right: 24px; bottom: 12px; display: flex; justify-content: center; gap: 12px; z-index: 12; pointer-events: none; }
-.combat-party-dock > :deep(.battle-card) { width: calc((100% - 48px) / 5); flex: 0 0 calc((100% - 48px) / 5); }
+.combat-party-dock { position: absolute; left: 24px; right: 24px; bottom: 0; display: flex; justify-content: flex-start; gap: 12px; z-index: 12; pointer-events: none; }
+.combat-party-dock > :deep(.battle-card) { width: calc((100% - 48px) / 5 * 0.8); flex: 0 0 calc((100% - 48px) / 5 * 0.8); }
 </style>

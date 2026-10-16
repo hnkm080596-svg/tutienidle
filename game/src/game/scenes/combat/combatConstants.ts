@@ -83,7 +83,7 @@ export const PERSPECTIVE_BORDER_ALPHA = 0.3
 export const PLAYER_COLOR = 0x4a90d9
 export const ENEMY_COLOR = 0xd94a4a
 
-export const PLAYER_DISPLAY_SCALE_MULTIPLIER = 4
+export const PLAYER_DISPLAY_SCALE_MULTIPLIER = 2.25
 export const ENEMY_DISPLAY_SCALE_MULTIPLIER = 2
 
 // Boss to gap 2 lan mot enemy THUONG (2026-09-05, Combat Art Pipeline spec

@@ -280,12 +280,24 @@
         "helpAria": "Technique help",
         "qualityLine": "Grade: {quality}",
         "gradeTrackTitle": "Technique Grade",
-        "rankLine": "Grade {grade} · Rank {rank}",
+        "rankLine": "{grade} · Rank {rank}",
         "materialsTitle": "Materials Needed",
         "reasonGradeCeiling": "Grade ceiling reached",
         "reasonRealmGate": "Requires a higher realm",
         "reasonInsufficientMaterial": "Not enough materials",
-        "reasonBusy": "Busy — try again later"
+        "reasonBusy": "Busy — try again later",
+        "grades": {
+          "1": "Grade I",
+          "2": "Grade II",
+          "3": "Grade III",
+          "4": "Grade IV",
+          "5": "Grade V",
+          "6": "Grade VI",
+          "7": "Grade VII",
+          "8": "Grade VIII",
+          "9": "Grade IX",
+          "10": "Grade X"
+        }
       },
       "colTitles": {
         "activeArts": "Active Spell Arts"
@@ -730,7 +742,7 @@
       },
       "labels": {
         "quanKhi": "Quán Khí",
-        "foundation": "Elixir",
+        "foundation": "Foundation",
         "majorFallback": "Major Realm"
       },
       "nodes": {
@@ -1260,7 +1272,41 @@
       "entryCcBlocked": "Turn {turn}: {actor} is locked (CC)",
       "basicAttack": "basic attack",
       "unknownActor": "??",
-      "unknownSkill": "unknown skill"
+      "unknownSkill": "unknown skill",
+      "dodged": "Dodged!",
+      "critTag": "Crit!",
+      "critMultiTag": "Crit ×{count}!",
+      "damageDealt": "deals {damage} {kind}{element}{crit}{ward}",
+      "wardNote": " (Ward -{ward})",
+      "healed": "heals {healed} HP",
+      "damageKinds": {
+        "physical": "Physical DMG",
+        "magic": "Spell DMG",
+        "true": "True DMG",
+        "default": "DMG"
+      },
+      "elements": {
+        "metal": "Metal",
+        "wood": "Wood",
+        "water": "Water",
+        "fire": "Fire",
+        "earth": "Earth",
+        "primordial": "Primordial"
+      },
+      "tabs": {
+        "battle": "Battle",
+        "stats": "Damage Stats",
+        "loot": "Loot"
+      },
+      "stats": {
+        "empty": "No damage data yet.",
+        "ally": "Ally",
+        "enemy": "Enemy",
+        "damage": "Damage",
+        "heal": "Healing",
+        "hits": "{hits} hits · {crits} crits",
+        "perTurn": "Avg {avg}/turn"
+      }
     },
     "offline": {
       "title": "CLOSED-DOOR RETREAT ENDED",
@@ -1279,7 +1325,7 @@
     },
     "overlay": {
       "aiPanel": {
-        "title": "Battle AI",
+        "title": "Target Priority",
         "ariaGroup": "AI target selection strategy",
         "strategies": {
           "nearest": "Nearest",
@@ -1786,6 +1832,7 @@
     "overflow": "Bag full — lost {amount} {name}",
     "pill": {
       "useHint": "Click to select — click again to drink.",
+      "decomposeOldRealmHint": "Lower-realm pill — Double-click to decompose (+{amount} Luyen Dan Tinh Hoa)",
       "used": "Used {name}.",
       "reason": {
         "wrong_realm": "Only usable at the pill's own realm.",

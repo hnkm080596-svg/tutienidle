@@ -1,8 +1,8 @@
 export const techniqueMessages = { vi: {
   name: 'Vạn Kiếm Quyết', quality: 'Huyền Phẩm', description: 'Lấy tâm ngự kiếm, lấy khí dưỡng thần. Kiếm ý hội tụ, từng bước lĩnh ngộ đạo pháp.',
   combat: 'Chiến Đấu', system: 'Hệ', systemValue: 'Kiếm Tu', might: 'Sức mạnh', defense: 'Phòng ngự', mana: 'Linh lực tối đa',
-  rank: 'Cảnh 1 · Tầng 7 / 18', stage: { entry: 'Sơ Nhập', minor: 'Tiểu Thành', major: 'Đại Thành', complete: 'Viên Mãn' },
-  currentGrade: 'Phẩm 1', nextGrade: 'Phẩm 2', material: 'Linh Thạch', materialNote: 'Tên và số lượng là dữ liệu mẫu để duyệt bố cục.',
+  rank: 'Nhất Phẩm · Tầng 7 / 18', stage: { entry: 'Sơ Nhập', minor: 'Tiểu Thành', major: 'Đại Thành', complete: 'Viên Mãn' },
+  currentGrade: 'Nhất Phẩm', nextGrade: 'Nhị Phẩm', material: 'Linh Thạch', materialNote: 'Tên và số lượng là dữ liệu mẫu để duyệt bố cục.',
   empty: 'Chưa gắn tâm pháp nào. Hoàn thành điển lễ khởi đầu để nhận tâm pháp đầu tiên.',
   notice: 'Chỉ xem trước UI — chưa nâng cảnh hay tiêu hao nguyên liệu.', navNotice: '{name} — chưa có bản duyệt trong màn này.', selection: 'Đang xem: {name}. Không thay đổi tiến trình tu luyện.',
   // Mirrors the production `technique.*` + `dongFu.aria` keys the
@@ -13,9 +13,9 @@ export const techniqueMessages = { vi: {
     artifactAlt: 'Bí kíp mở với nét mực và đường linh khí vàng',
     temporaryArt: 'Minh họa tạm · Có thể thay theo tâm pháp',
     training: 'Tiến Cảnh Tâm Pháp', mastery: 'Độ thuần thục',
-    advance: 'Nâng Cảnh', current: 'Hiện tại', target: 'Kế tiếp',
+    advance: 'Thăng Phẩm', current: 'Hiện tại', target: 'Kế tiếp',
     upgradeHint: 'Tiếp nối con đường tu luyện, mở cảnh tiếp theo của tâm pháp.',
-    materials: 'Nguyên Liệu Cần',
+    materials: 'Linh Tài Thăng Phẩm',
     stageNotice: 'Đang xem: {name}. Không thay đổi tiến trình tu luyện.',
     advanceNotice: 'Tâm pháp đã lên {grade}.',
   },

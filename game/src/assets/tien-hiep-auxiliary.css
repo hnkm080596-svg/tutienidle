@@ -93,7 +93,7 @@
 :is(#app, body) .tran-phap-panel__cell--occupied { background: #bb8c3955; }
 :is(#app, body) .tran-phap-panel__cell--hover { background: #e7b95980; }
 :is(#app, body) .queue-stand__base { background: #b68a3b28; }
-:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::before {
+:is(#app, body) :is(.overlay-panel__card,.lore-modal__panel)::before {
   background-image: var(--th-art-warm-landscape-header), var(--th-art-paper-surface);
   background-position: right top, center; background-size: 55% auto, cover; background-repeat: no-repeat;
 }

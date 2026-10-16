@@ -25,7 +25,7 @@ import { statLabel } from './stats/StatLabels'
 import { betaTechniqueAdmitted } from './betaScopeSkillDomain'
 import { COMBAT_TECHNIQUE_TYPES } from '../data/technique/CombatTechniqueTypes'
 import { getRealmIndex } from './realm/realmSystem'
-import { getActiveWay } from './player/CultivationPathSystem'
+import { getActiveElement, getActiveWay } from './player/CultivationPathSystem'
 
 // ---------------------------------------------------------------------------
 // Tam Phap tab lock (task 2026-10-03) - the surface stays sealed until the
@@ -255,7 +255,7 @@ export function betaTechniqueSurfaceFor(
     mastery: technique.mastery,
     icon: technique.icon,
     description: technique.description,
-    element: technique.element,
+    element: technique.element ?? getActiveElement(player),
     quality: technique.quality,
     tier: getTechniqueTierForRank(technique.rank),
     masteryForNextRank: rankCapped ? undefined : getTechniqueMasteryForNextRank(technique.grade),

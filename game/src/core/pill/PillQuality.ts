@@ -9,6 +9,8 @@ import type { ItemQuality } from '../item/ItemQuality'
 import { ITEM_QUALITY_ORDER } from '../item/ItemQuality'
 import { ITEM_QUALITY_DROP_WEIGHT, applyQualityBonusSteps } from '../equipment/ItemQualityBalance'
 import { weightedRandom } from '../reward/DropRoll'
+import type { Pill } from './Pill'
+import { getRealmIndex } from '../realm/realmSystem'
 
 // Hieu luc hieu ung theo chat dan (ruling 4).
 export const PILL_QUALITY_EFFECT_UPLIFT: Record<ItemQuality, number> = {
@@ -53,4 +55,14 @@ export function rollPillQualityWithHerb(rng: () => number, herbAge: HerbAge): It
 // He so hieu luc cua mot chat; undefined (dan cu/khong roll) = hoang.
 export function pillQualityUplift(quality: ItemQuality | undefined): number {
   return PILL_QUALITY_EFFECT_UPLIFT[quality ?? BASE_PILL_QUALITY]
+}
+
+// Luyen Dan Tinh Hoa tra ve khi phan giai 1 vien dan cu (owner ruling 2026-10-16):
+// tang theo canh gioi vien dan (1 + tierIndex) va chat da roll, toi thieu 1.
+export function pillDecomposeEssencePerUnit(
+  pill: Pick<Pill, 'realmId'>,
+  quality: ItemQuality | undefined = BASE_PILL_QUALITY,
+): number {
+  const tierIndex = pill.realmId ? Math.max(0, getRealmIndex(pill.realmId)) : 0
+  return Math.max(1, Math.round((1 + tierIndex) * pillQualityUplift(quality)))
 }

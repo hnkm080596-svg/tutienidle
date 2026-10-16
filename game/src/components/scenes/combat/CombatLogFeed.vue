@@ -7,19 +7,19 @@ import BattleLogPanel from '@/components/game/combat/BattleLogPanel.vue'
 
 <template>
   <div class="combat-log-feed" data-hk-region="battle-log">
-    <BattleLogPanel :collapsible="false" />
+    <BattleLogPanel :collapsible="false" :always-visible="true" />
   </div>
 </template>
 
 <style scoped>
-/* Spec 10 battle-log 1330/620/326/280 on the 1672x941 canvas: right
-   0.96vw, bottom 4.36vh, 19.5vw wide, capped at 29.76vh tall. */
 .combat-log-feed {
   position: absolute;
-  left: 24px;
-  bottom: 175px;
-  width: 335px;
-  height: 220px;
+  right: 24px;
+  left: auto;
+  bottom: 0;
+  width: 356px;
+  height: 192px;
   z-index: 12;
+  pointer-events: none;
 }
 </style>

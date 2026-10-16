@@ -351,7 +351,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       view.unmount()
     })
 
-    it('invests the next meridian on click: progress grows, 1 essence debited, bumpState fired', async () => {
+    it('invests the next meridian on click: pours available essence up to 100%, bumpState fired, node 0 sits at left arm', async () => {
       let state!: ReturnType<typeof usePlayerStore>['$state']
       const view = mountBodyScene((player, manager) => {
         state = player.$state
@@ -362,6 +362,14 @@ describe('BodySurface (scene 08 fidelity)', () => {
 
       await selectChapter(view, 'meridian')
 
+      const orbsBefore = view.container.querySelectorAll<HTMLElement>('.body-orb')
+      expect(orbsBefore.length).toBe(8)
+      // Meridian 1 (nham_mach) starts at the left arm [17.64%, 28.25%], not the crown.
+      expect(orbsBefore[0]!.style.left).toBe('17.64%')
+      expect(orbsBefore[0]!.style.top).toBe('28.25%')
+      expect(orbsBefore[7]!.style.left).toBe('51.76%')
+      expect(orbsBefore[7]!.style.top).toBe('17.28%')
+
       const button = investButton(view)
       expect(button).not.toBeNull()
       expect(button!.disabled).toBe(false)
@@ -369,13 +377,13 @@ describe('BodySurface (scene 08 fidelity)', () => {
       button!.click()
       await nextTick()
 
-      // Progressive invest: one essence adds a partial gain (nham 5~10),
-      // the meridian stays 'next' until it reaches 100.
+      // Pouring 5 essence into nham_mach (5~10 per essence -> 25..50 total):
+      // all 5 essence are consumed in one action.
       const progress = state.bodyProgression.meridian.progress.nham_mach
-      expect(progress).toBeGreaterThanOrEqual(5)
-      expect(progress).toBeLessThanOrEqual(10)
+      expect(progress).toBeGreaterThanOrEqual(25)
+      expect(progress).toBeLessThanOrEqual(50)
       expect(view.bumpState).toHaveBeenCalledTimes(1)
-      expect(view.manager.materialBag.getAmount('tinh_hoa_bao_the')).toBe(4)
+      expect(view.manager.materialBag.getAmount('tinh_hoa_bao_the')).toBe(0)
 
       const orbs = view.container.querySelectorAll('.body-orb')
       // The still-investable nham stays 'current'; locked nodes dim.
@@ -403,7 +411,11 @@ describe('BodySurface (scene 08 fidelity)', () => {
 
     it('paces the CTA by in-page-realm level', async () => {
       const low = mountBodyScene((player, manager) => {
-        qiPlayer(player, 1) // nham_mach needs level 2
+        qiPlayer(player, 1) // doi_mach needs level 2
+        setBodyProgression(player, {
+          body_refinement: { completedTiers: 6, currentTierProgress: 0 },
+          meridian: { progress: { nham_mach: 100 } },
+        })
         manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_bao_the'), 5)
       })
       await nextTick()
@@ -413,6 +425,10 @@ describe('BodySurface (scene 08 fidelity)', () => {
 
       const high = mountBodyScene((player, manager) => {
         qiPlayer(player, 2)
+        setBodyProgression(player, {
+          body_refinement: { completedTiers: 6, currentTierProgress: 0 },
+          meridian: { progress: { nham_mach: 100 } },
+        })
         manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_bao_the'), 5)
       })
       await nextTick()
@@ -463,8 +479,8 @@ describe('BodySurface (scene 08 fidelity)', () => {
       await nextTick()
 
       expect(view.bumpState).toHaveBeenCalledTimes(1)
-      // Exactly 1 essence per invest - doc_mach rolls 0.1~1 per invest.
-      expect(view.manager.materialBag.getAmount('tinh_hoa_bao_the')).toBe(39)
+      // Pouring 40 essence into doc_mach (0.1~1 per essence -> 4..40 total) consumes all 40.
+      expect(view.manager.materialBag.getAmount('tinh_hoa_bao_the')).toBe(0)
 
       view.unmount()
     })
@@ -588,6 +604,37 @@ describe('BodySurface (scene 08 fidelity)', () => {
       expect(view.container.querySelectorAll('.body-caption').length).toBe(0)
 
       view.unmount()
+    })
+
+    it('hides unactivated galaxy pieces (no gray unlit art) and renders the galactic core with inward particles when active', async () => {
+      const unlitView = mountBodyScene((player) => {
+        tcPlayer(player, 18, 0)
+      })
+      await nextTick()
+      await selectChapter(unlitView, 'zhou_tian')
+
+      expect(unlitView.container.querySelectorAll('.body-galaxy-piece').length).toBe(0)
+      expect(unlitView.container.querySelector('.body-galaxy-stars')).toBeNull()
+      unlitView.unmount()
+
+      const activeView = mountBodyScene((player) => {
+        tcPlayer(player, 18, 18) // 18 / 36 -> 3 pieces lit (core + 2 orbits)
+      })
+      await nextTick()
+      await selectChapter(activeView, 'zhou_tian')
+
+      const pieces = activeView.container.querySelectorAll('.body-galaxy-piece')
+      expect(pieces.length).toBe(3)
+      const core = activeView.container.querySelector('.galaxy-core.lit')
+      expect(core).not.toBeNull()
+      expect(core?.querySelectorAll('.zt-inward-mote').length).toBeGreaterThan(0)
+      const orbitImgs = activeView.container.querySelectorAll<HTMLImageElement>('img.body-galaxy-piece.orbiting')
+      expect(orbitImgs.length).toBe(2)
+      for (const img of orbitImgs) {
+        expect(img.getAttribute('src')).toContain('-lit')
+        expect(img.getAttribute('src')).not.toContain('-unlit')
+      }
+      activeView.unmount()
     })
   })
 })

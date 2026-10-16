@@ -14,8 +14,10 @@
   color: #30291d; font-family: var(--font-display);
   background: transparent; isolation: isolate;
   border-radius: 0; border: 0 solid transparent;
-  border-image: var(--th-art-panel-frame-v2) 240 320 / 72px / 0 stretch;
   box-shadow: none;
+}
+:is(#app, body) :is(.overlay-panel__card,.lore-modal__panel) {
+  border-image: var(--th-art-panel-frame-v2) 240 320 / 72px / 0 stretch;
 }
 :is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.error-screen__panel,.save-incompatible__panel) > .ink-nine-slice { visibility: hidden; }
 :is(#app, body) .overlay-panel { background: #07120e85; backdrop-filter: blur(3px); }
@@ -23,8 +25,7 @@
 :is(#app, body) .overlay-panel__card .overlay-panel__heading h3 { color: #352a1b; font: 700 28px/1.3 var(--font-display); }
 :is(#app, body) .overlay-panel__card .overlay-panel__body { padding: 18px 46px 38px; }
 :is(#app, body) .overlay-panel__card .overlay-panel__close { color: #3d301b; background: #e9dab6; border: 1px solid #a18448; border-radius: 50%; }
-:is(#app, body) :is(.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel) { padding: 38px 42px; }
-:is(#app, body) :is(.talent-entitlement__panel,.error-screen__panel,.save-incompatible__panel) { padding: 38px; }
+:is(#app, body) .lore-modal__panel { padding: 38px 42px; }
 :is(#app, body) :is(.offline-summary__title,.beta-completion__title,.tutorial-overlay__title,.abandon-modal__title,.lore-modal__title) { color: #352a1b; font-size: 28px; line-height: 1.3; }
 :is(#app, body) :is(.offline-summary__rows,.tutorial-overlay__body,.beta-completion__body,.abandon-modal__message,.lore-modal__description) { color: #675637; font-size: 16px; line-height: 1.65; }
 :is(#app, body) .overlay-panel__card .game-button--primary, :is(#app, body) :is(.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel) .game-button--primary { color: #352713; }
@@ -64,7 +65,7 @@
 :is(#app, body) .companion-panel__card.is-selected { background: #15221e; color: #eddeb6; border-color: #b99953; }
 :is(#app, body) .companion-panel__card.is-selected :is(.companion-panel__card-name,.companion-panel__card-meta) { color: #eddeb6; }
 
-:is(#app, body) :is(.toast-item,.update-banner,.world-announcement__content) { background: #15221ef5; color: #eddeb6; border: 1px solid #b9995370; border-radius: 0; box-shadow: 0 6px 20px #0005; }
+:is(#app, body) :is(.toast-item,.update-banner) { background: #15221ef5; color: #eddeb6; border: 1px solid #b9995370; border-radius: 0; box-shadow: 0 6px 20px #0005; }
 :is(#app, body) .toast-item {
   --hk-text-muted: #c5b797; --rank-color-1: #c5c2b8;
   font-family: var(--font-display); min-width: 240px; max-width: 320px;
@@ -78,15 +79,13 @@
 :is(#app, body) .toast-item__content { gap: 3px; }
 :is(#app, body) .toast-item__eyebrow { font-size: 10px; line-height: 1.3; color: #c7b996; }
 :is(#app, body) .toast-item__name { font-size: 14px; line-height: 1.4; }
-:is(#app, body) .world-announcement__title { color: #f1d391; }
-:is(#app, body) .world-announcement__body { color: #eddeb6; }
 :is(#app, body) .loading-screen { background: #15221e var(--th-art-world-vista) center/cover; }
 :is(#app, body) .loading-screen__title { padding: 18px 54px; color: #f3e0b5; background: var(--th-art-title-plaque) center/100% 100%; }
 :is(#app, body) .artifact-path-cards__milestone-level { color: color-mix(in srgb, var(--path-color) 35%, #fff3d2); }
 :is(#app, body) .artifact-path-cards__milestones li:not(.is-unlocked) { opacity: .7; }
 /* Paper occupies the opening; the ornament's exterior remains a cutout. */
-:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::before { content: ''; position: absolute; inset: 3px; border-radius: 3px; background: #efe4ca var(--th-art-paper-surface) center/cover; z-index: -2; pointer-events: none; }
-:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::after { content: ''; position: absolute; inset: 0; border: 0 solid transparent; border-image: inherit; z-index: -1; pointer-events: none; }
+:is(#app, body) :is(.overlay-panel__card,.lore-modal__panel)::before { content: ''; position: absolute; inset: 3px; border-radius: 3px; background: #efe4ca var(--th-art-paper-surface) center/cover; z-index: -2; pointer-events: none; }
+:is(#app, body) :is(.overlay-panel__card,.lore-modal__panel)::after { content: ''; position: absolute; inset: 0; border: 0 solid transparent; border-image: inherit; z-index: -1; pointer-events: none; }
 :is(#app, body) .toast-item::before { content: ''; position: absolute; inset: 6px; border-radius: 10px; background: #15221ef5; z-index: -2; pointer-events: none; }
 :is(#app, body) .toast-item::after { content: ''; position: absolute; inset: 0; border: 0 solid transparent; border-image: inherit; z-index: -1; pointer-events: none; }
 

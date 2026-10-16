@@ -146,7 +146,12 @@ export class PillBag {
     return spent
   }
 
-  get(pillId: string): Readonly<PillStack> | undefined {
+  get(pillId: string, quality?: ItemQuality): Readonly<PillStack> | undefined {
+    if (quality !== undefined) {
+      const exact = this.pills.get(stackKey(pillId, quality))
+      return exact === undefined ? undefined : { ...exact }
+    }
+
     // Stack chat thap nhat - icon/lookup cho mot loai dan bat ky.
     const stack = this.stacksOf(pillId)[0]
 

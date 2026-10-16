@@ -7,7 +7,7 @@
 // CharacterPanel.vue cho Kiem Tu -- panel nay KHONG tu kiem tra lai
 // dieu kien, chi tu dong ngay sau khi chon xong (component goi no
 // da gate roi).
-import { computed, ref } from 'vue'
+import { computed, ref, useId, type ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
@@ -30,9 +30,13 @@ import { BETA_PLAYABLE_ELEMENTS, isBetaElement, isBetaWay, isScopeHidden } from 
 import type { ElementType } from '@/core/element/ElementType'
 import { ELEMENT_LABELS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useDialogFocus } from '@/composables/useDialogFocus'
+import OrnateDialog from '@/components/common/art/OrnateDialog.vue'
+import OrnateDivider from '@/components/common/art/OrnateDivider.vue'
+import OrnateButton from '@/components/common/art/OrnateButton.vue'
+import GameCard from '@/components/common/GameCard.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import GameButton from '@/components/common/GameButton.vue'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM } from '@/data/skill/KiemPhoOrbs'
 import type { OrbId } from '@/core/kiem-tu/KiemTuState'
@@ -48,6 +52,12 @@ const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
 const { isBattleInProgress } = useTurnBattleInfo()
+
+const titleId = useId()
+const dialogRef = ref<ComponentPublicInstance | null>(null)
+const panelEl = () => (dialogRef.value?.$el as HTMLElement | undefined) ?? null
+const isOpen = computed(() => ui.standalonePanel === 'quan_khi')
+
 const cooldownSeconds = computed(() => {
   stateVersion.value
   return gameManager.tribulationDirector.getCooldownSeconds()
@@ -221,6 +231,8 @@ function close() {
   ui.closeHomeOverlays()
 }
 
+useDialogFocus(panelEl, isOpen, { onEscape: close })
+
 // Kiem Tu specialization card below - shown only after the player has
 // chosen the sword path (read-only display; the way was locked at
 // the Initiation Ritual - there is no in-panel conversion).
@@ -313,248 +325,313 @@ function removeOrbAt(index: number) {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'quan_khi'" :title="t('panels.quanKhi.title')" width="min(480px, 90vw)" @close="close">
-    <div v-if="!player.cultivationPath" class="quan-khi-panel__card">
-      <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.pathSelection.hint') }}</p>
+  <Transition name="overlay-fade">
+    <div
+      v-if="isOpen"
+      class="quan-khi-modal"
+      :style="{ zIndex: OVERLAY_LAYERS.panel }"
+      @click.self="close"
+    >
+      <OrnateDialog
+        ref="dialogRef"
+        class="quan-khi-panel__dialog"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="titleId"
+        :title="t('panels.quanKhi.title')"
+        :title-id="titleId"
+        badge="info"
+        show-close
+        :close-label="t('panels.common.close')"
+        width="min(580px, 94vw)"
+        @close="close"
+      >
+        <div v-if="!player.cultivationPath" class="quan-khi-panel__card">
+          <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.pathSelection.hint') }}</p>
 
-      <!-- BETA SCOPE LOCK v2 (phase-2) - the spell way's element pick:
-           one atomic commit, not a way pick + a later element choice. -->
-      <div v-if="pendingChoice !== null && pendingWayHasElementAxis" class="quan-khi-panel__element-step">
-        <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.elementPick.hint') }}</p>
-        <div class="quan-khi-panel__element-grid">
-          <GameButton
-            v-for="element in elementChoices"
-            :key="element"
-            class="quan-khi-panel__element-btn"
-            :class="{ 'is-locked': !isBetaElement(element) }"
-            variant="danger"
-            size="sm"
-            :disabled="cooldownSeconds > 0 || !isBetaElement(element)"
-            :title="isBetaElement(element) ? undefined : t('panels.quanKhi.sections.elementPick.lockedBeta')"
-            @click="commitInitiation(element)"
-          >
-            {{ elementLabel(element) }}
-            <img v-if="!isBetaElement(element)" class="quan-khi-panel__element-lock" :src="lockIcon" alt="">
-          </GameButton>
-        </div>
-        <p v-if="initiationError" class="quan-khi-panel__element-error">{{ initiationError }}</p>
-        <GameButton variant="ghost" size="sm" @click="cancelChoosePath">
-          {{ t('panels.quanKhi.sections.elementPick.back') }}
-        </GameButton>
-      </div>
+          <OrnateDivider />
 
-      <div v-else class="quan-khi-panel__choices">
-        <template v-for="kit in availableWays" :key="`${kit.pathId}/${kit.wayId}`">
-          <!-- Sealed hidden-path card (Task 16, M9) -- renders for any
-               way declaring sealedOffer (today: hidden_spell_pathway); names the
-               way, carries the permanent warning, no node-tree entry
-               point. -->
-          <div v-if="kit.way.sealedOffer" class="quan-khi-panel__hidden-card">
-            <p class="quan-khi-panel__hidden-title">{{ kit.way.name }}</p>
-            <p class="quan-khi-panel__hidden-desc">
-              {{ t('panels.quanKhi.sections.hiddenPath.description', { kit: sealedKitSkillNames(kit.way).join(' · ') }) }}
-            </p>
-            <p class="quan-khi-panel__hidden-warning">{{ t('panels.quanKhi.sections.hiddenPath.warning') }}</p>
-            <GameButton
-              class="quan-khi-panel__choice"
-              variant="danger"
-              size="sm"
-              :disabled="cooldownSeconds > 0"
-              @click="choosePath(kit.pathId, kit.wayId)"
-            >
-              {{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}
-            </GameButton>
+          <!-- BETA SCOPE LOCK v2 (phase-2) - the spell way's element pick:
+               one atomic commit, not a way pick + a later element choice. -->
+          <div v-if="pendingChoice !== null && pendingWayHasElementAxis" class="quan-khi-panel__element-step">
+            <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.elementPick.hint') }}</p>
+            <div class="quan-khi-panel__element-grid">
+              <GameCard
+                v-for="element in elementChoices"
+                :key="element"
+                as="button"
+                type="button"
+                class="quan-khi-panel__element-btn"
+                :class="{ 'is-locked': !isBetaElement(element) }"
+                :disabled="cooldownSeconds > 0 || !isBetaElement(element)"
+                :title="isBetaElement(element) ? undefined : t('panels.quanKhi.sections.elementPick.lockedBeta')"
+                @click="commitInitiation(element)"
+              >
+                <span class="quan-khi-panel__element-label">{{ elementLabel(element) }}</span>
+                <img v-if="!isBetaElement(element)" class="quan-khi-panel__element-lock" :src="lockIcon" alt="">
+              </GameCard>
+            </div>
+            <p v-if="initiationError" class="quan-khi-panel__element-error">{{ initiationError }}</p>
           </div>
 
-          <GameButton
-            v-else
-            class="quan-khi-panel__choice"
-            variant="danger"
-            size="sm"
-            :disabled="cooldownSeconds > 0"
-            @click="choosePath(kit.pathId, kit.wayId)"
-          >
-            <span class="quan-khi-panel__choice-body">
-              <span class="quan-khi-panel__choice-name">{{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}</span>
-              <span v-if="wayDescription(kit.wayId)" class="quan-khi-panel__choice-desc">{{ wayDescription(kit.wayId) }}</span>
-              <span v-if="choiceKitLine(kit.way)" class="quan-khi-panel__choice-kit">{{ choiceKitLine(kit.way) }}</span>
-            </span>
-          </GameButton>
+          <div v-else class="quan-khi-panel__choices">
+            <template v-for="kit in availableWays" :key="`${kit.pathId}/${kit.wayId}`">
+              <!-- Sealed hidden-path card (Task 16, M9) -- renders for any
+                   way declaring sealedOffer (today: hidden_spell_pathway); names the
+                   way, carries the permanent warning, no node-tree entry
+                   point. -->
+              <GameCard v-if="kit.way.sealedOffer" as="div" class="quan-khi-panel__hidden-card">
+                <p class="quan-khi-panel__hidden-title">{{ kit.way.name }}</p>
+                <p class="quan-khi-panel__hidden-desc">
+                  {{ t('panels.quanKhi.sections.hiddenPath.description', { kit: sealedKitSkillNames(kit.way).join(' · ') }) }}
+                </p>
+                <p class="quan-khi-panel__hidden-warning">{{ t('panels.quanKhi.sections.hiddenPath.warning') }}</p>
+                <OrnateButton
+                  class="quan-khi-panel__choice"
+                  variant="gold"
+                  :disabled="cooldownSeconds > 0"
+                  @click="choosePath(kit.pathId, kit.wayId)"
+                >
+                  {{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}
+                </OrnateButton>
+              </GameCard>
+
+              <GameCard
+                v-else
+                as="button"
+                type="button"
+                class="quan-khi-panel__choice"
+                :disabled="cooldownSeconds > 0"
+                @click="choosePath(kit.pathId, kit.wayId)"
+              >
+                <span class="quan-khi-panel__choice-body">
+                  <span class="quan-khi-panel__choice-name">{{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}</span>
+                  <span v-if="wayDescription(kit.wayId)" class="quan-khi-panel__choice-desc">{{ wayDescription(kit.wayId) }}</span>
+                  <span v-if="choiceKitLine(kit.way)" class="quan-khi-panel__choice-kit">{{ choiceKitLine(kit.way) }}</span>
+                </span>
+              </GameCard>
+            </template>
+          </div>
+        </div>
+
+        <!-- Kiem Tu Reimagined (spec 2026-09-15) -- shows the active
+             specialization (Kiem Pho / Ngu Kiem Dao) read from
+             player.cultivationWay. -->
+        <div v-if="isSwordPath" class="quan-khi-panel__card">
+          <OrnateDivider />
+          <GameCard as="div" class="quan-khi-panel__route-card">
+            <p class="quan-khi-panel__hint">
+              {{ t('panels.quanKhi.sections.kiemTuSpec.hintPrefix') }} <strong class="quan-khi-panel__route-name">{{ specNameDisplay }}</strong>{{ t('panels.quanKhi.sections.kiemTuSpec.hintSuffix') }}
+            </p>
+            <p class="quan-khi-panel__warning">
+              {{ swordPathWay === 'hidden_sword_pathway'
+                ? t('panels.quanKhi.sections.kiemTuSpec.nguDescription')
+                : t('panels.quanKhi.sections.kiemTuSpec.hienDescription') }}
+            </p>
+          </GameCard>
+        </div>
+
+        <!-- Kiem Pho preset editor -- sword_pathway only (hidden_sword_pathway never reads preset).
+             Strip = current persisted sequence, palette = realm-unlocked
+             orbs; both write through setKiemPhoPreset(). -->
+        <div v-if="isSwordPath && swordPathWay === 'sword_pathway'" class="quan-khi-panel__card">
+          <GameCard as="div" class="quan-khi-panel__route-card">
+            <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.title') }}</p>
+            <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.hint') }}</p>
+            <p v-if="presetBattleLocked" class="quan-khi-panel__warning">
+              {{ t('panels.quanKhi.sections.kiemPhoPreset.battleLocked') }}
+            </p>
+
+            <div class="quan-khi-panel__preset-strip" role="listbox" :aria-label="t('panels.quanKhi.sections.kiemPhoPreset.title')">
+              <button
+                v-for="(orbId, index) in presetOrbs"
+                :key="`${index}-${orbId}`"
+                type="button"
+                class="quan-khi-panel__preset-slot"
+                :disabled="presetBattleLocked || presetOrbs.length <= 1"
+                :aria-label="t('panels.quanKhi.sections.kiemPhoPreset.removeAria', { name: orbLabel(orbId) })"
+                @click="removeOrbAt(index)"
+              >
+                {{ orbLabel(orbId) }}
+              </button>
+              <span
+                v-for="empty in 9 - presetOrbs.length"
+                :key="`empty-${empty}`"
+                class="quan-khi-panel__preset-slot quan-khi-panel__preset-slot--empty"
+              ></span>
+            </div>
+
+            <div class="quan-khi-panel__preset-palette">
+              <button
+                v-for="orbId in orbPalette"
+                :key="orbId"
+                type="button"
+                class="quan-khi-panel__preset-orb"
+                :class="{ 'is-locked': !isOrbUnlocked(orbId) }"
+                :disabled="presetBattleLocked || !isOrbUnlocked(orbId) || presetOrbs.length >= 9"
+                :title="isOrbUnlocked(orbId) ? orbTooltip(orbId) : t('panels.quanKhi.sections.kiemPhoPreset.lockedHint', { realm: orbUnlockRealmName(orbId) })"
+                :aria-label="t('panels.quanKhi.sections.kiemPhoPreset.appendAria', { name: orbLabel(orbId) })"
+                @click="appendOrb(orbId)"
+              >
+                {{ orbLabel(orbId) }}
+              </button>
+            </div>
+          </GameCard>
+        </div>
+
+        <template v-if="pendingChoice !== null && pendingWayHasElementAxis" #actions>
+          <OrnateButton variant="dark" @click="cancelChoosePath">
+            {{ t('panels.quanKhi.sections.elementPick.back') }}
+          </OrnateButton>
         </template>
-      </div>
+      </OrnateDialog>
+
+      <ConfirmModal
+        :open="pendingChoice !== null && !pendingWayHasElementAxis"
+        :title="t('panels.quanKhi.messages.confirmPathTitle')"
+        :message="pendingWay?.sealedOffer
+          ? t('panels.quanKhi.messages.confirmPathHiddenBody', { name: pendingPathName })
+          : t('panels.quanKhi.messages.confirmPathBody', { name: pendingPathName })"
+        danger
+        @confirm="confirmChoosePath"
+        @cancel="cancelChoosePath"
+      />
     </div>
-
-    <!-- Kiem Tu Reimagined (spec 2026-09-15) -- shows the active
-         specialization (Kiem Pho / Ngu Kiem Dao) read from
-         player.cultivationWay. -->
-    <div v-if="isSwordPath" class="quan-khi-panel__card">
-      <div class="quan-khi-panel__route-card">
-        <p class="quan-khi-panel__hint">
-          {{ t('panels.quanKhi.sections.kiemTuSpec.hintPrefix') }} <strong class="quan-khi-panel__route-name">{{ specNameDisplay }}</strong>{{ t('panels.quanKhi.sections.kiemTuSpec.hintSuffix') }}
-        </p>
-        <p class="quan-khi-panel__warning">
-          {{ swordPathWay === 'hidden_sword_pathway'
-            ? t('panels.quanKhi.sections.kiemTuSpec.nguDescription')
-            : t('panels.quanKhi.sections.kiemTuSpec.hienDescription') }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Kiem Pho preset editor -- sword_pathway only (hidden_sword_pathway never reads preset).
-         Strip = current persisted sequence, palette = realm-unlocked
-         orbs; both write through setKiemPhoPreset(). -->
-    <div v-if="isSwordPath && swordPathWay === 'sword_pathway'" class="quan-khi-panel__card">
-      <div class="quan-khi-panel__route-card">
-        <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.title') }}</p>
-        <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.hint') }}</p>
-        <p v-if="presetBattleLocked" class="quan-khi-panel__warning">
-          {{ t('panels.quanKhi.sections.kiemPhoPreset.battleLocked') }}
-        </p>
-
-        <div class="quan-khi-panel__preset-strip" role="listbox" :aria-label="t('panels.quanKhi.sections.kiemPhoPreset.title')">
-          <button
-            v-for="(orbId, index) in presetOrbs"
-            :key="`${index}-${orbId}`"
-            type="button"
-            class="quan-khi-panel__preset-slot"
-            :disabled="presetBattleLocked || presetOrbs.length <= 1"
-            :aria-label="t('panels.quanKhi.sections.kiemPhoPreset.removeAria', { name: orbLabel(orbId) })"
-            @click="removeOrbAt(index)"
-          >
-            {{ orbLabel(orbId) }}
-          </button>
-          <span
-            v-for="empty in 9 - presetOrbs.length"
-            :key="`empty-${empty}`"
-            class="quan-khi-panel__preset-slot quan-khi-panel__preset-slot--empty"
-          ></span>
-        </div>
-
-        <div class="quan-khi-panel__preset-palette">
-          <button
-            v-for="orbId in orbPalette"
-            :key="orbId"
-            type="button"
-            class="quan-khi-panel__preset-orb"
-            :class="{ 'is-locked': !isOrbUnlocked(orbId) }"
-            :disabled="presetBattleLocked || !isOrbUnlocked(orbId) || presetOrbs.length >= 9"
-            :title="isOrbUnlocked(orbId) ? orbTooltip(orbId) : t('panels.quanKhi.sections.kiemPhoPreset.lockedHint', { realm: orbUnlockRealmName(orbId) })"
-            :aria-label="t('panels.quanKhi.sections.kiemPhoPreset.appendAria', { name: orbLabel(orbId) })"
-            @click="appendOrb(orbId)"
-          >
-            {{ orbLabel(orbId) }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <ConfirmModal
-      :open="pendingChoice !== null && !pendingWayHasElementAxis"
-      :title="t('panels.quanKhi.messages.confirmPathTitle')"
-      :message="pendingWay?.sealedOffer
-        ? t('panels.quanKhi.messages.confirmPathHiddenBody', { name: pendingPathName })
-        : t('panels.quanKhi.messages.confirmPathBody', { name: pendingPathName })"
-      danger
-      @confirm="confirmChoosePath"
-      @cancel="cancelChoosePath"
-    />
-  </OverlayPanel>
+  </Transition>
 </template>
 
 <style scoped>
-.quan-khi-panel__card {
+.quan-khi-modal {
+  position: absolute;
+  inset: 0;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px 24px;
-  font-family: var(--font-body);
-  color: var(--paper-text);
+  align-items: center;
+  justify-content: center;
+  background: var(--scrim, rgba(10, 9, 7, 0.72));
 }
 
-/* Cau duy nhat truoc 1 quyet dinh vinh vien -- xung dang co chu lon hon
-   text-sm mac dinh (2026-08-30 frontend-design pass). */
+.quan-khi-panel__dialog {
+  flex: none;
+  --ornate-button-label-size: min(2.9cqh, 1.8cqw, 20px);
+}
+
+.quan-khi-panel__dialog :deep(.ornate-dialog__badge) {
+  height: 13.5cqh;
+  margin-top: 0.4%;
+}
+
+.quan-khi-panel__dialog :deep(.ornate-dialog__body) {
+  padding-bottom: 3cqh;
+}
+
+.quan-khi-panel__dialog :deep(.ornate-dialog__actions) {
+  margin-bottom: 3cqh;
+}
+
+.quan-khi-panel__card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  color: var(--paper-text, #302719);
+}
+
 .quan-khi-panel__hint {
   margin: 0;
-  font-size: var(--text-md);
-  color: var(--paper-text-muted);
+  font-size: min(2.6cqh, 14.5px);
+  line-height: 1.45;
+  text-align: center;
+  color: var(--paper-text-soft, #5e5a50);
 }
 
 .quan-khi-panel__route-name {
-  color: var(--chrome-100);
+  color: #f3dfb5;
 }
 
-/* Khoi "duong da chot" -- card that thay vi van ban tran (2026-08-30). */
 .quan-khi-panel__route-card {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 14px 16px;
-  background: var(--ink-800);
-  border: 1px solid var(--chrome-500);
-  border-radius: var(--radius-md);
+  padding: 16px 18px;
+}
+
+.quan-khi-panel__route-card .quan-khi-panel__hint {
+  color: #e6d6b5;
 }
 
 .quan-khi-panel__choices {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
-/* wave B chrome: cinnabar-tinted button-compact art owns the choice
-   shell - the permanent-decision signal rides the tint, not a hand
-   gradient/border pasted over the drawn chrome. */
 .quan-khi-panel__choice {
   display: block;
   width: 100%;
-  padding: 10px;
-  color: var(--text-primary);
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-/* Choice cards carry the way's description + initiation kit under the
-   name -- stacked lines inside the GameButton label. */
+.quan-khi-panel__choice:not(:disabled):hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
 .quan-khi-panel__choice-body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   text-align: center;
 }
 
+.quan-khi-panel__choice-name {
+  font-family: var(--font-display);
+  font-size: min(3.2cqh, 18px);
+  font-weight: 700;
+  color: #f4e4c0;
+}
+
 .quan-khi-panel__choice-desc {
-  font-size: var(--text-xs);
+  font-size: min(2.4cqh, 13px);
   font-weight: 400;
   line-height: 1.45;
-  color: var(--text-secondary);
+  color: #d8c8a5;
 }
 
 .quan-khi-panel__choice-kit {
-  font-size: var(--text-2xs, 10px);
+  font-size: min(2.1cqh, 11.5px);
   font-weight: 400;
-  color: var(--text-muted);
+  color: #bfa97a;
 }
 
 .quan-khi-panel__choice:disabled {
   opacity: 0.6;
+  cursor: default;
 }
 
-/* Kiem Pho preset editor -- strip mirrors the HUD preset readout;
-   palette buttons mirror the manual orb picker. */
 .quan-khi-panel__preset-strip {
   display: flex;
+  justify-content: center;
   gap: 4px;
 }
 
 .quan-khi-panel__preset-slot {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  font-size: var(--text-xs);
-  background: var(--ink-700);
-  border: 1px solid var(--chrome-500);
-  border-radius: var(--radius-sm);
-  color: var(--paper-text);
+  font-size: 12px;
+  background: rgba(20, 26, 22, 0.9);
+  border: 1px solid #b28a43;
+  border-radius: 3px;
+  color: #f3dfb5;
   cursor: pointer;
 }
 
@@ -576,17 +653,17 @@ function removeOrbAt(index: number) {
 
 .quan-khi-panel__preset-orb {
   flex: 1;
-  padding: 8px 4px;
-  font-size: var(--text-sm);
-  background: linear-gradient(180deg, var(--ink-700), var(--ink-800));
-  border: 1px solid var(--chrome-500);
-  border-radius: var(--radius-sm);
-  color: var(--paper-text);
+  padding: 7px 4px;
+  font-size: 13px;
+  background: rgba(20, 26, 22, 0.92);
+  border: 1px solid #b28a43;
+  border-radius: 3px;
+  color: #f3dfb5;
   cursor: pointer;
 }
 
 .quan-khi-panel__preset-orb:not(:disabled):hover {
-  border-color: var(--jade);
+  border-color: #f1d391;
 }
 
 .quan-khi-panel__preset-orb.is-locked {
@@ -597,18 +674,16 @@ function removeOrbAt(index: number) {
   cursor: default;
 }
 
-/* Doan giai thich that su -- truoc day nho HON dong hint phia tren no du
-   la noi dung payoff chinh (2026-08-30 frontend-design pass). */
 .quan-khi-panel__warning {
   margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.5;
-  color: var(--gold-500);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  color: #f1d391;
 }
 
-/* BETA SCOPE LOCK v2 (phase-2) - element pick step of the atomic
-   initiation. */
 .quan-khi-panel__element-step {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -616,20 +691,31 @@ function removeOrbAt(index: number) {
 
 .quan-khi-panel__element-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
 }
 
-/* wave B chrome: the GameButton danger slice (cinnabar-tinted
-   button-compact) owns the chip shell - no hand gradient/border on top. */
 .quan-khi-panel__element-btn {
   position: relative;
-  padding: 10px 4px;
-  color: var(--text-primary);
+  min-height: 54px;
+  padding: 12px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: #f4e4c0;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-/* Locked elements (out of beta scope): dimmed, non-interactive, lock
-   glyph bottom-right - same locked-read as the preset orb palette. */
+.quan-khi-panel__element-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+}
+
 .quan-khi-panel__element-btn.is-locked {
   opacity: 0.45;
   filter: saturate(0.35);
@@ -638,51 +724,51 @@ function removeOrbAt(index: number) {
 
 .quan-khi-panel__element-lock {
   position: absolute;
-  right: 3px;
-  bottom: 3px;
-  width: 11px;
-  height: 11px;
+  right: 6px;
+  bottom: 6px;
+  width: 12px;
+  height: 12px;
   opacity: 0.9;
   pointer-events: none;
 }
 
 .quan-khi-panel__element-error {
   margin: 0;
-  font-size: var(--text-xs);
-  color: var(--crimson);
+  font-size: 12px;
+  color: var(--danger, #a63628);
   text-align: center;
 }
 
-/* Sealed hidden-path card (Task 16) -- distinct frame so the ritual
-   reads it as a road others cannot see, not a third equal option. */
 .quan-khi-panel__hidden-card {
+  width: 100%;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
-  padding: 14px 16px;
-  background: var(--ink-800);
-  border: 1px solid var(--gold-700);
-  border-radius: var(--radius-md);
+  padding: 16px 18px;
 }
 
 .quan-khi-panel__hidden-title {
   margin: 0;
-  font-size: var(--text-md);
+  font-family: var(--font-display);
+  font-size: 17px;
   font-weight: 700;
-  color: var(--gold-700);
+  color: #f1d391;
 }
 
 .quan-khi-panel__hidden-desc {
   margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.5;
-  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  color: #d8c8a5;
 }
 
 .quan-khi-panel__hidden-warning {
   margin: 0;
-  font-size: var(--text-xs);
+  font-size: 12px;
   line-height: 1.4;
-  color: var(--crimson);
+  text-align: center;
+  color: #e88378;
 }
 </style>

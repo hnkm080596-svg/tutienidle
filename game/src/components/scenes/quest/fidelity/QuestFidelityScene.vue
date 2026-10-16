@@ -15,9 +15,8 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import GameCard from '@/components/common/GameCard.vue'
+import GameTabButton from '@/components/common/GameTabButton.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
-import QuestCategoryArtButton from '@/components/common/art/QuestCategoryArtButton.vue'
-import { questGroupIcon } from '../groups/questGroupArt'
 import type { QuestDisplay } from './questUi'
 
 withDefaults(defineProps<{
@@ -48,20 +47,19 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
     <div class="quest-columns">
       <nav class="quest-groups">
         <slot name="groups">
-          <QuestCategoryArtButton
+          <GameTabButton
             v-for="id in filters"
             :key="id"
-            :icon="questGroupIcon(id)"
-            :label="t(`questPreview.${id}`)"
-            hint=""
+            class="quest-group-tab"
             :selected="filter === id"
             @click="emit('filter', id)"
-          />
+          >
+            <span>{{ t(`questPreview.${id}`) }}</span>
+          </GameTabButton>
         </slot>
       </nav>
 
       <GameCard class="quest-list-card">
-        <h2 class="quest-list-title">{{ t('panels.quest.scene.list') }}</h2>
         <slot name="list">
           <div class="quest-list-fallback">
             <button
@@ -71,7 +69,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
               :class="{ selected: selected?.id === quest.id }"
               @click="emit('select', quest.id)"
             >
-              <img :src="quest.image" alt="">
               <span class="quest-list-fallback__body">
                 <b>{{ quest.name }}</b>
                 <small>{{ quest.description }}</small>
@@ -103,16 +100,14 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .quest-scene :deep(*){box-sizing:border-box}
 /* 3-column grid per the approved preview: rail | list | detail. */
 .quest-columns{position:absolute;left:367px;top:200px;width:1021px;height:490px;display:grid;grid-template-columns:19% 43% minmax(0,1fr);gap:12px}
-.quest-groups{display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.quest-groups :deep(button){flex:0 0 auto}
+.quest-groups{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden}
+.quest-groups :deep(button){flex:0 0 auto;width:100%}
 .quest-list-card,.quest-detail-card{display:flex;flex-direction:column;min-height:0;gap:6px}
-.quest-list-title{margin:0;flex:0 0 auto;font:700 18px var(--font-display,Georgia,serif);color:#f3e4c4}
 /* Slot fallback list (preview page) - same row shape as QuestRow. */
 .quest-list-fallback{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column}
 .quest-list-fallback::-webkit-scrollbar{display:none}
 .quest-list-fallback>button{width:100%;display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:7px;color:#efdfb9;border:1px solid #947444;background:#15171550;text-align:left;cursor:pointer;font-family:inherit}
 .quest-list-fallback>button.selected{border-color:#f5ce78;box-shadow:inset 0 0 8px #e1a94370,0 0 4px #e1a94380}
-.quest-list-fallback img{width:56px;height:56px;object-fit:cover;border:1px solid #ad8a46;flex:0 0 auto}
 .quest-list-fallback__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .quest-list-fallback__body b{font-size:15px}
 .quest-list-fallback__body small{font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

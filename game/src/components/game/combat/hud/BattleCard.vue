@@ -57,7 +57,7 @@ const skills = computed(() => {
 </script>
 
 <template>
-  <GameCard class="battle-card" :class="{ 'is-empty': !participant, 'is-human': isHuman, 'is-defeated': participant && !participant.alive }" frame-src="/assets/ui/tien-hiep-2026-10/combat/battle-card/frame-v1.png">
+  <GameCard class="battle-card" :class="{ 'is-empty': !participant, 'is-human': isHuman, 'is-defeated': participant && !participant.alive }">
     <header class="battle-card__identity" v-tooltip="statsTooltip" tabindex="0">
       <div class="battle-card__avatar"><div class="battle-card__crop"><img v-if="avatar" :src="avatar" alt="" /></div><img src="/assets/ui/tien-hiep-2026-10/combat/battle-card/ring-v1.png" alt="" class="battle-card__ring" /></div>
       <strong>{{ entity?.name ?? t('combat.partyCard.empty') }}</strong>
@@ -77,30 +77,28 @@ const skills = computed(() => {
 </template>
 
 <style scoped>
-.battle-card.game-card { --game-card-frame-slice: 180; --game-card-frame-width: 16px; padding: 12px 16px; height: 204px; clip-path: none; container-type: inline-size; pointer-events: auto; }
-.battle-card :deep(.game-card__fill) { inset: 13px 6px; clip-path: inset(0); background: url('/assets/ui/tien-hiep-2026-10/combat/battle-card/backdrop-v1.png') center / 100% 100%; }
-.battle-card :deep(.game-card__frame) { clip-path: none; }
-.battle-card__identity { height: 48px; display: flex; align-items: center; gap: 8px; color: #281d11; min-width: 0; }
-.battle-card__identity strong { font: 700 18px/1.2 var(--font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.battle-card__avatar { position: relative; flex: 0 0 48px; height: 48px; }
+.battle-card.game-card { padding: 10px 12px; height: 163px; container-type: inline-size; pointer-events: auto; }
+.battle-card__identity { height: 38px; display: flex; align-items: center; gap: 6px; color: #f3e4c4; min-width: 0; }
+.battle-card__identity strong { font: 700 15px/1.2 var(--font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.battle-card__avatar { position: relative; flex: 0 0 38px; height: 38px; }
 .battle-card__crop { position: absolute; inset: 10%; border-radius: 50%; overflow: hidden; background: #252a25; }
 .battle-card__crop img { width: 300%; height: 300%; max-width: none; object-fit: cover; position: absolute; left: -100%; top: -8%; }
 .battle-card__ring { position: absolute; inset: 0; width: 100%; height: 100%; }
-.battle-card__vitals { height: 54px; padding-top: 5px; display: flex; flex-direction: column; gap: 4px; }
-.battle-card__vitals :deep(.combat-vital-meter) { font-size: 11px; grid-template-columns: 1fr auto; }
+.battle-card__vitals { height: 48px; padding-top: 2px; display: flex; flex-direction: column; gap: 2px; }
+.battle-card__vitals :deep(.combat-vital-meter) { font-size: 10px; grid-template-columns: 1fr auto; }
 .battle-card__vitals :deep(.combat-vital-meter__label) { display: none; }
 .battle-card__vitals :deep(.combat-vital-meter__frame) { height: 100%; }
-.battle-card__vitals :deep(.combat-vital-meter__track) { height: 18px; }
-.battle-card__vitals :deep(.combat-vital-meter__interior) { inset: 4px 5%; }
-.battle-card__resource { font-size: 11px; }
-.battle-card__skills { height: 66px; margin-top: 3px; }
+.battle-card__vitals :deep(.combat-vital-meter__track) { height: 14px; }
+.battle-card__vitals :deep(.combat-vital-meter__interior) { inset: 3px 5%; }
+.battle-card__resource { font-size: 10px; line-height: 1.1; color: #ead394; }
+.battle-card__skills { height: 48px; margin-top: 2px; }
 .battle-card__skills :deep(.turn-combat-skill-bar__slots) { padding-bottom: 0; }
-.battle-card__skills :deep(.turn-combat-skill-bar__slot-button) { width: min(100%, 48px); justify-self: center; }
-.battle-card__skills :deep(.combat-skill-slot__caption) { font-size: 10px; }
+.battle-card__skills :deep(.turn-combat-skill-bar__slot-button) { width: min(100%, 38px); justify-self: center; }
+.battle-card__skills :deep(.combat-skill-slot__caption) { font-size: 9px; top: calc(100% + 2px); }
 .battle-card__companion-skills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10%; }
 .battle-card__skill { min-width: 0; position: relative; }
-.battle-card__skill :deep(.combat-skill-slot) { width: 100%; height: auto; aspect-ratio: 1; }
-.battle-card__skill :deep(.combat-skill-slot__caption) { top: calc(100% + 4px); left: 0; width: 100%; font-size: 10px; }
+.battle-card__skill :deep(.combat-skill-slot) { width: min(100%, 38px); height: auto; aspect-ratio: 1; margin: 0 auto; }
+.battle-card__skill :deep(.combat-skill-slot__caption) { top: calc(100% + 2px); left: 0; width: 100%; font-size: 9px; }
 .battle-card__skill :deep(.slot-view) { width: 100%; height: auto; aspect-ratio: 1; }
 .battle-card__skill > span { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
 .battle-card.is-empty { opacity: .5; }

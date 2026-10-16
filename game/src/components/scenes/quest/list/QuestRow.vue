@@ -8,7 +8,6 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
 import { questRowStatus } from '@/presentation/questUi'
@@ -26,13 +25,9 @@ const locked = computed(() => props.row.lockedPreview !== undefined)
 const status = computed(() => questRowStatus(props.row))
 
 const fill = computed(() =>
-  props.row.target > 0 ? Math.min(props.row.progress, props.row.target) / props.row.target : 0,
+  props.row.target > 0 ? (Math.min(props.row.progress, props.row.target) / props.row.target) * 100 : 0,
 )
 const amountText = computed(() => `${Math.min(props.row.progress, props.row.target)} / ${props.row.target}`)
-
-const thumb = computed(() =>
-  resolveAssetUrl(props.row.image ?? '/assets/ui/tien-hiep-2026-10/source/world-vista-warm-v1.png'),
-)
 
 const lockReasons = computed(() => {
   const preview = props.row.lockedPreview
@@ -62,8 +57,6 @@ const lockReasons = computed(() => {
     :tabindex="locked ? -1 : 0"
     @click="locked ? undefined : onSelect()"
   >
-    <img class="quest-row__thumb" :src="thumb" alt="" aria-hidden="true">
-
     <span class="quest-row__body">
       <span class="quest-row__name">{{ row.name }}</span>
       <span class="quest-row__desc">{{ locked ? lockReasons : row.description }}</span>
@@ -82,8 +75,8 @@ const lockReasons = computed(() => {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px;
+  gap: 10px;
+  padding: 9px 10px;
   color: #efdfb9;
   border: 1px solid #947444;
   background: #15171550;
@@ -97,14 +90,6 @@ const lockReasons = computed(() => {
 }
 .quest-row.is-locked { opacity: 0.55; filter: grayscale(0.9); cursor: default; }
 .quest-row.is-locked:hover { border-color: #947444; }
-
-.quest-row__thumb {
-  width: 56px;
-  height: 56px;
-  flex: 0 0 auto;
-  object-fit: cover;
-  border: 1px solid #ad8a46;
-}
 
 .quest-row__body {
   flex: 1;

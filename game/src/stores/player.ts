@@ -656,7 +656,16 @@ export const usePlayerStore = defineStore('player', {
         return owningDomain === undefined || modifier.domain === owningDomain
       }
 
-      restoredPlayer.modifiers = (restoredPlayer.modifiers ?? []).filter(isCurrentShapeModifier)
+      restoredPlayer.modifiers = (restoredPlayer.modifiers ?? [])
+        .filter(isCurrentShapeModifier)
+        .map((modifier) =>
+          modifier.sourceType === 'realm' &&
+          modifier.sourceId === 'kien_co' &&
+          restoredPlayer.highestFoundationAchieved === 'human' &&
+          modifier.percent === 0
+            ? { ...modifier, percent: 0.02 }
+            : modifier,
+        )
       // externalModifiers is the per-tick aggregate mirror the
       // GameManager rewrites every tick from live buff/technique
       // sources - it holds no persisted authority of its own, so the

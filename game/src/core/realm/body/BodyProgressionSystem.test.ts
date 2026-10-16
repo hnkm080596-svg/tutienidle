@@ -60,17 +60,17 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
 
-    const consumed = investBodyChapterState(player, 'meridian', 10, 0)
+    const consumed = investBodyChapterState(player, 'meridian', 1, 0)
 
     expect(consumed).toBe(1)
-    // Progressive rule: one pill rolls a 5~10 gain on nham_mach.
+    // Progressive rule: one essence rolls a 5~10 gain on nham_mach.
     const progress = player.bodyProgression.meridian.progress.nham_mach
     expect(progress).toBeGreaterThanOrEqual(5)
     expect(progress).toBeLessThanOrEqual(10)
 
     // Drive to 100 -> the dispatch rebuild emits the bat-mach modifier.
     player.bodyProgression.meridian.progress.nham_mach = 100
-    expect(investBodyChapterState(player, 'meridian', 10, 0)).toBe(1)
+    expect(investBodyChapterState(player, 'meridian', 1, 0)).toBe(1)
     expect(player.modifiers.filter(m => m.id.startsWith('bat-mach:')).length).toBeGreaterThan(0)
   })
 
@@ -85,7 +85,7 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
 
     player.bodyProgression.body_refinement.completedTiers = 6
     player.physiqueGrade = 'bao'
-    expect(investBodyChapterState(player, 'meridian', 10, 0)).toBe(1)
+    expect(investBodyChapterState(player, 'meridian', 1, 0)).toBe(1)
   })
 
   it('sequential gate: zhou_tian invest consumes nothing while meridian is incomplete (C2C-59)', () => {

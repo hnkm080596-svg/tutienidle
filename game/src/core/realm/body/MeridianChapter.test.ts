@@ -36,8 +36,7 @@ describe('MeridianChapter - Bat Mach progressive (spec dot-pha-loi-kiep sec.4.1a
       'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
       'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
     ])
-    expect(MERIDIANS[0]!.requiredRealmLevel).toBe(2)
-    expect(MERIDIANS[7]!.requiredRealmLevel).toBe(16)
+    expect(MERIDIANS.map((m) => m.requiredRealmLevel)).toEqual([1, 2, 4, 5, 7, 8, 10, 12])
     // Owner gain table by data index.
     expect(MERIDIANS.map((m) => m.investGainRange)).toEqual([
       { min: 5, max: 10 },
@@ -57,29 +56,30 @@ describe('MeridianChapter - Bat Mach progressive (spec dot-pha-loi-kiep sec.4.1a
     expect(allStats).not.toContain('manaRegenPerTurn')
   })
 
-  it('invest: 1 dan per invest adds a uniform random gain inside investGainRange', () => {
+  it('invest: pours available essence up to 100% on the active meridian without spilling into the next', () => {
     const player = createLuyenKhiPlayer()
     const spy = vi.spyOn(Math, 'random').mockReturnValue(0.5)
 
-    // idx0 Nham 5~10 -> mid 7.5
-    expect(meridianChapter.invest(player, 10, 0)).toBe(1)
+    // Single essence: idx0 Nham 5~10 -> mid 7.5
+    expect(meridianChapter.invest(player, 1, 0)).toBe(1)
     expect(player.bodyProgression.meridian.progress.nham_mach).toBeCloseTo(7.5, 10)
     expect(spy).toHaveBeenCalledTimes(1)
 
-    // Each further invest consumes exactly 1 more pill.
-    expect(meridianChapter.invest(player, 9, 0)).toBe(1)
-    expect(player.bodyProgression.meridian.progress.nham_mach).toBeCloseTo(15, 10)
+    // Pouring 20 essence: needs ceil(92.5 / 7.5) = 13 essence to hit 100, leaves 7 untouched.
+    expect(meridianChapter.invest(player, 20, 0)).toBe(13)
+    expect(player.bodyProgression.meridian.progress.nham_mach).toBe(100)
+    expect(player.bodyProgression.meridian.progress.doi_mach).toBeUndefined()
   })
 
   it('invest gain stays inside the rolled range across the bounds', () => {
     const player = createLuyenKhiPlayer()
     const spy = vi.spyOn(Math, 'random')
     spy.mockReturnValue(0)
-    meridianChapter.invest(player, 10, 0)
+    meridianChapter.invest(player, 1, 0)
     expect(player.bodyProgression.meridian.progress.nham_mach).toBeCloseTo(5, 10)
 
     spy.mockReturnValue(0.999999)
-    meridianChapter.invest(player, 10, 0)
+    meridianChapter.invest(player, 1, 0)
     expect(player.bodyProgression.meridian.progress.nham_mach).toBeCloseTo(5 + 10 * 0.999999, 5)
   })
 
@@ -88,18 +88,19 @@ describe('MeridianChapter - Bat Mach progressive (spec dot-pha-loi-kiep sec.4.1a
     setProgress(player, [['nham_mach', 97]])
     vi.spyOn(Math, 'random').mockReturnValue(0.999999)
 
-    expect(meridianChapter.invest(player, 1, 0)).toBe(1)
+    expect(meridianChapter.invest(player, 5, 0)).toBe(1)
     expect(player.bodyProgression.meridian.progress.nham_mach).toBe(100)
   })
 
   it('tuan tu: duong sau KHONG dau tu khi duong truoc chua 100', () => {
     const player = createLuyenKhiPlayer()
-    // nham at 50 (partial) -> doi must NOT receive progress.
+    // nham at 50 (partial) -> doi must NOT receive progress even with surplus essence.
     setProgress(player, [['nham_mach', 50]])
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
 
-    expect(meridianChapter.invest(player, 10, 0)).toBe(1)
-    expect(player.bodyProgression.meridian.progress.nham_mach).toBeCloseTo(57.5, 10)
+    // 7 * 7.5 = 52.5 -> caps nham_mach at 100, consumes 7 of 10, doi stays untouched.
+    expect(meridianChapter.invest(player, 10, 0)).toBe(7)
+    expect(player.bodyProgression.meridian.progress.nham_mach).toBe(100)
     expect(player.bodyProgression.meridian.progress.doi_mach).toBeUndefined()
   })
 
@@ -108,28 +109,28 @@ describe('MeridianChapter - Bat Mach progressive (spec dot-pha-loi-kiep sec.4.1a
     setProgress(player, [['nham_mach', 100]])
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
 
-    expect(meridianChapter.invest(player, 10, 0)).toBe(1)
-    // idx1 Doi 4~9 -> mid 6.5
-    expect(player.bodyProgression.meridian.progress.doi_mach).toBeCloseTo(6.5, 10)
+    expect(meridianChapter.invest(player, 2, 0)).toBe(2)
+    // idx1 Doi 4~9 -> mid 6.5 * 2 = 13
+    expect(player.bodyProgression.meridian.progress.doi_mach).toBeCloseTo(13, 10)
   })
 
-  it('gate tang: dung tang 3 (Luyen Khi) khong dau tu duong 2 (mo tang 4)', () => {
+  it('gate tang: dung tang 1 (Luyen Khi) khong dau tu duong 2 (mo tang 2)', () => {
     const player = createLuyenKhiPlayer()
-    player.realmLevel = 3
+    player.realmLevel = 1
     setProgress(player, [['nham_mach', 100]])
     expect(meridianChapter.invest(player, 10, 0)).toBe(0)
     expect(player.bodyProgression.meridian.progress.doi_mach).toBeUndefined()
   })
 
-  it('roi Luyen Khi (da vao Truc Co): van duoc tieu not dan do (pattern Luyen The)', () => {
+  it('roi Luyen Khi (da vao Truc Co): van duoc tieu not tinh hoa do (pattern Luyen The)', () => {
     const player = createDefaultPlayer()
     player.realmId = 'foundation_establishment'
     setProgress(player, [['nham_mach', 100]])
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const consumed = meridianChapter.invest(player, 5, 0)
-    expect(consumed).toBe(1) // 1 pill per invest
-    expect(player.bodyProgression.meridian.progress.doi_mach).toBeCloseTo(4, 10)
+    expect(consumed).toBe(5) // pours all 5 available essence (5 * 4 = 20%)
+    expect(player.bodyProgression.meridian.progress.doi_mach).toBeCloseTo(20, 10)
     expect(meridianChapter.progress(player).completed).toBe(1)
   })
 
@@ -347,7 +348,7 @@ describe('MeridianChapter - persisted state + integrity + migration', () => {
 
   it('integrityIssues flags partial progress below requiredRealmLevel inside the page realm', () => {
     const player = createLuyenKhiPlayer()
-    player.realmLevel = 3
+    player.realmLevel = 1
     setProgress(player, [['nham_mach', 100], ['doi_mach', 10]])
     expect(meridianChapter.integrityIssues(player).length).toBeGreaterThan(0)
   })

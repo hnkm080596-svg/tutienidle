@@ -35,10 +35,47 @@ describe('realm paper presentation contract', () => {
 
     try {
       const floors = container.querySelectorAll<HTMLButtonElement>('[role="option"]')
-      expect(floors).toHaveLength(18)
+      expect(floors).toHaveLength(12)
+      expect(container.querySelector('.realm-floor-line')?.textContent).toBe('Tầng 1 / 12')
       expect(container.querySelector('.realm-earned')?.textContent).toContain('Linh Khí')
       floors[2]?.click()
       expect(selectFloor).toHaveBeenCalledWith(3)
+    } finally {
+      app.unmount()
+    }
+  })
+
+  it('reveals extended floors past 12 as 13/12 .. 18/12 when currentFloor > 12', () => {
+    const container = document.createElement('div')
+    const extendedModel = { ...model, currentFloor: 14 }
+    const app = createApp({
+      render: () => h(RealmFidelityScene, { model: extendedModel, selected: 14 }),
+    })
+    app.use(i18n)
+    document.body.appendChild(container)
+    app.mount(container)
+
+    try {
+      const floors = container.querySelectorAll<HTMLButtonElement>('[role="option"]')
+      expect(floors).toHaveLength(14)
+      expect(container.querySelector('.realm-floor-line')?.textContent).toBe('Tầng 14 / 12')
+    } finally {
+      app.unmount()
+    }
+  })
+
+  it('hides the bottom passive section completely when passives is empty (Mortal)', () => {
+    const container = document.createElement('div')
+    const mortalModel = { ...model, passives: [] }
+    const app = createApp({
+      render: () => h(RealmFidelityScene, { model: mortalModel, selected: 1 }),
+    })
+    app.use(i18n)
+    document.body.appendChild(container)
+    app.mount(container)
+
+    try {
+      expect(container.querySelector('.realm-earned')).toBeNull()
     } finally {
       app.unmount()
     }

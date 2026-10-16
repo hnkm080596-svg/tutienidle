@@ -125,4 +125,22 @@ describe('useRealmStatPassives - hidden-breakthrough grants stay withheld', () =
       lockBetaFeaturesForTests()
     }
   })
+
+  it('Kiến Cơ swallows Nhập Đạo into a single passive while retaining both effect sets', () => {
+    const rows = mountRows((pinia) => {
+      const player = usePlayerStore(pinia)
+      player.realmId = 'foundation_establishment'
+      player.breakthroughGrade = 4
+      player.highestFoundationAchieved = 'earth'
+      player.grantedRealmPassiveIds = ['qi_refining', 'foundation_establishment']
+    })
+
+    expect(rows.value).toHaveLength(1)
+    expect(rows.value[0]!.id).toBe('foundation_establishment')
+    expect(rows.value[0]!.name).toBe('Kiến Cơ')
+    // 4 lines from Nhap Dao + 5 lines from Kien Co = 9 lines
+    expect(rows.value[0]!.effectLines).toHaveLength(9)
+    expect(rows.value[0]!.effectLines[0]).toContain('+12')
+    expect(rows.value[0]!.effectLines[4]).toContain('+5')
+  })
 })

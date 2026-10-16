@@ -280,12 +280,24 @@
         "helpAria": "Trợ giúp công pháp",
         "qualityLine": "Phẩm: {quality}",
         "gradeTrackTitle": "Cảnh Giới Công Pháp",
-        "rankLine": "Cảnh {grade} · Cấp {rank}",
+        "rankLine": "{grade} · Cấp {rank}",
         "materialsTitle": "Nguyên Liệu Cần",
         "reasonGradeCeiling": "Đã đạt phẩm tối đa",
         "reasonRealmGate": "Cần cảnh giới cao hơn",
         "reasonInsufficientMaterial": "Không đủ nguyên liệu",
-        "reasonBusy": "Đang bận — thử lại sau"
+        "reasonBusy": "Đang bận — thử lại sau",
+        "grades": {
+          "1": "Nhất Phẩm",
+          "2": "Nhị Phẩm",
+          "3": "Tam Phẩm",
+          "4": "Tứ Phẩm",
+          "5": "Ngũ Phẩm",
+          "6": "Lục Phẩm",
+          "7": "Thất Phẩm",
+          "8": "Bát Phẩm",
+          "9": "Cửu Phẩm",
+          "10": "Thập Phẩm"
+        }
       },
       "colTitles": {
         "activeArts": "Pháp Thuật Đang Vận Hành"
@@ -730,7 +742,7 @@
       },
       "labels": {
         "quanKhi": "Quán Khí",
-        "foundation": "Dược",
+        "foundation": "Trúc Cơ",
         "majorFallback": "Đại Cảnh Giới"
       },
       "nodes": {
@@ -1260,7 +1272,41 @@
       "entryCcBlocked": "Lượt {turn}: {actor} bị khóa (CC)",
       "basicAttack": "đòn thường",
       "unknownActor": "??",
-      "unknownSkill": "kỹ năng chưa rõ"
+      "unknownSkill": "kỹ năng chưa rõ",
+      "dodged": "Né tránh!",
+      "critTag": "Chí Mạng!",
+      "critMultiTag": "Chí Mạng ×{count}!",
+      "damageDealt": "gây {damage} {kind}{element}{crit}{ward}",
+      "wardNote": " (Khiên -{ward})",
+      "healed": "hồi {healed} HP",
+      "damageKinds": {
+        "physical": "ST Vật Lý",
+        "magic": "ST Pháp Thuật",
+        "true": "ST Chuẩn",
+        "default": "ST"
+      },
+      "elements": {
+        "metal": "Kim",
+        "wood": "Mộc",
+        "water": "Thủy",
+        "fire": "Hỏa",
+        "earth": "Thổ",
+        "primordial": "Hỗn Nguyên"
+      },
+      "tabs": {
+        "battle": "Chiến Đấu",
+        "stats": "Thống Kê",
+        "loot": "Thu Hoạch"
+      },
+      "stats": {
+        "empty": "Chưa có dữ liệu sát thương.",
+        "ally": "Ta",
+        "enemy": "Địch",
+        "damage": "Sát thương",
+        "heal": "Hồi phục",
+        "hits": "{hits} đòn · {crits} chí mạng",
+        "perTurn": "TB {avg}/lượt"
+      }
     },
     "offline": {
       "title": "BẾ QUAN KẾT THÚC",
@@ -1279,7 +1325,7 @@
     },
     "overlay": {
       "aiPanel": {
-        "title": "AI Chiến Đấu",
+        "title": "Ưu Tiên Mục Tiêu",
         "ariaGroup": "Chiến lược AI chọn mục tiêu",
         "strategies": {
           "nearest": "Gần nhất",
@@ -1786,6 +1832,7 @@
     "overflow": "Túi đầy — mất {amount} {name}",
     "pill": {
       "useHint": "Bấm để chọn — bấm lần nữa để uống.",
+      "decomposeOldRealmHint": "Đan cảnh giới cũ — Bấm 2 lần để phân giải (+{amount} Luyện Đan Tinh Hoa)",
       "used": "Đã dùng {name}.",
       "reason": {
         "wrong_realm": "Chỉ dùng được tại đúng cảnh giới của đan dược.",
@@ -2364,11 +2411,11 @@
     "temporaryArt": "Minh họa tạm · Có thể thay theo tâm pháp",
     "training": "Tiến Cảnh Tâm Pháp",
     "mastery": "Độ thuần thục",
-    "advance": "Nâng Cảnh",
+    "advance": "Thăng Phẩm",
     "current": "Hiện tại",
     "target": "Kế tiếp",
     "upgradeHint": "Tiếp nối con đường tu luyện, mở cảnh tiếp theo của tâm pháp.",
-    "materials": "Nguyên Liệu Cần",
+    "materials": "Linh Tài Thăng Phẩm",
     "stageNotice": "Đang xem: {name}. Không thay đổi tiến trình tu luyện.",
     "advanceNotice": "Tâm pháp đã lên {grade}."
   },

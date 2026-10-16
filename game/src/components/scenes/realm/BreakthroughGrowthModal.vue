@@ -1,9 +1,17 @@
 <script setup lang="ts">
+import { computed, ref, useId, type ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { BreakthroughGrowthSnapshot, RealmFoundationTotals } from '@/core/realm/RealmFoundationGrowth'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useDialogFocus } from '@/composables/useDialogFocus'
+import { useAudioStore } from '@/stores/audio'
+import OrnateDialog from '@/components/common/art/OrnateDialog.vue'
+import OrnateButton from '@/components/common/art/OrnateButton.vue'
+import OrnateDivider from '@/components/common/art/OrnateDivider.vue'
+import StatRow from '@/components/common/primitives/StatRow.vue'
 
-defineProps<{
+const props = defineProps<{
   snapshot: BreakthroughGrowthSnapshot | null
 }>()
 
@@ -13,6 +21,27 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const titleId = useId()
+
+const dialogRef = ref<ComponentPublicInstance | null>(null)
+const panelEl = () => (dialogRef.value?.$el as HTMLElement | undefined) ?? null
+
+function onContinue() {
+  useAudioStore().cue('ui.confirm')
+  useAudioStore().cue('ui.modal.close')
+  emit('close')
+}
+
+function onOpenAttributes() {
+  useAudioStore().cue('ui.confirm')
+  emit('openAttributes')
+}
+
+useDialogFocus(
+  panelEl,
+  computed(() => Boolean(props.snapshot)),
+  { onEscape: onContinue },
+)
 
 const STAT_LABEL_KEYS: Record<keyof RealmFoundationTotals, string> = {
   maxHp: 'panels.realm.growthModal.stats.maxHp',
@@ -45,260 +74,195 @@ function formatStatVal(stat: keyof RealmFoundationTotals, val: number): string {
 <template>
   <div
     v-if="snapshot"
-    class="bg-modal-backdrop"
-    role="dialog"
-    aria-modal="true"
-    :aria-label="t('panels.realm.growthModal.title')"
+    class="breakthrough-growth-modal"
+    :style="{ zIndex: OVERLAY_LAYERS.modal }"
     data-testid="breakthrough-growth-modal"
-    @click.self="emit('close')"
+    @click.self="onContinue"
   >
-    <div class="bg-modal">
-      <header class="bg-modal__header">
-        <span class="bg-modal__eyebrow">
-          {{ snapshot.isMajorRealm ? t('panels.realm.growthModal.eyebrowMajor') : t('panels.realm.growthModal.eyebrowMinor') }}
+    <OrnateDialog
+      ref="dialogRef"
+      class="breakthrough-growth__panel"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="titleId"
+      :title="t('panels.realm.growthModal.title')"
+      :title-id="titleId"
+      badge="info"
+      show-close
+      :close-label="t('panels.realm.growthModal.continueCta')"
+      width="min(560px, 94vw)"
+      @close="onContinue"
+    >
+      <div class="breakthrough-growth__transition">
+        <span class="breakthrough-growth__realm-from">
+          {{ snapshot.fromRealmName }} · {{ t('panels.realm.growthModal.floor', { level: snapshot.fromLevel }) }}
         </span>
-        <h2 class="bg-modal__title">{{ t('panels.realm.growthModal.title') }}</h2>
-        <div class="bg-modal__transition">
-          <span class="bg-modal__realm-from">
-            {{ snapshot.fromRealmName }} · {{ t('panels.realm.growthModal.floor', { level: snapshot.fromLevel }) }}
-          </span>
-          <span class="bg-modal__arrow" aria-hidden="true">⟶</span>
-          <strong class="bg-modal__realm-to">
-            {{ snapshot.toRealmName }} · {{ t('panels.realm.growthModal.floor', { level: snapshot.toLevel }) }}
-          </strong>
-        </div>
-      </header>
+        <span class="breakthrough-growth__arrow" aria-hidden="true">⟶</span>
+        <strong class="breakthrough-growth__realm-to">
+          {{ snapshot.toRealmName }} · {{ t('panels.realm.growthModal.floor', { level: snapshot.toLevel }) }}
+        </strong>
+      </div>
 
-      <section class="bg-modal__section">
-        <h3 class="bg-modal__section-title">{{ t('panels.realm.growthModal.foundationHeading') }}</h3>
-        <ul class="bg-modal__stat-list">
-          <li v-for="row in snapshot.statRows" :key="row.stat" class="bg-modal__stat-row">
-            <span class="bg-modal__stat-name">{{ t(STAT_LABEL_KEYS[row.stat]) }}</span>
-            <span class="bg-modal__stat-values">
-              <span class="bg-modal__stat-before">{{ formatStatVal(row.stat, row.before) }}</span>
-              <span class="bg-modal__stat-sep" aria-hidden="true">→</span>
-              <strong class="bg-modal__stat-after">{{ formatStatVal(row.stat, row.after) }}</strong>
-              <em class="bg-modal__stat-delta">(+{{ formatStatVal(row.stat, row.delta) }})</em>
-            </span>
-          </li>
-        </ul>
-      </section>
+      <OrnateDivider />
 
-      <section v-if="snapshot.attributePointsGained > 0" class="bg-modal__reward">
-        <div class="bg-modal__reward-copy">
-          <strong>{{ t('panels.realm.growthModal.freePointGain', { count: snapshot.attributePointsGained }) }}</strong>
-          <small>{{ t('panels.realm.growthModal.freePointTotal', { total: snapshot.totalAttributePoints }) }}</small>
-        </div>
-        <button type="button" class="bg-modal__btn bg-modal__btn--secondary" @click="emit('openAttributes')">
+      <ul class="breakthrough-growth__rows">
+        <StatRow
+          v-for="row in snapshot.statRows"
+          :key="row.stat"
+          :label="t(STAT_LABEL_KEYS[row.stat])"
+          tone="positive"
+        >
+          <span class="breakthrough-growth__val-before">{{ formatStatVal(row.stat, row.before) }}</span>
+          <span class="breakthrough-growth__val-sep" aria-hidden="true"> → </span>
+          <strong class="breakthrough-growth__val-after">{{ formatStatVal(row.stat, row.after) }}</strong>
+          <em class="breakthrough-growth__val-delta"> (+{{ formatStatVal(row.stat, row.delta) }})</em>
+        </StatRow>
+      </ul>
+
+      <div v-if="snapshot.attributePointsGained > 0" class="breakthrough-growth__reward">
+        <strong>{{ t('panels.realm.growthModal.freePointGain', { count: snapshot.attributePointsGained }) }}</strong>
+        <small>{{ t('panels.realm.growthModal.freePointTotal', { total: snapshot.totalAttributePoints }) }}</small>
+      </div>
+
+      <template #actions>
+        <OrnateButton
+          v-if="snapshot.attributePointsGained > 0"
+          class="breakthrough-growth__allocate"
+          variant="dark"
+          :sound="false"
+          @click="onOpenAttributes"
+        >
           {{ t('panels.realm.growthModal.allocateCta') }}
-        </button>
-      </section>
-
-      <footer class="bg-modal__footer">
-        <button type="button" class="bg-modal__btn bg-modal__btn--primary" @click="emit('close')">
+        </OrnateButton>
+        <OrnateButton
+          class="breakthrough-growth__continue"
+          variant="gold"
+          :sound="false"
+          @click="onContinue"
+        >
           {{ t('panels.realm.growthModal.continueCta') }}
-        </button>
-      </footer>
-    </div>
+        </OrnateButton>
+      </template>
+    </OrnateDialog>
   </div>
 </template>
 
 <style scoped>
-.bg-modal-backdrop {
+/* SceneDesignCanvas(--overlay) sets pointer-events:none on its wrapper;
+   explicitly re-enable pointer-events here so the dialog and its buttons
+   receive clicks. */
+.breakthrough-growth-modal {
   position: absolute;
   inset: 0;
-  z-index: 45;
-  display: grid;
-  place-items: center;
-  background: rgba(10, 9, 7, 0.72);
-  backdrop-filter: blur(2px);
-  animation: bg-fade-in 180ms ease-out;
-}
-
-.bg-modal {
-  width: min(460px, 92vw);
-  padding: 24px 28px 22px;
-  border: 2px solid #c9a761;
-  outline: 1px solid rgba(235, 208, 148, 0.35);
-  outline-offset: -6px;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(214, 168, 82, 0.22), transparent 65%),
-    linear-gradient(180deg, #231d14 0%, #17140e 100%);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.78), 0 0 28px rgba(201, 167, 97, 0.28);
-  color: #f1e6c5;
-  font-family: var(--font-display, Georgia, serif);
-}
-
-.bg-modal__header {
-  text-align: center;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(201, 167, 97, 0.35);
-}
-
-.bg-modal__eyebrow {
-  display: inline-block;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #d6a852;
-  margin-bottom: 4px;
-}
-
-.bg-modal__title {
-  margin: 0 0 10px;
-  font-size: 26px;
-  font-weight: 700;
-  color: #ffe7ad;
-  text-shadow: 0 2px 10px rgba(214, 168, 82, 0.45);
-}
-
-.bg-modal__transition {
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  font-size: 15px;
+  background: var(--scrim, rgba(10, 9, 7, 0.72));
 }
 
-.bg-modal__realm-from {
-  color: #b9ab8b;
+.breakthrough-growth__panel {
+  flex: none;
+  pointer-events: auto;
+  --ornate-button-label-size: min(2.9cqh, 1.8cqw, 20px);
 }
 
-.bg-modal__arrow {
-  color: #d6a852;
-  font-weight: 700;
+.breakthrough-growth__panel :deep(.ornate-dialog__badge) {
+  height: 13.5cqh;
+  margin-top: 0.4%;
 }
 
-.bg-modal__realm-to {
-  color: #ffe9ae;
-  font-weight: 700;
+.breakthrough-growth__panel :deep(.ornate-dialog__actions) {
+  margin-bottom: 3.2cqh;
 }
 
-.bg-modal__section {
-  margin-top: 14px;
-}
-
-.bg-modal__section-title {
-  margin: 0 0 8px;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #cbb582;
-}
-
-.bg-modal__stat-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 7px;
-}
-
-.bg-modal__stat-row {
+.breakthrough-growth__transition {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 7px 12px;
-  background: rgba(255, 244, 214, 0.04);
-  border: 1px solid rgba(201, 167, 97, 0.22);
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0.2cqh;
+  font-family: var(--font-display);
+  font-size: min(3cqh, 16px);
+  color: var(--paper-text, #302719);
 }
 
-.bg-modal__stat-name {
-  font-size: 14px;
-  color: #e6d6b0;
+.breakthrough-growth__realm-from {
+  color: var(--paper-text-soft, #5e5a50);
 }
 
-.bg-modal__stat-values {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-}
-
-.bg-modal__stat-before {
-  color: #a89c80;
-}
-
-.bg-modal__stat-sep {
-  color: #c9a761;
-}
-
-.bg-modal__stat-after {
-  color: #fff2cc;
+.breakthrough-growth__arrow {
+  color: #8a5a19;
   font-weight: 700;
 }
 
-.bg-modal__stat-delta {
+.breakthrough-growth__realm-to {
+  color: #6b3f08;
+  font-weight: 700;
+}
+
+.breakthrough-growth__rows {
+  --hk-text-primary: var(--paper-text, #302719);
+  --hk-text-secondary: var(--paper-text-soft, #5e5a50);
+  --hk-text-muted: var(--paper-text-muted, #8f897c);
+  --hk-jade: var(--hk-jade-deep, #1f6b50);
+  list-style: none;
+  margin: 0.3cqh 0 0;
+  padding: 0;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: min(2.6cqh, 15px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35cqh;
+}
+
+.breakthrough-growth__rows :deep(.stat-row) {
+  padding: 2px 0;
+}
+
+.breakthrough-growth__val-before {
+  color: var(--paper-text-soft, #675637);
+  font-weight: 400;
+}
+
+.breakthrough-growth__val-sep {
+  color: #8a6420;
+}
+
+.breakthrough-growth__val-after {
+  color: var(--paper-text, #302719);
+  font-weight: 700;
+}
+
+.breakthrough-growth__val-delta {
   font-style: normal;
   font-weight: 700;
-  color: #7ee2a8;
+  color: var(--hk-jade-deep, #1f6b50);
 }
 
-.bg-modal__reward {
-  margin-top: 14px;
-  padding: 10px 12px;
+.breakthrough-growth__reward {
+  margin-top: 0.8cqh;
+  padding: 0.6cqh 1.6cqw 0;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  background: rgba(214, 168, 82, 0.12);
-  border: 1px solid rgba(214, 168, 82, 0.42);
+  gap: 8px;
+  border-top: 1px solid rgba(161, 132, 72, 0.45);
+  font-family: var(--font-body);
+  font-size: min(2.4cqh, 14px);
+  color: #5a3811;
 }
 
-.bg-modal__reward-copy {
-  display: grid;
-  gap: 2px;
-}
-
-.bg-modal__reward-copy strong {
-  font-size: 14px;
-  color: #ffe6a3;
-}
-
-.bg-modal__reward-copy small {
-  font-size: 12px;
-  color: #c7b894;
-}
-
-.bg-modal__footer {
-  margin-top: 18px;
-  display: flex;
-  justify-content: center;
-}
-
-.bg-modal__btn {
-  cursor: pointer;
-  font-family: inherit;
-  border: 1px solid #c9a761;
-  padding: 8px 18px;
-  font-size: 14px;
+.breakthrough-growth__reward strong {
   font-weight: 700;
-  transition: filter 150ms ease, transform 120ms ease;
+  color: #6b3f08;
 }
 
-.bg-modal__btn:hover {
-  filter: brightness(1.12);
-}
-
-.bg-modal__btn--primary {
-  min-width: 170px;
-  background: linear-gradient(180deg, #f3d287 0%, #c89b43 100%);
-  color: #231707;
-}
-
-.bg-modal__btn--secondary {
-  padding: 6px 12px;
-  font-size: 13px;
-  background: rgba(42, 34, 21, 0.9);
-  color: #f3d999;
-}
-
-@keyframes bg-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.breakthrough-growth__reward small {
+  font-size: min(2.2cqh, 13px);
+  color: #675637;
 }
 </style>

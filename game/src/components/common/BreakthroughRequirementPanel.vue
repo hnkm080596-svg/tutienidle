@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, useId, type ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { usePlayerStore } from '@/stores/player'
@@ -7,17 +7,27 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useTribulation } from '@/composables/useTribulation'
 import { projectTechniqueCompletion } from '@/core/technique/TechniqueProgression'
 import { betaTechniqueAdmitted } from '@/core/betaScopeSkillDomain'
-import OverlayPanel from '@/components/common/OverlayPanel.vue'
-import GameButton from '@/components/common/GameButton.vue'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useDialogFocus } from '@/composables/useDialogFocus'
+import { useAudioStore } from '@/stores/audio'
+import OrnateDialog from '@/components/common/art/OrnateDialog.vue'
+import OrnateDivider from '@/components/common/art/OrnateDivider.vue'
+import OrnateButton from '@/components/common/art/OrnateButton.vue'
 
-// Task 9.1 - panel xac nhan don gian: canh bao "khong the mac trang bi
-// khi do kiep" + 2 nut. Auto-unequip do triggerBreakthrough() lo.
+// Task 9.1 - ornate confirmation dialog before entering tribulation:
+// warns that equipped gear is stripped during tribulation + optional
+// unperfected technique warning + 2 ornate action buttons.
 const { t } = useI18n()
 const store = useBreakthroughRequirementStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const { triggerBreakthrough } = useTribulation()
+
+const titleId = useId()
+const messageId = useId()
+const dialogRef = ref<ComponentPublicInstance | null>(null)
+const panelEl = () => (dialogRef.value?.$el as HTMLElement | undefined) ?? null
 
 // M-F-TECHNIQUE (F-BREAK-CONFIRM) - unperfected warning: fires iff the
 // live cycle's projected seal is below vien_man (the FIELD is compared
@@ -45,66 +55,123 @@ const hasEquippedGear = computed(() => {
 })
 
 function onConfirm() {
+  useAudioStore().cue('ui.confirm')
   store.close()
   triggerBreakthrough()
 }
 
 function onCancel() {
+  useAudioStore().cue('ui.cancel')
   store.close()
 }
+
+useDialogFocus(
+  panelEl,
+  computed(() => store.isOpen),
+  { onEscape: onCancel },
+)
 </script>
 
 <template>
-  <OverlayPanel
-    :open="store.isOpen"
-    :title="t('tribulation.stillEquipped.title')"
-    width="min(420px, 94vw)"
-    @close="onCancel"
-  >
-    <div class="breakthrough-confirm">
-      <p v-if="hasEquippedGear" class="breakthrough-confirm__warning">{{ t('tribulation.stillEquipped.subtitle') }}</p>
+  <Transition name="overlay-fade">
+    <div
+      v-if="store.isOpen"
+      class="breakthrough-confirm-modal"
+      :style="{ zIndex: OVERLAY_LAYERS.panel }"
+      @click.self="onCancel"
+    >
+      <OrnateDialog
+        ref="dialogRef"
+        class="breakthrough-confirm__panel"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="messageId"
+        :title="t('tribulation.overlay.sceneTitle')"
+        :title-id="titleId"
+        badge="alert"
+        show-close
+        :close-label="t('panels.common.close')"
+        width="min(540px, 94vw)"
+        @close="onCancel"
+      >
+        <p :id="messageId" class="breakthrough-confirm__lead">
+          {{ t('tribulation.stillEquipped.title') }}
+        </p>
 
-      <p v-if="techniqueCompletionWarning" class="breakthrough-confirm__warning">
-        {{
-          t('tribulation.unperfectedTechnique.warning', {
-            grade: techniqueCompletionWarning.grade,
-            state: t(`tribulation.unperfectedTechnique.state.${techniqueCompletionWarning.state}`),
-          })
-        }}
-      </p>
+        <OrnateDivider />
 
-      <div class="breakthrough-confirm__actions">
-        <GameButton variant="ghost" size="sm" @click="onCancel">{{ t('tribulation.stillEquipped.cancel') }}</GameButton>
-        <GameButton size="sm" @click="onConfirm">{{ t('tribulation.stillEquipped.confirm') }}</GameButton>
-      </div>
+        <p v-if="hasEquippedGear" class="breakthrough-confirm__warning">
+          {{ t('tribulation.stillEquipped.subtitle') }}
+        </p>
+
+        <p v-if="techniqueCompletionWarning" class="breakthrough-confirm__warning">
+          {{
+            t('tribulation.unperfectedTechnique.warning', {
+              grade: techniqueCompletionWarning.grade,
+              state: t(`tribulation.unperfectedTechnique.state.${techniqueCompletionWarning.state}`),
+            })
+          }}
+        </p>
+
+        <template #actions>
+          <OrnateButton variant="dark" :sound="false" @click="onCancel">
+            {{ t('tribulation.stillEquipped.cancel') }}
+          </OrnateButton>
+          <OrnateButton variant="gold" :sound="false" @click="onConfirm">
+            {{ t('tribulation.stillEquipped.confirm') }}
+          </OrnateButton>
+        </template>
+      </OrnateDialog>
     </div>
-  </OverlayPanel>
+  </Transition>
 </template>
 
 <style scoped>
-.breakthrough-confirm {
-  padding: 20px 24px 24px;
+.breakthrough-confirm-modal {
+  position: absolute;
+  inset: 0;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  background: var(--scrim, rgba(10, 9, 7, 0.72));
+}
+
+.breakthrough-confirm__panel {
+  flex: none;
+  --ornate-button-label-size: min(3cqh, 1.8cqw, 20px);
+}
+
+.breakthrough-confirm__panel :deep(.ornate-dialog__badge) {
+  height: 16cqh;
+  margin-top: 0.6%;
+}
+
+.breakthrough-confirm__panel :deep(.ornate-dialog__actions) {
+  margin-bottom: 3cqh;
+}
+
+.breakthrough-confirm__lead {
+  margin: 0.8cqh 0 0.4cqh;
+  padding: 0 2cqw;
+  font-family: var(--font-display);
+  font-size: min(3.3cqh, 18px);
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--paper-text, #302719);
 }
 
 .breakthrough-confirm__warning {
-  margin: 0;
-  padding: 8px 12px;
-  font-size: var(--text-sm);
+  margin: 0.6cqh 0 0;
+  padding: 6px 12px;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: min(2.6cqh, 14px);
+  line-height: 1.45;
   text-align: center;
-  color: var(--danger, #c0392b);
-  border: 1px dashed currentColor;
-  border-radius: var(--radius-sm);
-}
-
-.breakthrough-confirm__actions {
-  display: flex;
-  gap: 10px;
-}
-
-.breakthrough-confirm__actions > * {
-  flex: 1;
+  color: var(--danger, #a63628);
+  background: rgba(166, 54, 40, 0.08);
+  border: 1px dashed rgba(166, 54, 40, 0.55);
+  border-radius: 4px;
 }
 </style>

@@ -1474,7 +1474,10 @@ function validatePlayer(
             (authored) =>
               authored.id === modifier.id &&
               authored.stat === modifier.stat &&
-              authored.percent === modifier.percent &&
+              (authored.percent === modifier.percent ||
+                (passive.sourceId === 'kien_co' &&
+                  (player as unknown as PlayerData).highestFoundationAchieved === 'human' &&
+                  modifier.percent === 0)) &&
               authored.flat === modifier.flat &&
               authored.domain === modifier.domain,
           )

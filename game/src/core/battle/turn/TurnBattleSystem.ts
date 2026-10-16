@@ -422,6 +422,9 @@ export interface TurnDeclaredAction {
 
   /** The protector participant that absorbed this action via Ho. */
   interceptedBy?: string
+
+  /** Summarized combat impact metrics captured during applyActionImpact for the battle log. */
+  impactSummary?: Omit<BattleLogEntry, 'turn' | 'actorId' | 'skillId' | 'targetIds' | 'ccBlocked'>
 }
 
 /**
@@ -2084,6 +2087,12 @@ export class TurnBattleSystem {
     const outcomes: SkillPresentationOutcome[] = []
     const actor = [...battle.players, ...battle.enemies].find(p => p.id === declared.actorId)
     const skill = declaredPresentationSkill(declared)
+    const hpBefore = new Map<string, number>()
+    const wardBefore = new Map<string, number>()
+    for (const p of [...battle.players, ...battle.enemies]) {
+      hpBefore.set(p.id, Math.max(0, p.entity.currentHp))
+      wardBefore.set(p.id, Math.max(0, p.entity.currentWard + (p.entity.externalWard?.amount ?? 0)))
+    }
     const primary = actor ? presentationGroup(actor, skill) : {
       groupId: '', role: 'primary' as const, resolvedSkillId: skill?.id ?? declared.skillId,
       presetId: skill?.presetId ?? 'arcane_impact' as const,
@@ -2094,6 +2103,82 @@ export class TurnBattleSystem {
       const disposition = castDisposition(declared)
       const reason = !actor ? 'missing-source' : disposition !== 'action' && disposition !== 'charge-release' ? disposition : this.runtime ? 'unsupported' : 'engine-unit-no-effect'
       groups.unshift(withGroupOutcomes(primary, outcomes.length ? outcomes : [{ outcomeId: '', kind: 'no-effect', reason }]))
+    }
+    const allOutcomes = groups.flatMap(g => g.outcomes)
+    const hitOutcomes = allOutcomes.filter(
+      (o): o is Extract<SkillPresentationOutcome, { kind: 'hit' }> => o.kind === 'hit',
+    )
+    const healOutcomes = allOutcomes.filter(
+      (o): o is Extract<SkillPresentationOutcome, { kind: 'heal' }> => o.kind === 'heal',
+    )
+    const landedHits = hitOutcomes.filter(o => o.landed)
+    const hpDamageFromHits = landedHits.reduce((sum, o) => sum + Math.max(0, o.hpDamage), 0)
+    const opposingSide = actor
+      ? battle.players.includes(actor)
+        ? battle.enemies
+        : battle.players
+      : declared.opposingSide
+    const opposingHpLoss = opposingSide.reduce(
+      (sum, p) => sum + Math.max(0, (hpBefore.get(p.id) ?? 0) - Math.max(0, p.entity.currentHp)),
+      0,
+    )
+    const wardDamage = Math.round(
+      opposingSide.reduce(
+        (sum, p) =>
+          sum +
+          Math.max(
+            0,
+            (wardBefore.get(p.id) ?? 0) -
+              Math.max(0, p.entity.currentWard + (p.entity.externalWard?.amount ?? 0)),
+          ),
+        0,
+      ),
+    )
+    const hpDamage = Math.round(Math.max(hpDamageFromHits, opposingHpLoss))
+    const totalDamage = hpDamage + wardDamage
+    const allySide = actor
+      ? battle.players.includes(actor)
+        ? battle.players
+        : battle.enemies
+      : []
+    const healedFromOutcomes = healOutcomes.reduce((sum, o) => sum + Math.max(0, o.healed), 0)
+    const allyHpGain = allySide.reduce(
+      (sum, p) => sum + Math.max(0, Math.max(0, p.entity.currentHp) - (hpBefore.get(p.id) ?? 0)),
+      0,
+    )
+    const healed = Math.round(Math.max(healedFromOutcomes, allyHpGain))
+    const hitCount = landedHits.length
+    const critCount = landedHits.filter(o => o.crit).length
+    const damageInfo = skill?.damage ?? declared.scaledDamage ?? declared.chargedSkill?.damage ?? null
+    const damageKind: BattleLogEntry['damageKind'] =
+      damageInfo?.kind === 'physical'
+        ? 'physical'
+        : damageInfo?.kind === 'elemental'
+          ? 'magic'
+          : damageInfo?.kind === 'primordial'
+            ? 'true'
+            : undefined
+    const elementComp =
+      damageInfo?.kind === 'elemental'
+        ? damageInfo.components.find((c): c is Extract<typeof c, { element: string }> => 'element' in c)
+        : undefined
+    const element =
+      elementComp
+        ? elementComp.element
+        : damageInfo?.kind === 'primordial'
+          ? 'primordial'
+          : undefined
+    declared.impactSummary = {
+      totalDamage,
+      hpDamage,
+      wardDamage,
+      healed,
+      hitCount,
+      critCount,
+      crit: critCount > 0,
+      dodged: hitOutcomes.length > 0 && landedHits.length === 0,
+      damageKind,
+      element,
     }
     return { ...result, presentationGroups: freezePresentation(groups) }
   }
@@ -4121,6 +4206,7 @@ export class TurnBattleSystem {
       skillId: declared.skillId,
       targetIds,
       ccBlocked: declared.ccBlocked,
+      ...declared.impactSummary,
     }
 
     battle.log = battle.log ?? []

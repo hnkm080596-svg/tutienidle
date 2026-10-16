@@ -56,6 +56,7 @@ export class GameManagerTickOps {
       alchemySystem: AlchemySystem
       pillBag: PillBag
       pillRegistry: PillRegistry
+      autoDecomposeLowerRealmPills?: (player: PlayerData) => void
       persistentBuffs: BuffPersistence
       passiveSystem: PassiveSystem
       turnBattleOps: GameManagerTurnBattleOps
@@ -244,6 +245,7 @@ export class GameManagerTickOps {
               kind: 'craft',
               message: `${pill?.name ?? event.pillId} x${event.delivered}`,
             })
+            this.deps.autoDecomposeLowerRealmPills?.(activePlayer)
           }
 
           if (event.overflow > 0) {

@@ -14,7 +14,6 @@
 // `top` (publishTopBarHeight - giu nguyen `right` cua dock), khong con
 // giu import cho 2 component da doi.
 import { nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
 import CombatTopRail from '@/components/scenes/combat/CombatTopRail.vue'
 import CombatTurnRail from '@/components/scenes/combat/CombatTurnRail.vue'
 import CombatAiRail from '@/components/scenes/combat/CombatAiRail.vue'
@@ -23,15 +22,12 @@ import { clearSkillDockWidth } from '@/presentation/geometry/combatInsets'
 import CombatLogFeed from '@/components/scenes/combat/CombatLogFeed.vue'
 import CombatModalLayer from '@/components/scenes/combat/CombatModalLayer.vue'
 import CombatPanel from '@/components/scenes/combat/CombatPanel.vue'
-import CombatControlButton from '@/components/scenes/combat/CombatControlButton.vue'
 import { publishTopBarHeight, resetCombatInsets } from '@/presentation/geometry/combatInsets'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 import { mountCombatChromeRoot } from '@/presentation/combat/CombatChromeAssetGate'
 
-const { t } = useI18n()
 const rootRef = ref<HTMLElement | null>(null)
 const layoutVersion = ref(0)
-const logOpen = ref(false)
 let unmountChromeRoot: (() => void) | undefined
 
 // Skill dock mounts only while the battle is fighting: its only content
@@ -133,7 +129,7 @@ onUnmounted(() => {
            replaces the retired canvas PlayerHudLayer. -->
 
 
-      <!-- Combat AI panel - goc TRAI battlefield, chi panel nhan pointer. -->
+      <!-- Combat AI panel - ngay duoi nut Tu Dong o goc tren phai. -->
       <CombatAiRail class="combat-scene-overlay__ai-panel" />
     </div>
 
@@ -141,8 +137,7 @@ onUnmounted(() => {
          log (goc phai-duoi, self-guarded khi khong fighting). -->
     <CombatTurnRail class="combat-scene-overlay__turn-order-strip" />
 
-    <CombatLogFeed v-if="logOpen" />
-    <CombatControlButton class="combat-scene-overlay__log-toggle" :aria-expanded="logOpen" @click="logOpen = !logOpen">{{ t(logOpen ? 'combat.overlay.healthHud.hideLog' : 'combat.overlay.healthHud.showLog') }}</CombatControlButton>
+    <CombatLogFeed />
 
 
     <!-- 6A-T6 - confirm thoat tran + result/intro/countdown (scene exit
@@ -154,10 +149,7 @@ onUnmounted(() => {
 <style scoped>
 /* T8.1 (2026-09-02) - khoi phuc styles bi mat trong 6A T8 rewrite
    (991ba75 da xoa toan bo style scoped): root phu canvas, AI panel
-   neo trai-tren ("bang chon muc tieu" - user report), battlefield
-   la vung chua. Gia tri NGUYEN BAN tu 71357a1^ - khong cai thien
-   tuy tien. Status/event/control bar rules KHONG khoi phuc (da
-   retire dung chu y). */
+   neo duoi nut Tu Dong, battlefield la vung chua. */
 .combat-scene-overlay {
   --combat-topbar-h: 94px;
   position: absolute;
@@ -183,11 +175,15 @@ onUnmounted(() => {
 
 .combat-scene-overlay__ai-panel {
   position: absolute;
-  left: 24px;
-  top: 476px;
+  right: 248px;
+  left: auto;
+  top: 68px;
   width: 210px;
   max-height: 380px;
   overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   z-index: 12;
 }
 
@@ -201,14 +197,6 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   z-index: 12;
-}
-
-.combat-scene-overlay__log-toggle {
-  position: absolute;
-  left: 24px;
-  top: 528px;
-  bottom: auto;
-  pointer-events: auto;
 }
 </style>
 

@@ -24,7 +24,8 @@ const fill = computed(() => Number.isFinite(props.model.progress) ? Math.min(100
 const isCurrent = computed(() => props.selected === props.model.currentFloor)
 const isLocked = computed(() => props.selected > props.model.currentFloor)
 const statusLabel = computed(() => isLocked.value ? t('panels.realm.nodes.locked') : t('panels.realm.nodes.unlocked'))
-const ritualReady = computed(() => props.model.currentFloor >= CORE_REALM_LEVEL && props.model.ctaEnabled)
+const ritualVisible = computed(() => props.model.currentFloor >= CORE_REALM_LEVEL && (props.model.ctaVisible ?? props.model.ctaEnabled))
+const ritualReady = computed(() => ritualVisible.value && props.model.ctaEnabled)
 const ritualAction = computed(() => props.model.ritualAction ?? 'breakthrough')
 
 function onRitual() {
@@ -36,7 +37,7 @@ function onRitual() {
 <template>
   <section class="realm-active-card" :class="{ 'realm-locked-view': isLocked }" :aria-label="model.name">
     <h2>{{ model.name }}</h2>
-    <p class="realm-floor-line">{{ t('realm.floorCount', { floor: selected, total: model.maxFloor }) }}</p>
+    <p class="realm-floor-line">{{ t('realm.floorCount', { floor: selected, total: CORE_REALM_LEVEL }) }}</p>
     <div class="realm-meditation-wrap"><img class="realm-meditation" :src="meditation" alt="" /></div>
     <template v-if="isCurrent">
       <div class="realm-row">
@@ -47,8 +48,9 @@ function onRitual() {
       <div class="realm-row realm-rate">
         <span>{{ model.rate }}</span>
       </div>
+      <p v-if="ritualVisible && !ritualReady && model.ctaLockReason" class="realm-ritual-lock">{{ model.ctaLockReason }}</p>
       <div class="realm-actions">
-        <GameActionButton gold class="realm-upgrade" :class="{ 'btn-hidden': !ritualReady }" :disabled="!ritualReady" data-testid="realm-ritual" @click="onRitual">{{ model.ctaLabel }}</GameActionButton>
+        <GameActionButton gold class="realm-upgrade" :class="{ 'btn-hidden': !ritualVisible }" :disabled="!ritualReady" :title="!ritualReady ? model.ctaLockReason : undefined" data-testid="realm-ritual" @click="onRitual">{{ model.ctaLabel }}</GameActionButton>
         <GameActionButton gold class="realm-upgrade" :class="{ 'btn-hidden': !model.canAdvanceFloor }" :disabled="!model.canAdvanceFloor" data-testid="realm-upgrade" @click="emit('advance')">{{ t('realm.advance') }}</GameActionButton>
       </div>
     </template>
@@ -81,6 +83,7 @@ function onRitual() {
 .realm-meditation { width:100%; height:100%; object-fit:cover; opacity:0.6; }
 .realm-row { display:flex; justify-content:space-between; font-size:13px; font-weight:700; color:#241708; text-shadow:0 0 2px #f4e7ce, 0 0 4px #f4e7ce, 0 0 8px #f4e7ce, 0 1px 0 #f4e7ce; }
 .realm-rate { font-size:12px; margin-top:2px; justify-content:center; }
+.realm-ritual-lock { margin:2px 0 0; text-align:center; font-size:11.5px; font-weight:700; color:#7a2e22; text-shadow:0 0 2px #f4e7ce, 0 0 6px #f4e7ce; }
 .realm-actions { display:grid; grid-template-columns:1fr; gap:2px; flex:none; margin-top:auto; }
 .realm-actions .realm-upgrade.game-action-button { font-size:15px; margin-top:0; width:100%; aspect-ratio:auto; height:50px; }
 /* Gate unmet: the button is invisible but keeps its slot so the card

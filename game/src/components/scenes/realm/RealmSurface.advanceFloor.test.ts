@@ -61,6 +61,7 @@ function mountRealmSurface(shouldFail = false) {
   const gameManager = {
     realmAdvanceOps: {
       canTriggerBreakthrough: () => false,
+      getBreakthroughRequirements: () => [],
       breakthroughWithConsequences: vi.fn((target: typeof player): BreakthroughOutcomeResult => {
         if (shouldFail) {
           return { kind: 'failure' }

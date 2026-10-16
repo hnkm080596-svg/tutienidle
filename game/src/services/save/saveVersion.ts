@@ -236,7 +236,9 @@
 // into a clean version gate. v89 saves MIGRATE by pure re-stamp: jobs
 // without the field still verify (the fold omits the absent key).
 // Fresh age-only resource identities intentionally have no legacy migration.
-export const CURRENT_SAVE_VERSION = 91 as const
+// v92 (2026-10-17, BETA 0.0.0.1 CUTOVER): craftedRealmId added to PillBag
+// stacks and fresh-start beta cutover; pre-v92 saves are rejected wholesale.
+export const CURRENT_SAVE_VERSION = 92 as const
 
 // The version-acceptance migration chain, shared by EVERY save gate
 // (local boot inspectLocalSave, cloud SAVE_READY pull, pending-journal

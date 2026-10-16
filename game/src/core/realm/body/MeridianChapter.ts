@@ -199,9 +199,9 @@ export const meridianChapter: ModifierBodyChapter = {
     return need
   },
 
-  // Dau tu 1 Thong Mach Dan vao duong ke tiep: cong mot gain ngau nhien
-  // dong deu trong investGainRange (Math.random), clamp o 100. Tra ve
-  // so dan THAT SU da tieu (0 neu khong du dieu kien/da xong het).
+  // Pour available Tinh Hoa Bao The into the active meridian until its
+  // progress reaches 100 (or available essence runs out), matching
+  // BodyRefinementChapter. Returns the exact amount consumed.
   // Does NOT rebuild modifiers - the system dispatch owns the rebuild.
   invest(player: PlayerData, available: number, _auxOwned: number): number {
     const state = player.bodyProgression.meridian
@@ -241,13 +241,20 @@ export const meridianChapter: ModifierBodyChapter = {
     }
 
     const range = next.investGainRange
-    const gain = range.min + Math.random() * (range.max - range.min)
-    progress[next.id] = Math.min(
-      MERIDIAN_FULL_PROGRESS,
-      (progress[next.id] ?? 0) + gain,
-    )
+    let consumed = 0
+    while (
+      consumed + next.thongMachDanCost <= available &&
+      (progress[next.id] ?? 0) < MERIDIAN_FULL_PROGRESS
+    ) {
+      const gain = range.min + Math.random() * (range.max - range.min)
+      progress[next.id] = Math.min(
+        MERIDIAN_FULL_PROGRESS,
+        (progress[next.id] ?? 0) + gain,
+      )
+      consumed += next.thongMachDanCost
+    }
 
-    return next.thongMachDanCost
+    return consumed
   },
 
   applyModifiers(player: PlayerData): void {

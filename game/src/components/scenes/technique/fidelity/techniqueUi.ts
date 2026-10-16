@@ -1,3 +1,5 @@
+import type { ItemQuality } from '@/core/item/ItemQuality'
+
 export interface TechniqueUiRow { id: string; label: string; value: string }
 export interface TechniqueUiModel {
   /** False when no technique is bound - the scene then renders ONLY the
@@ -6,6 +8,7 @@ export interface TechniqueUiModel {
   hasTechnique: boolean
   name: string
   quality: string
+  qualityKey?: ItemQuality
   description: string
   art: string
   sections: readonly { id: string; title: string; rows: readonly TechniqueUiRow[] }[]
@@ -15,7 +18,15 @@ export interface TechniqueUiModel {
   masteryPercent: number
   currentGrade: string
   nextGrade: string
-  material: { name: string; amountLabel: string }
+  material: {
+    id?: string
+    name: string
+    icon?: string
+    amountLabel: string
+    have?: number
+    need?: number
+    met?: boolean
+  }
   /** Optional footnote under the material row (empty = hidden). The
    *  preview uses it for its fixture disclaimer; production leaves it
    *  blank because the row already carries real owned/cost numbers. */
@@ -27,4 +38,7 @@ export interface TechniqueUiModel {
   /** True while `art` is the fallback placeholder rather than the
    *  technique's own icon - the vista shows its temp-art caption. */
   artTemporary: boolean
+  /** Accent color for the mastery progress bar (element color for Phap Tu,
+   *  or pathway signature color for other pathways). */
+  progressColor?: string
 }

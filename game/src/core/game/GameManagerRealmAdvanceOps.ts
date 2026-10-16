@@ -2,13 +2,18 @@ import type { MaterialReceipt } from '../material/MaterialReceipt'
 import type { ArtifactPath } from '../artifact/Artifact'
 import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
+import type { Material } from '../material/Material'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { PillBag } from '../pill/PillBag'
+import type { ItemQuality } from '../item/ItemQuality'
+import { BASE_PILL_QUALITY, pillDecomposeEssencePerUnit } from '../pill/PillQuality'
+import { LUYEN_DAN_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
+import { createBagOverflowEvent } from '../notification/bagOverflow'
 import type { PlayerData } from '../player/Player'
 import { capturePlayerSnapshot, restorePlayerSnapshotInPlace } from '../player/PlayerSnapshot'
 import type { ElementType } from '../element/ElementType'
-import { isBetaElement, isBetaWay, isScopeHidden } from '../betaScope'
+import { isBetaElement, isBetaWay, isScopeHidden, scopeHiddenPillFamilyOfId } from '../betaScope'
 import { betaTechniqueAdmitted } from '../betaScopeSkillDomain'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { canPurchaseNode as canPurchaseNodeSystem } from '../progression/NodeSystem'
@@ -37,7 +42,7 @@ import {
 import { recordMeridianOpenQuality } from '../realm/body/MeridianChapter'
 import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
-import { CORE_REALM_LEVEL, getCurrentRealm } from '../realm/realmSystem'
+import { CORE_REALM_LEVEL, getCurrentRealm, getRealmIndex } from '../realm/realmSystem'
 import {
   closeHiddenLineage,
   recordHiddenBreakthrough,
@@ -268,6 +273,166 @@ export class GameManagerRealmAdvanceOps {
     issueCompanionGifts(player, { kind: 'realm_entered', realmId: player.realmId })
   }
 
+  private resolveLuyenDanTinhHoaMaterial(): Material {
+    return (
+      (this.deps.materialRegistry.has(LUYEN_DAN_TINH_HOA_ID)
+        ? this.deps.materialRegistry.get(LUYEN_DAN_TINH_HOA_ID)
+        : undefined) ?? {
+        id: LUYEN_DAN_TINH_HOA_ID,
+        name: 'Luyện Đan Tinh Hoa',
+        category: 'essence',
+        sourceType: 'building',
+      }
+    )
+  }
+
+  /**
+   * Automatically decomposes all pills in PillBag whose realmId is strictly
+   * below `player.realmId` into Luyen Dan Tinh Hoa when advancing to a higher
+   * major realm (or when a lower-realm alchemy job finishes after breakthrough).
+   */
+  autoDecomposeLowerRealmPills(player: PlayerData): { decomposedPills: number; essenceGained: number } {
+    const targetRealmIdx = getRealmIndex(player.realmId)
+    if (targetRealmIdx <= 0) {
+      return { decomposedPills: 0, essenceGained: 0 }
+    }
+
+    const stacks = this.deps.pillBag.getAll()
+    const toRemove: Array<{ pillId: string; quality: ItemQuality; amount: number; essence: number }> = []
+
+    for (const stack of stacks) {
+      const pillRealmId = stack.pill.realmId
+      if (!pillRealmId) continue
+      if (scopeHiddenPillFamilyOfId(stack.pill.id) !== null) continue
+      const pillRealmIdx = getRealmIndex(pillRealmId)
+      if (pillRealmIdx >= 0 && pillRealmIdx < targetRealmIdx && stack.amount > 0) {
+        const quality = stack.quality ?? BASE_PILL_QUALITY
+        const perUnit = pillDecomposeEssencePerUnit(stack.pill, quality)
+        toRemove.push({
+          pillId: stack.pill.id,
+          quality,
+          amount: stack.amount,
+          essence: perUnit,
+        })
+      }
+    }
+
+    if (toRemove.length === 0) {
+      return { decomposedPills: 0, essenceGained: 0 }
+    }
+
+    return this.deps.materialBag.withAcquisition(() => {
+      const tinhHoa = this.resolveLuyenDanTinhHoaMaterial()
+      let decomposedPills = 0
+      let totalDelivered = 0
+      let blockedEssence = 0
+
+      for (const item of toRemove) {
+        const perUnit = Math.max(1, item.essence)
+        const requestedEssence = item.amount * perUnit
+        const acceptable = this.deps.materialBag.canAcceptAmount(tinhHoa, requestedEssence)
+        const pillsToDecompose = Math.min(item.amount, Math.floor(acceptable / perUnit))
+
+        if (pillsToDecompose > 0 && this.deps.pillBag.remove(item.pillId, pillsToDecompose, item.quality)) {
+          const essenceForStack = pillsToDecompose * perUnit
+          const { overflow, receipt } = this.deps.materialBag.credit(tinhHoa, essenceForStack)
+          const delivered = essenceForStack - overflow
+          decomposedPills += pillsToDecompose
+          totalDelivered += delivered
+          if (delivered > 0) {
+            this.deps.notifyMaterialGained(LUYEN_DAN_TINH_HOA_ID, delivered, receipt)
+          }
+          if (overflow > 0) {
+            blockedEssence += overflow
+          }
+        }
+
+        if (pillsToDecompose < item.amount) {
+          blockedEssence += (item.amount - pillsToDecompose) * perUnit
+        }
+      }
+
+      if (totalDelivered > 0) {
+        this.deps.notifications.push({
+          kind: 'craft',
+          message: `Phân giải ${decomposedPills} đan cảnh giới cũ → +${totalDelivered} ${tinhHoa.name}`,
+        })
+      }
+
+      if (blockedEssence > 0) {
+        this.deps.notifications.push(
+          createBagOverflowEvent(tinhHoa.name, blockedEssence),
+        )
+      }
+
+      return { decomposedPills, essenceGained: totalDelivered }
+    })
+  }
+
+  /**
+   * Manually decomposes a lower-realm pill stack from PillBag into Luyen Dan Tinh Hoa.
+   */
+  decomposePillStack(
+    pillId: string,
+    quality: ItemQuality = BASE_PILL_QUALITY,
+    playerRealmId?: string,
+  ): { ok: boolean; decomposedPills: number; essenceGained: number } {
+    if (scopeHiddenPillFamilyOfId(pillId) !== null) {
+      return { ok: false, decomposedPills: 0, essenceGained: 0 }
+    }
+    const stack = this.deps.pillBag.get(pillId, quality)
+    if (!stack || stack.amount <= 0) {
+      return { ok: false, decomposedPills: 0, essenceGained: 0 }
+    }
+    if (playerRealmId !== undefined) {
+      const pillRealmIdx = stack.pill.realmId ? getRealmIndex(stack.pill.realmId) : -1
+      const targetRealmIdx = getRealmIndex(playerRealmId)
+      if (pillRealmIdx < 0 || pillRealmIdx >= targetRealmIdx) {
+        return { ok: false, decomposedPills: 0, essenceGained: 0 }
+      }
+    }
+
+    const perUnit = Math.max(1, pillDecomposeEssencePerUnit(stack.pill, quality))
+    const totalEssence = stack.amount * perUnit
+    const tinhHoa = this.resolveLuyenDanTinhHoaMaterial()
+    const acceptable = this.deps.materialBag.canAcceptAmount(tinhHoa, totalEssence)
+    const pillsToDecompose = Math.min(stack.amount, Math.floor(acceptable / perUnit))
+
+    if (pillsToDecompose <= 0) {
+      this.deps.notifications.push(
+        createBagOverflowEvent(tinhHoa.name, totalEssence),
+      )
+      return { ok: false, decomposedPills: 0, essenceGained: 0 }
+    }
+
+    return this.deps.materialBag.withAcquisition(() => {
+      const essenceToCredit = pillsToDecompose * perUnit
+      if (!this.deps.pillBag.remove(pillId, pillsToDecompose, quality)) {
+        return { ok: false, decomposedPills: 0, essenceGained: 0 }
+      }
+
+      const { overflow, receipt } = this.deps.materialBag.credit(tinhHoa, essenceToCredit)
+      const delivered = essenceToCredit - overflow
+
+      if (delivered > 0) {
+        this.deps.notifyMaterialGained(LUYEN_DAN_TINH_HOA_ID, delivered, receipt)
+        this.deps.notifications.push({
+          kind: 'craft',
+          message: `Phân giải ${stack.pill.name} x${pillsToDecompose} → +${delivered} ${tinhHoa.name}`,
+        })
+      }
+
+      const unacceptedEssence = (stack.amount - pillsToDecompose) * perUnit + overflow
+      if (unacceptedEssence > 0) {
+        this.deps.notifications.push(
+          createBagOverflowEvent(tinhHoa.name, unacceptedEssence),
+        )
+      }
+
+      return { ok: true, decomposedPills: pillsToDecompose, essenceGained: delivered }
+    })
+  }
+
   /**
    * R8.2 Slice 2 (AR-10): facade for the minor-realm breakthrough outcome
    * chain. The service owns all consequences (passive sync, banked
@@ -491,6 +656,7 @@ export class GameManagerRealmAdvanceOps {
     // Preflight guarantees this cannot fail (template exists, holder
     // empty, grade within ceiling).
     this.grantCanonicalTechnique(way.techniqueId, player)
+    this.autoDecomposeLowerRealmPills(player)
 
     return true
   }
@@ -758,6 +924,8 @@ export class GameManagerRealmAdvanceOps {
       rollback()
       throw error
     }
+
+    this.autoDecomposeLowerRealmPills(player)
 
     return { ok: true }
   }

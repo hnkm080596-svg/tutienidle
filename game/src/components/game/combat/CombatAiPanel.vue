@@ -140,9 +140,13 @@ function select(strategy: CombatAiStrategy) {
 }
 
 .combat-ai-panel__legend {
-  padding: 0 0 8px;
-  font-size: var(--text-2xs, 10px);
-  color: #b9a880;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 /* Mock .strategy rows: bordered, min-height, gold wash when selected. */

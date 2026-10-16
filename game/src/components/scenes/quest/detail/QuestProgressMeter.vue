@@ -13,7 +13,7 @@ const props = defineProps<{ row: BetaQuestSurfaceModel }>()
 const { t } = useI18n()
 
 const fill = computed(() =>
-  props.row.target > 0 ? Math.min(props.row.progress, props.row.target) / props.row.target : 0,
+  props.row.target > 0 ? (Math.min(props.row.progress, props.row.target) / props.row.target) * 100 : 0,
 )
 const amountText = computed(() => `${Math.min(props.row.progress, props.row.target)} / ${props.row.target}`)
 </script>

@@ -6,6 +6,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { CORE_REALM_LEVEL } from '@/core/realm/realmSystem'
 
 const props = defineProps<{ current: number; selected: number; max: number }>()
 const emit = defineEmits<{ select: [floor: number] }>()
@@ -13,12 +14,14 @@ const { t } = useI18n()
 
 const SPACING = 170
 
+const visibleMax = computed(() => Math.min(props.max, Math.max(CORE_REALM_LEVEL, props.current)))
+
 const floors = computed(() => {
   /* Focus card is 270px wide where a milestone is ~110: push milestones away
      from the selected slot so the card-circle gap matches circle-circle. */
   const widen = SPACING / 2
   const rows: Array<{ floor: number; left: number; locked: boolean; status: string }> = []
-  for (let i = 1; i <= props.max; i += 1) {
+  for (let i = 1; i <= visibleMax.value; i += 1) {
     const shift = i < props.selected ? -widen : i > props.selected ? widen : 0
     rows.push({
       floor: i,

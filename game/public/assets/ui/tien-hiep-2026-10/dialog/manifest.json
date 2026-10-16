@@ -1,11 +1,11 @@
 {
-  "generator": "sliced from game/docs/art-ref/ornate-ui-sheet.png (owner sheet, 1448x1086); v2 recut: flood-fill bg removal + edge-band alpha unmix (no gray fringe)",
+  "generator": "sliced from game/docs/art-ref/ornate-ui-sheet.png (owner sheet, 1448x1086)",
   "scope": "dialog/confirm/info-notification chrome; whole-component slices, never nine-slice",
   "artifacts": [
     {
       "name": "badge-alert-v1",
-      "width": 352,
-      "height": 219,
+      "width": 348,
+      "height": 214,
       "hasAlpha": true,
       "cornerAlpha": 0,
       "centerAlpha": 255,
@@ -14,8 +14,8 @@
     },
     {
       "name": "badge-info-v1",
-      "width": 314,
-      "height": 217,
+      "width": 308,
+      "height": 214,
       "hasAlpha": true,
       "cornerAlpha": 0,
       "centerAlpha": 255,
@@ -24,8 +24,8 @@
     },
     {
       "name": "button-close-v1",
-      "width": 108,
-      "height": 107,
+      "width": 103,
+      "height": 105,
       "hasAlpha": true,
       "cornerAlpha": 0,
       "centerAlpha": 255,
@@ -34,7 +34,7 @@
     },
     {
       "name": "button-dark-v1",
-      "width": 230,
+      "width": 219,
       "height": 120,
       "hasAlpha": true,
       "cornerAlpha": 0,
@@ -44,8 +44,8 @@
     },
     {
       "name": "button-gold-v1",
-      "width": 277,
-      "height": 124,
+      "width": 269,
+      "height": 120,
       "hasAlpha": true,
       "cornerAlpha": 0,
       "centerAlpha": 255,
@@ -54,8 +54,8 @@
     },
     {
       "name": "corner-bracket-v1",
-      "width": 64,
-      "height": 64,
+      "width": 52,
+      "height": 52,
       "hasAlpha": true,
       "cornerAlpha": 0,
       "centerAlpha": 255,
@@ -64,8 +64,8 @@
     },
     {
       "name": "dialog-frame-ornate-v1",
-      "width": 786,
-      "height": 630,
+      "width": 778,
+      "height": 625,
       "hasAlpha": true,
       "cornerAlpha": 0,
       "centerAlpha": 255,
@@ -84,8 +84,8 @@
     },
     {
       "name": "info-card-v1",
-      "width": 629,
-      "height": 236,
+      "width": 627,
+      "height": 234,
       "hasAlpha": true,
       "cornerAlpha": 0,
       "centerAlpha": 255,
@@ -94,8 +94,8 @@
     },
     {
       "name": "item-square-v1",
-      "width": 192,
-      "height": 177,
+      "width": 184,
+      "height": 171,
       "hasAlpha": true,
       "cornerAlpha": 0,
       "centerAlpha": 255,
@@ -104,8 +104,8 @@
     },
     {
       "name": "panel-plain-v1",
-      "width": 597,
-      "height": 198,
+      "width": 594,
+      "height": 196,
       "hasAlpha": true,
       "cornerAlpha": 0,
       "centerAlpha": 255,
@@ -114,8 +114,8 @@
     },
     {
       "name": "title-banner-crest-v1",
-      "width": 620,
-      "height": 178,
+      "width": 611,
+      "height": 172,
       "hasAlpha": true,
       "cornerAlpha": 0,
       "centerAlpha": 255,

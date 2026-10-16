@@ -52,7 +52,7 @@ const costCells = computed(() => props.recipe?.costs.map(item => ({ ...item })) 
 const pillCell = computed(() => {
   const recipe = props.recipe
   if (!recipe) return null
-  const lines = [recipe.grade, recipe.duration, recipe.description].filter(Boolean).join('\n')
+  const lines = [recipe.grade, recipe.duration, recipe.outcome, recipe.description].filter(Boolean).join('\n')
   return { name: recipe.name, label: recipe.name, icon: recipe.icon, tooltip: { title: recipe.name, description: lines } }
 })
 
@@ -179,22 +179,26 @@ function jobSubline(job: AlchemyJobDisplay) {
               <SlotView static static-tooltip :item="pillCell" :icon="pillCell.icon" :label="pillCell.label" :tooltip="pillCell.tooltip" variant="circle" />
             </div>
           </div>
-          <div class="alchemy-slots">
+          <div class="alchemy-slots" :class="{ 'alchemy-slots--dense': costCells.length >= 4 }">
             <div v-if="herbCell" class="alchemy-slot">
               <SlotView :item="herbCell" :icon="herbCell.icon" :label="herbCell.label" :description="herbCell.description" :tooltip="herbCell.tooltip ?? { title: herbCell.name, description: t('alchemy.cycleHerbHint') }" :equipment-quality-rank="herbCell.equipmentQualityRank" :rarity-rank="herbCell.rarityRank" :rarity-rank-scale="herbCell.rarityRankScale" :name-segments="herbCell.nameSegments" variant="bag" />
-              <span class="alchemy-slot__count">{{ herbCell.amount }}</span>
+              <span class="alchemy-slot__count" :class="{ 'is-short': !herbCell.enough }">{{ herbCell.amount }}</span>
             </div>
             <div v-for="cost in costCells" :key="cost.id" class="alchemy-slot">
               <SlotView :item="cost" :icon="cost.icon" :label="cost.label" :description="cost.description" :tooltip="cost.tooltip ?? { title: cost.label, description: cost.value }" :equipment-quality-rank="cost.equipmentQualityRank" :rarity-rank="cost.rarityRank" :rarity-rank-scale="cost.rarityRankScale" :name-segments="cost.nameSegments" variant="bag" />
-              <span class="alchemy-slot__count">{{ cost.value }}</span>
+              <span class="alchemy-slot__count" :class="{ 'is-short': cost.enough === false }">{{ cost.value }}</span>
             </div>
           </div>
           <GameCard as="div" class="alchemy-variant-picker" role="listbox" :aria-label="t('alchemy.variantPicker')">
             <div v-for="v in recipe.variants" :key="v.id" class="alchemy-variant-pick">
               <SlotView :item="v" :icon="v.icon" :label="v.name" :description="v.description" :tooltip="v.tooltip ?? { title: v.name, description: v.description }" :equipment-quality-rank="v.equipmentQualityRank" :rarity-rank="v.rarityRank" :rarity-rank-scale="v.rarityRankScale" :name-segments="v.nameSegments" variant="bag" :state="{ interaction: v.id === variant ? 'selected' : 'idle' }" @click="pickVariant(v.id)" />
-              <span class="alchemy-slot__count">{{ v.amount }}</span>
+              <span class="alchemy-slot__count" :class="{ 'is-short': !v.enough }">{{ v.amount }}</span>
             </div>
           </GameCard>
+          <div class="alchemy-meta">
+            <span v-if="recipe.outcome" class="alchemy-outcome">{{ recipe.outcome }}</span>
+            <span v-if="recipe.brewDisabled && recipe.blockReason" class="block-reason">{{ recipe.blockReason }}</span>
+          </div>
           <div class="alchemy-brew">
             <GameActionButton :gold="!recipe.brewDisabled" :disabled="recipe.brewDisabled" @click="onBrew">{{ t('alchemy.startBrewing') }}</GameActionButton>
           </div>
@@ -260,13 +264,18 @@ function jobSubline(job: AlchemyJobDisplay) {
 }
 .alchemy-cauldron img { width:auto; height:308px; object-fit:contain; opacity:.8; filter:drop-shadow(0 10px 10px #70421d35); }
 .alchemy-slots { display:flex; gap:32px; margin-top:auto; justify-content:center; position:relative; z-index:2; }
+.alchemy-slots--dense { gap:18px; }
 .alchemy-slot { display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; }
 .alchemy-slot:first-child, .alchemy-slot:last-child { transform:translateY(calc(-1 * var(--outer-raise, 28px))); }
 .alchemy-slot :deep(.slot-view) { flex:0 0 56px; width:56px; }
 .alchemy-slot__count { font-size:11px; color:#6d5730; letter-spacing:.5px; }
-.alchemy-variant-picker { display:flex; gap:10px; justify-content:center; margin-top:8px; align-self:center; position:relative; z-index:4; }
+.alchemy-slot__count.is-short { color:#a83228; font-weight:600; }
+.alchemy-variant-picker { display:flex; gap:10px; justify-content:center; margin-top:6px; align-self:center; position:relative; z-index:4; }
 .alchemy-variant-pick { display:flex; flex-direction:column; align-items:center; gap:4px; }
 .alchemy-variant-picker :deep(.slot-view) { flex:0 0 56px; width:56px; }
+.alchemy-meta { display:flex; justify-content:center; align-items:center; gap:12px; min-height:18px; margin:2px 0; font-size:12px; position:relative; z-index:4; }
+.alchemy-outcome { color:#5a4622; font-weight:600; }
+.block-reason { color:#a83228; font-weight:600; }
 .alchemy-brew { display:flex; justify-content:center; }
 .alchemy-brew .game-action-button { width:255px; max-width:100%; height:calc(255px * 324 / 1225); font-size:24px; padding:8px 29px; }
 .alchemy-mid__empty { margin:auto; text-align:center; }

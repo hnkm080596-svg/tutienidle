@@ -84,9 +84,9 @@ describe('CombatSceneOverlay — style contract (T8.1)', () => {
     const rule = ruleOf('.combat-scene-overlay__ai-panel')
 
     expect(rule).toContain('position: absolute')
-    expect(rule).toContain('left: 24px')
+    expect(rule).toContain('right: 248px')
     // The last authored selector wins inside the shared design canvas.
-    expect(rule).toContain('top: 476px')
+    expect(rule).toContain('top: 68px')
     expect(rule).toContain('width: 210px')
     expect(rule).toContain('z-index: 12')
     expect(ruleOf('.combat-scene-overlay__turn-order-strip')).toContain('left: 50%')

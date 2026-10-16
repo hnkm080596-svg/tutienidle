@@ -1,21 +1,13 @@
 <script setup lang="ts">
-// Detail banner (Codex landscape port): painted landscape strip across
-// the top of the detail card with the quest name + its group under a
-// dark gradient, like the approved preview's .quest-banner. No
-// per-quest vista art exists in the model yet - the shared warm vista
-// stands in until row.image is assigned.
+// Detail header: renders the quest name and its group label cleanly
+// at the top of the detail card without a placeholder vista image.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
 
 const props = defineProps<{ row: BetaQuestSurfaceModel }>()
 
 const { t, te } = useI18n()
-
-const art = computed(() => ({
-  backgroundImage: `url('${resolveAssetUrl(props.row.image ?? '/assets/ui/tien-hiep-2026-10/source/world-vista-warm-v1.png')}')`,
-}))
 
 const groupLabel = computed(() => {
   const id = props.row.group ?? props.row.cadence
@@ -25,7 +17,7 @@ const groupLabel = computed(() => {
 </script>
 
 <template>
-  <div class="quest-detail-vista" :style="art">
+  <div class="quest-detail-vista">
     <h2 class="quest-detail-vista__name">{{ row.name }}</h2>
     <p class="quest-detail-vista__group">{{ groupLabel }}</p>
   </div>
@@ -34,32 +26,22 @@ const groupLabel = computed(() => {
 <style scoped>
 .quest-detail-vista {
   position: relative;
-  isolation: isolate;
-  height: 78px;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 8px;
+  gap: 2px;
+  padding: 2px 0 8px;
+  border-bottom: 1px solid #b28a4344;
   box-sizing: border-box;
-  background-position: center;
-  background-size: cover;
-}
-.quest-detail-vista::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(transparent, #141511e8);
 }
 .quest-detail-vista__name {
   margin: 0;
   font-size: 20px;
   color: #ffe6aa;
-  text-shadow: 0 2px 4px #000;
 }
 .quest-detail-vista__group {
-  margin: 2px 0 0;
+  margin: 0;
   font-size: 12px;
+  color: #c9b489;
 }
 </style>

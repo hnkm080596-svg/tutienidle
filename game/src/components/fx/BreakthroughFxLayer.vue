@@ -83,6 +83,7 @@ const ringOpacity = ref(0)
 const ringScale = ref(0)
 const flashOpacity = ref(0)
 const motes = ref<FxMote[]>([])
+const inputLocked = ref(false)
 
 const flights = new Map<number, FxRun>()
 const centers = new Map<number, { x: number; y: number }>()
@@ -171,8 +172,9 @@ function startRun(run: BreakthroughFxRun): void {
     }
   }
 
-  // The overlay owns every input while the cinematic runs - clicks land
-  // on the layer and keys die in the capture-phase swallow.
+  // The overlay owns every input while the inhale builds - once the
+  // burst resolves and the growth modal opens, release pointer/key lock.
+  inputLocked.value = true
   window.addEventListener('keydown', swallowKey, true)
 
   const startedAt = performance.now()
@@ -273,6 +275,8 @@ function startRun(run: BreakthroughFxRun): void {
 
     if (elapsed >= RESOLVE_MS && !resolved.has(run.id)) {
       resolved.add(run.id)
+      inputLocked.value = false
+      window.removeEventListener('keydown', swallowKey, true)
       run.resolve()
     }
 
@@ -304,6 +308,7 @@ function finishRun(runId: number): void {
   settleBreakthroughFxRun(runId)
 
   if (flights.size === 0) {
+    inputLocked.value = false
     window.removeEventListener('keydown', swallowKey, true)
     dimOpacity.value = 0
     silOpacity.value = 0
@@ -349,7 +354,11 @@ onBeforeUnmount(() => {
     <div
       v-if="dimOpacity > 0 || motes.length || ringOpacity > 0"
       class="breakthrough-fx-layer"
-      :style="{ zIndex: OVERLAY_LAYERS.breakthroughFx, background: `rgba(14, 9, 3, ${dimOpacity})` }"
+      :style="{
+        zIndex: OVERLAY_LAYERS.breakthroughFx,
+        background: `rgba(14, 9, 3, ${dimOpacity})`,
+        pointerEvents: inputLocked ? 'auto' : 'none',
+      }"
       aria-hidden="true"
     >
       <div

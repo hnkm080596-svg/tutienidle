@@ -50,32 +50,49 @@ export function useRealmStatPassives() {
       ? undefined
       : new Set(getHiddenBreakthroughRealmIds(player.$state))
 
-    return REALM_PASSIVES
+    const granted = REALM_PASSIVES
       .filter(passive => player.grantedRealmPassiveIds.includes(passive.id))
       .filter(passive => hiddenRealmIds === undefined || !hiddenRealmIds.has(passive.id))
-      .map(passive => {
-        const modifiers = authoredRealmPassiveEntries(passive, player.$state)
 
-        const effectLines = modifiers
-          .filter(modifier => (modifier.percent ?? 0) !== 0)
-          .map(modifier => `${statLabel(modifier.stat)} +${formatStat('realmPassivePercent', modifier.percent ?? 0)}`)
+    const latest = granted[granted.length - 1]
+    if (!latest) {
+      return []
+    }
 
-        const appearance = realmPassiveAppearance(passive.id, player.$state,
-          isBetaFeature('hiddenContent') && getHiddenBreakthroughRealmIds(player.$state).includes(passive.id), t)
-        const tooltip: RealmPassiveTooltipContent = {
-          kind: 'realm-passive', name: passive.name, imagePath: appearance.iconUrl,
-          levelLabel: appearance.tierLabel, description: passive.description,
-          sections: [{ label: t('realmPassive.effects'), rows: effectLines.map((line) => ({ label: line, value: '' })) },
-            { label: t('realmPassive.origin'), rows: [{ label: t('realmPassive.recorded'), value: appearance.tierLabel }] }],
-        }
-        return {
-          ...appearance, tooltip,
-          id: passive.id,
-          name: passive.name,
-          description: passive.description,
-          effectLines,
-        }
-      })
+    const effectLines = granted.flatMap((passive) =>
+      authoredRealmPassiveEntries(passive, player.$state)
+        .filter(modifier => (modifier.percent ?? 0) !== 0)
+        .map(modifier => `${statLabel(modifier.stat)} +${formatStat('realmPassivePercent', modifier.percent ?? 0)}`),
+    )
+
+    const appearance = realmPassiveAppearance(
+      latest.id,
+      player.$state,
+      isBetaFeature('hiddenContent') && getHiddenBreakthroughRealmIds(player.$state).includes(latest.id),
+      t,
+    )
+    const tooltip: RealmPassiveTooltipContent = {
+      kind: 'realm-passive',
+      name: latest.name,
+      imagePath: appearance.iconUrl,
+      levelLabel: appearance.tierLabel,
+      description: latest.description,
+      sections: [
+        { label: t('realmPassive.effects'), rows: effectLines.map((line) => ({ label: line, value: '' })) },
+        { label: t('realmPassive.origin'), rows: [{ label: t('realmPassive.recorded'), value: appearance.tierLabel }] },
+      ],
+    }
+
+    return [
+      {
+        ...appearance,
+        tooltip,
+        id: latest.id,
+        name: latest.name,
+        description: latest.description,
+        effectLines,
+      },
+    ]
   })
 
   return { realmStatPassiveRows: rows }

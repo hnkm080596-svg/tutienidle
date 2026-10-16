@@ -954,6 +954,7 @@ export class GameManager {
       alchemySystem: this.alchemySystem,
       pillBag: this.pillBag,
       pillRegistry: this.pillRegistry,
+      autoDecomposeLowerRealmPills: (player) => this.realmAdvanceOps.autoDecomposeLowerRealmPills(player),
       persistentBuffs: this.persistentBuffs,
       passiveSystem: this.passiveSystem,
       turnBattleOps: this.turnBattleOps,

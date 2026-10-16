@@ -90,7 +90,7 @@ h2 { font-size:17px; margin:0; white-space:nowrap; overflow:hidden; text-overflo
 .actor { position:absolute; bottom:11px; width:130px; height:130px; display:flex; justify-content:center; align-items:flex-end; filter:drop-shadow(0 5px 4px #191d1499); }
 .actor img { width:100%; height:100%; object-fit:contain; }
 .actor--player { left:40px; transform:translateX(var(--lunge)); }
-.actor--enemy { right:33px; transform:translateX(var(--recoil)) scaleX(-1); }
+.actor--enemy { right:33px; transform:translateX(var(--recoil)); }
 .sword-trail { position:absolute; left:39%; top:53%; width:95px; height:3px; background:linear-gradient(90deg,transparent,#fff7c2,#b3eaff); box-shadow:0 0 8px #f9d76d; transform:rotate(-18deg); opacity:var(--strike); }
 .impact { position:absolute; right:98px; top:60px; width:32px; height:32px; border-radius:50%; background:radial-gradient(#fff8d9, #ffe69777 25%,transparent 70%); transform:scale(calc(.5 + var(--strike))); opacity:var(--strike); }
 .replay-caption { position:absolute; left:0; right:0; bottom:0; font-size:10px; text-align:center; color:#fff1d5; background:#222e2577; padding:2px; }
@@ -98,5 +98,5 @@ h2 { font-size:17px; margin:0; white-space:nowrap; overflow:hidden; text-overflo
 .progress span { display:block; height:100%; background:linear-gradient(90deg,#48694d,#b49a51); }
 footer { display:flex; align-items:center; justify-content:space-between; font-size:12px; gap:8px; }
 footer .pc-paper-button { min-height:38px; font-size:14px; padding:6px 16px; }
-@media (prefers-reduced-motion: reduce) { .actor--player { transform:none; } .actor--enemy { transform:scaleX(-1); } .sword-trail,.impact { display:none; } }
+@media (prefers-reduced-motion: reduce) { .actor--player { transform:none; } .actor--enemy { transform:none; } .sword-trail,.impact { display:none; } }
 </style>

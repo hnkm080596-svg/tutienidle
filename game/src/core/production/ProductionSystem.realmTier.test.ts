@@ -131,26 +131,29 @@ describe('clamp applied at every production entry point (T3-17)', () => {
     }
   })
 
-  it('rollRewards still reaches one tier above the collector - qi_refining stays droppable for mortal cycles', () => {
+  it('rollRewards drops only herbs of the collector realm for grotto cycles (owner ruling 2026-10-16)', () => {
     const system = createSystem()
-    let qiTierPicks = 0
-    for (let seed = 0; seed < 1000; seed++) {
-      const cycle = {
-        cycleId: `t${seed}`,
-        siteId: 'thanh_van_dong_thien',
-        collectionRealmId: 'mortal',
-        siteLevelAtStart: 1,
-        rewardTableVersion: 1,
-        rollSeed: seed * 48271,
-        startedAtMs: 0,
-        completesAtMs: 1,
-      }
-      for (const reward of system.rollRewards(cycle)) {
-        if (reward.materialId.includes('_qi_refining_')) {
-          qiTierPicks += 1
+    for (const realmId of ['mortal', 'qi_refining', 'foundation_establishment'] as const) {
+      let matchingTierPicks = 0
+      for (let seed = 0; seed < 400; seed++) {
+        const cycle = {
+          cycleId: `t${seed}`,
+          siteId: 'thanh_van_dong_thien',
+          collectionRealmId: realmId,
+          siteLevelAtStart: 1,
+          rewardTableVersion: 1,
+          rollSeed: seed * 48271,
+          startedAtMs: 0,
+          completesAtMs: 1,
+        }
+        for (const reward of system.rollRewards(cycle)) {
+          if (reward.materialId !== 'luyen_dan_tinh_hoa') {
+            expect(reward.materialId).toContain(`_${realmId}_`)
+            matchingTierPicks += 1
+          }
         }
       }
+      expect(matchingTierPicks).toBeGreaterThan(50)
     }
-    expect(qiTierPicks).toBeGreaterThan(35) // 25% product branch * ~25% capped low profile (60/20/0) -> ~62
   })
 })

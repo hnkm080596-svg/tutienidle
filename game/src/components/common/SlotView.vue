@@ -113,11 +113,35 @@ const emit = defineEmits<{
 // 'stage' variant (Minh 2026-10-11): ban do node ai - same circle ring
 // chrome as 'circle', the inner art is a full-bleed landscape painting
 // (cover-clipped to the ring interior) instead of a contain icon.
-const isCircle = computed(() => props.variant === 'circle' || props.variant === 'stage')
+const isCircle = computed(() => props.variant === 'circle' || props.variant === 'stage' || props.variant === 'technique')
 const isStage = computed(() => props.variant === 'stage')
+const isTechnique = computed(() => props.variant === 'technique')
 const CIRCLE_FRAME_SRC = resolveAssetUrl(
   '/assets/ui/tien-hiep-2026-10/controls/equipment-circle-frame-v1.png',
 )
+const TECHNIQUE_CIRCLE_FRAME_SRC =
+  `data:image/svg+xml;utf8,` +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">` +
+      `<defs>` +
+      `<radialGradient id="bg" cx="50%" cy="46%" r="54%">` +
+      `<stop offset="0%" stop-color="#221e19"/>` +
+      `<stop offset="72%" stop-color="#171411"/>` +
+      `<stop offset="100%" stop-color="#100e0b"/>` +
+      `</radialGradient>` +
+      `<linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">` +
+      `<stop offset="0%" stop-color="#f2d68e"/>` +
+      `<stop offset="50%" stop-color="#c8a258"/>` +
+      `<stop offset="100%" stop-color="#8f6c2f"/>` +
+      `</linearGradient>` +
+      `</defs>` +
+      `<circle cx="120" cy="120" r="116" fill="url(#bg)"/>` +
+      `<circle cx="120" cy="120" r="116" fill="none" stroke="url(#gold)" stroke-width="2"/>` +
+      `<circle cx="120" cy="120" r="113.2" fill="none" stroke="#0d0b09" stroke-width="3.2"/>` +
+      `<circle cx="120" cy="120" r="111" fill="none" stroke="url(#gold)" stroke-width="1" stroke-opacity="0.72"/>` +
+      `<circle cx="120" cy="120" r="78" fill="none" stroke="#b99652" stroke-width="0.75" stroke-opacity="0.22"/>` +
+      `</svg>`,
+  )
 
 const filled = computed(() => props.item !== null)
 
@@ -228,14 +252,16 @@ const qualityTintColor = computed(() => {
 
 // Chat meteors (owner ruling 2026-10-08): the approved demo cell is
 // the groove 'sao bang' (shooting star) - twin bright streaks running the art's inner
-// groove. Chat 1 (Hoang, lowest) gets NO streak at all - the effect
-// starts at Huyen (rank 2); tiers differ by COLOR only
-// (--slot-rarity-color already maps rank -> --grade-* ramp positions).
+// groove. Chat 1 (Hoang, lowest) gets NO streak at all on equipment grid cells - the effect
+// starts at Huyen (rank 2); on the 'technique' circular centerpiece, all 5 Chat tiers
+// (rank >= 1) render the circular meteor streak around the ring.
 // rarityRankScale=10 callers (materials) are not equipment Chat - off.
 const chatMeteorTier = computed(() => {
-  if (!ART_FRAME_VARIANTS.has(props.variant ?? 'item')) return 0
+  const variant = props.variant ?? 'item'
+  if (!ART_FRAME_VARIANTS.has(variant) && variant !== 'technique') return 0
   const rank = clampRank(props.rarityRank)
-  if (!filled.value || (props.rarityRankScale ?? 5) !== 5 || !rank || rank < 2) return 0
+  const minRank = variant === 'technique' ? 1 : 2
+  if (!filled.value || (props.rarityRankScale ?? 5) !== 5 || !rank || rank < minRank) return 0
   return Math.min(rank, 5)
 })
 
@@ -345,14 +371,14 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     <img
       v-if="isCircle"
       class="slot-view__ring-art"
-      :src="circleFrameSrc ?? CIRCLE_FRAME_SRC"
+      :src="circleFrameSrc ?? (isTechnique ? TECHNIQUE_CIRCLE_FRAME_SRC : CIRCLE_FRAME_SRC)"
       alt=""
       aria-hidden="true"
     />
 
     <!-- layer 2: icon / monogram fallback -->
     <span class="slot-view__icon-wrap">
-      <img v-if="showIcon" class="slot-view__item-icon" :src="icon" :alt="label || ''" @error="onIconError" />
+      <img v-if="showIcon" class="slot-view__item-icon" :class="{ 'technique-book': isTechnique }" :src="icon" :alt="label || ''" @error="onIconError" />
       <span v-else-if="filled" class="slot-view__monogram" aria-hidden="true">{{ monogram(label) }}</span>
     </span>
 
@@ -1212,5 +1238,96 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 'technique' variant: simple circular centerpiece slot for Tam Phap.
+   Uses a clean 1:1 double-ring circular frame (TECHNIQUE_CIRCLE_FRAME_SRC),
+   rotates a thin Chat meteor streak around the circular groove (center 50% 50%),
+   and floats the pathway book gently. */
+:is(#app) .slot-view--technique,
+.slot-view--technique,
+.slot-view--technique.slot-view--filled,
+.slot-view--technique.slot-view--filled.slot-view--max-rank {
+  aspect-ratio: 1;
+  overflow: visible;
+}
+.slot-view--technique .slot-view__ring-art {
+  filter: drop-shadow(0 3px 8px rgba(36, 23, 8, 0.28));
+}
+.slot-view--technique .slot-view__chat {
+  z-index: 3;
+  clip-path: none;
+  background: conic-gradient(from var(--slot-meteor) at 50% 50%,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 0%, transparent) 0deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 0%, transparent) 45deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 35%, transparent) 95deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 72%, transparent) 135deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 95%, transparent) 164deg,
+    #fff8dc 173deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 0%, transparent) 182deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 0%, transparent) 225deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 35%, transparent) 275deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 72%, transparent) 315deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 95%, transparent) 344deg,
+    #fff8dc 353deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 0%, transparent) 360deg);
+  -webkit-mask-image: radial-gradient(
+    circle closest-side at 50% 50%,
+    transparent 93.6%,
+    #000 94.1%,
+    #000 94.8%,
+    transparent 95.3%
+  );
+  mask-image: radial-gradient(
+    circle closest-side at 50% 50%,
+    transparent 93.6%,
+    #000 94.1%,
+    #000 94.8%,
+    transparent 95.3%
+  );
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--slot-rarity-color, transparent) 70%, transparent));
+}
+.slot-view--technique.slot-view--max-rank .slot-view__chat {
+  background: conic-gradient(from var(--slot-meteor) at 50% 50%,
+    transparent 0deg,
+    transparent 45deg,
+    rgba(103, 216, 255, 0.4) 90deg,
+    rgba(158, 140, 255, 0.65) 125deg,
+    rgba(255, 107, 107, 0.8) 150deg,
+    rgba(255, 214, 107, 0.92) 166deg,
+    #fff8dc 173deg,
+    transparent 182deg,
+    transparent 225deg,
+    rgba(103, 216, 255, 0.4) 270deg,
+    rgba(158, 140, 255, 0.65) 305deg,
+    rgba(255, 107, 107, 0.8) 330deg,
+    rgba(255, 214, 107, 0.92) 346deg,
+    #fff8dc 353deg,
+    transparent 360deg);
+  filter: drop-shadow(0 0 2px rgba(255, 214, 107, 0.75));
+}
+.slot-view--technique .slot-view__icon-wrap {
+  inset: 8%;
+  z-index: 4;
+}
+.slot-view--technique .slot-view__item-icon,
+.slot-view--technique.slot-view--static .slot-view__item-icon,
+.slot-view--technique:hover:not([aria-disabled='true']) .slot-view__item-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 10px rgba(36, 23, 8, 0.42));
+  animation: slot-technique-float 4s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes slot-technique-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slot-view--technique .slot-view__item-icon,
+  .slot-view--technique.slot-view--static .slot-view__item-icon {
+    animation: none;
+  }
 }
 </style>

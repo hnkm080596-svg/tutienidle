@@ -142,8 +142,7 @@ onUnmounted(() => {
     <!-- Centered ornate plaque (mock): section-plaque chrome, zone over
          stage name. `__plaque` class kept on the frame wrapper. -->
     <div class="combat-top-bar__plaque">
-      <GameCardTitle class="combat-top-bar__region-title" :label="zoneName" />
-      <span class="combat-top-bar__stage-label">{{ stage?.name ?? zoneName }}</span>
+      <GameCardTitle class="combat-top-bar__region-title" :label="stage?.name || zoneName" />
     </div>
 
     <div class="combat-top-bar__side">

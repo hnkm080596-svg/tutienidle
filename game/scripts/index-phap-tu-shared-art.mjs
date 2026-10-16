@@ -50,7 +50,7 @@ function clipEntry(sheet) {
 }
 
 async function main() {
-  const avatar = await loadImage(path.join(DIR, 'avatar.png'))
+  const avatar = await loadImage(path.join(DIR, 'avatar-transparent.png'))
   if (avatar.width !== CELL.w || avatar.height !== CELL.h) {
     throw new Error(`Avatar must be ${CELL.w}x${CELL.h}`)
   }

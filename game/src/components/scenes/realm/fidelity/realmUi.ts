@@ -29,8 +29,12 @@ export interface RealmUiModel {
       floor-advance button renders (auto floor-advance removed
       2026-10-11: a floor only moves when the player presses it). */
   canAdvanceFloor: boolean
-  /** canTriggerBreakthrough - one input of the floor-12+ ritual gate. */
+  /** Whether the major realm transition CTA exists at floor 12+ in the current release window. */
+  ctaVisible?: boolean
+  /** canTriggerBreakthrough - whether all requirements for the floor-12+ ritual are met. */
   ctaEnabled: boolean
+  /** Unmet requirement hint shown when ctaVisible is true at floor 12+ but ctaEnabled is false. */
+  ctaLockReason?: string
   /** Which canonical action the floor-12+ ritual button fires: mortal
       sword-path re-entry rides 'quanKhi', everything else rides the
       shared 'breakthrough' ceremony. Defaults to 'breakthrough'. */

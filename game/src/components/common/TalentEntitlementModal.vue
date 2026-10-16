@@ -10,10 +10,9 @@
 // persisted record is what re-presents the modal after a mid-decision
 // reload; the tribulation drain (useTribulation's
 // checkTribulationOutcomeAction) waits on the same record.
-import { computed, ref, useId, watchEffect } from 'vue'
+import { computed, ref, useId, watchEffect, type ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
-import InkNineSlice from './primitives/InkNineSlice.vue'
-import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
+import { type TalentDefinition } from '@/core/talent/Talent'
 import {
   getTalentLevel,
   getUpgradeableTalentIds,
@@ -22,13 +21,15 @@ import {
   type TalentEntitlementDecision,
 } from '@/core/talent/TalentEntitlement'
 import { getTalentDefinition } from '@/data/talent/Talents'
-import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
-import { talentSymbolId } from '@/presentation/huyenKim/StableSceneArt'
+import { buildTalentTooltip, talentIconUrl } from '@/composables/useTalentTooltip'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useAudioStore } from '@/stores/audio'
+import OrnateDialog from '@/components/common/art/OrnateDialog.vue'
+import OrnateDivider from '@/components/common/art/OrnateDivider.vue'
+import GameCard from '@/components/common/GameCard.vue'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -79,8 +80,9 @@ const upgradeableTalents = computed<{ talent: TalentDefinition; level: number; n
   }),
 )
 
-const panelRef = ref<HTMLElement | null>(null)
-useDialogFocus(panelRef, open, {
+const dialogRef = ref<ComponentPublicInstance | null>(null)
+const panelEl = () => (dialogRef.value?.$el as HTMLElement | undefined) ?? null
+useDialogFocus(panelEl, open, {
   // No escape path - the decision is mandatory; the dialog stays until
   // ONE branch resolves (cancel-safe, reload-safe via the record).
   onEscape: () => {},
@@ -100,60 +102,73 @@ function decide(decision: TalentEntitlementDecision): void {
 </script>
 
 <template>
-  <div v-if="entitlement" class="talent-entitlement" :style="{ zIndex: OVERLAY_LAYERS.modal }" data-testid="talent-entitlement-modal">
-    <section
-      ref="panelRef"
+  <div
+    v-if="entitlement"
+    class="talent-entitlement"
+    :style="{ zIndex: OVERLAY_LAYERS.modal }"
+    data-testid="talent-entitlement-modal"
+  >
+    <OrnateDialog
+      ref="dialogRef"
       class="talent-entitlement__panel"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
+      :title="t('tribulation.entitlement.title')"
+      :title-id="titleId"
+      badge="info"
+      :show-close="false"
+      width="min(620px, 94vw)"
     >
-      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
-
-      <h3 :id="titleId" class="talent-entitlement__title">{{ t('tribulation.entitlement.title') }}</h3>
       <p class="talent-entitlement__body">{{ t('tribulation.entitlement.body') }}</p>
+
+      <OrnateDivider />
 
       <template v-if="offeredTalents.length > 0">
         <h4 class="talent-entitlement__heading">{{ t('tribulation.entitlement.newHeading') }}</h4>
         <div class="talent-grid">
-          <button
+          <GameCard
             v-for="talent in offeredTalents"
             :key="talent.id"
+            as="button"
             type="button"
             class="talent-card"
             :class="`talent-tier-${talent.rarity}`"
+            :data-rarity="talent.rarity"
             :data-testid="`entitlement-talent-${talent.id}`"
+            :aria-label="talent.name"
+            v-tooltip="buildTalentTooltip(talent, t)"
             @click="decide({ kind: 'new', talentId: talent.id })"
           >
-            <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span>
-            <h5><HuyenKimSymbol :name="talentSymbolId(talent.id)" /> {{ talent.name }}</h5>
-            <p>{{ talent.description }}</p>
-            <small>{{ talent.tags[0] }}</small>
-          </button>
+            <img class="talent-card__icon" :src="talentIconUrl(talent)" :alt="talent.name" draggable="false" />
+          </GameCard>
         </div>
       </template>
 
       <template v-if="upgradeableTalents.length > 0">
         <h4 class="talent-entitlement__heading">{{ t('tribulation.entitlement.upgradeHeading') }}</h4>
         <div class="upgrade-list">
-          <button
+          <GameCard
             v-for="row in upgradeableTalents"
             :key="row.talent.id"
+            as="button"
             type="button"
             class="upgrade-card"
             :class="`talent-tier-${row.talent.rarity}`"
+            :data-rarity="row.talent.rarity"
             :data-testid="`entitlement-upgrade-${row.talent.id}`"
+            :aria-label="`${row.talent.name} (${t('tribulation.entitlement.levelArrow', { current: row.level, next: row.nextLevel })})`"
+            v-tooltip="buildTalentTooltip(row.talent, t)"
             @click="decide({ kind: 'upgrade', talentId: row.talent.id })"
           >
-            <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[row.talent.rarity] }}</span>
-            <h5><HuyenKimSymbol :name="talentSymbolId(row.talent.id)" /> {{ row.talent.name }}</h5>
-            <span class="upgrade-card__level">{{ t('tribulation.entitlement.levelArrow', { current: row.level, next: row.nextLevel }) }}</span>
-            <p>{{ row.talent.description }}</p>
-          </button>
+            <img class="talent-card__icon" :src="talentIconUrl(row.talent)" :alt="row.talent.name" draggable="false" />
+            <span class="upgrade-card__level">
+              {{ t('tribulation.entitlement.levelArrow', { current: row.level, next: row.nextLevel }) }}
+            </span>
+          </GameCard>
         </div>
       </template>
-    </section>
+    </OrnateDialog>
   </div>
 </template>
 
@@ -164,127 +179,97 @@ function decide(decision: TalentEntitlementDecision): void {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--scrim);
+  background: var(--scrim, rgba(10, 9, 7, 0.75));
 }
 
-/* Huyen Kim paper chrome: surface-xl-scroll fill + frame-m-modal ring
-   (the modal band owns ~40px, so the padding clears it entirely -
-   content never touches the frame art). border-radius + the hidden
-   x-axis clip the scroll's square corners under the rounded frame. */
 .talent-entitlement__panel {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: min(640px, 94vw);
-  max-height: 88vh;
-  overflow: hidden auto;
-  padding: 48px 44px;
-  border-radius: 16px;
-  color: var(--paper-text, #211f1a);
-  font-family: var(--font-body);
+  flex: none;
 }
 
-.talent-entitlement__panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
+.talent-entitlement__panel :deep(.ornate-dialog__badge) {
+  height: 13.5cqh;
+  margin-top: 0.4%;
 }
 
-.talent-entitlement__title {
-  margin: 0 0 2px;
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  letter-spacing: 0.06em;
-  text-align: center;
+.talent-entitlement__panel :deep(.ornate-dialog__body) {
+  padding-bottom: 4cqh;
 }
 
 .talent-entitlement__body {
-  margin: 0;
-  font-size: var(--text-xs);
-  line-height: 1.5;
+  margin: 0 0 0.2cqh;
+  font-family: var(--font-body);
+  font-size: min(2.4cqh, 13.5px);
+  line-height: 1.45;
   color: var(--paper-text-soft, #5e5a50);
   text-align: center;
 }
 
 .talent-entitlement__heading {
-  margin: 6px 0 0;
-  font: 600 var(--text-md) var(--font-display);
+  margin: 0.8cqh 0 0.6cqh;
+  font-family: var(--font-display);
+  font-size: min(2.9cqh, 16px);
+  font-weight: 700;
+  color: #3a2c14;
   text-align: center;
 }
 
-.talent-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
+.talent-grid,
 .upgrade-list {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
 }
 
-/* Talent card styling mirrors the creation screen's .talent-card
-   (talent-grid + talent-tier-* rarity accent) - same card grammar for
-   the same pick-one interaction. */
+/* 9-slice GameCard option tile: square icon-only button, details shown on hover via v-tooltip. */
 .talent-card,
 .upgrade-card {
-  position: relative;
+  width: 92px;
+  height: 92px;
   padding: 12px;
-  border: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent);
-  color: var(--paper-text, #211f1a);
-  text-align: left;
+  display: grid;
+  place-items: center;
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
 .talent-card:hover,
-.upgrade-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--cinnabar, #b54432);
+.upgrade-card:hover,
+.talent-card:focus-visible,
+.upgrade-card:focus-visible {
+  transform: translateY(-3px) scale(1.04);
+  filter: brightness(1.15) drop-shadow(0 4px 10px rgba(219, 178, 96, 0.45));
 }
 
-.talent-card__rarity {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.13em;
+.talent-card:focus-visible,
+.upgrade-card:focus-visible {
+  outline: 2px solid var(--hk-gold-bright, #e8b45a);
+  outline-offset: 2px;
 }
 
-.talent-card h5,
-.upgrade-card h5 {
-  margin: 6px 0;
-  font: 600 var(--text-md) var(--font-display);
-}
-
-.talent-card p,
-.upgrade-card p {
-  margin: 0 0 6px;
-  color: var(--paper-text-soft, #5e5a50);
-  font-size: var(--text-xs);
-  line-height: 1.5;
-}
-
-.talent-card small {
-  color: var(--text-muted);
+.talent-card__icon {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.65));
+  pointer-events: none;
 }
 
 .upgrade-card__level {
-  float: right;
-  font: 600 var(--text-xs) var(--font-body);
-  color: var(--cinnabar, #b54432);
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(15, 22, 18, 0.88);
+  border: 1px solid rgba(219, 178, 96, 0.65);
+  color: #f3dfb5;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  pointer-events: none;
 }
-
-.upgrade-card {
-  display: flex;
-  flex-direction: column;
-}
-
-.talent-tier-pham .talent-card__rarity { color: var(--rank-color-1) }
-.talent-tier-linh .talent-card__rarity { color: var(--rank-color-3) }
-.talent-tier-dia .talent-card__rarity { color: var(--rank-color-5) }
-.talent-tier-thien .talent-card__rarity { color: var(--rank-color-7) }
-.talent-tier-di .talent-card__rarity { color: var(--rank-color-8) }
 </style>

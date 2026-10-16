@@ -2,12 +2,13 @@
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import OrnateDialog from '@/components/common/art/OrnateDialog.vue'
+import OrnateDivider from '@/components/common/art/OrnateDivider.vue'
 
 const store = useWorldAnnouncementStore()
 
-// Hieu ung typewriter - go tung ky tu thay vi CSS steps() (chu co
-// dau tieng Viet do rong khong deu, JS interval an toan hon CSS
-// width-reveal theo so ky tu co dinh).
+// Typewriter effect - reveals one character per tick rather than CSS steps()
+// so Vietnamese diacritics with variable glyph widths advance smoothly.
 const TYPE_INTERVAL_MS = 28
 
 const displayedBody = ref('')
@@ -76,23 +77,25 @@ onBeforeUnmount(() => {
       :style="{ zIndex: OVERLAY_LAYERS.announcement }"
       @click="store.hide()"
     >
-      <div class="world-announcement__content">
-        <h2 class="world-announcement__title">{{ store.active.title }}</h2>
-
+      <OrnateDialog
+        class="world-announcement__content"
+        :title="store.active.title"
+        badge="info"
+        show-close
+        width="min(520px, 92vw)"
+        @close="store.hide()"
+      >
+        <OrnateDivider />
         <p class="world-announcement__body">{{ displayedBody }}</p>
-      </div>
+      </OrnateDialog>
     </div>
   </Transition>
 </template>
 
 <style scoped>
 .world-announcement {
-  /* KHONG dung position:fixed - component nay KHONG Teleport, render
-     thang trong .game-root nen absolute de phu dung vung container
-     game, khong neo theo viewport trinh duyet that. */
   position: absolute;
   inset: 0;
-  /* z-index via OVERLAY_LAYERS.announcement (inline style). */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -101,33 +104,28 @@ onBeforeUnmount(() => {
 }
 
 .world-announcement__content {
-  max-width: 640px;
-  padding: 0 32px;
-  text-align: center;
+  flex: none;
 }
 
-.world-announcement__title {
-  margin: 0 0 16px;
-  font-family: var(--font-display);
-  font-size: var(--text-display-lg);
-  letter-spacing: 0.08em;
-  color: var(--gold-300);
-  text-shadow: 0 0 24px color-mix(in srgb, var(--gold-500) 50%, transparent);
+.world-announcement__content :deep(.ornate-dialog__badge) {
+  height: 15cqh;
+  margin-top: 0.6%;
 }
 
 .world-announcement__body {
-  margin: 0;
-  min-height: 1.6em;
+  margin: 1cqh 0 0;
+  padding: 0 2cqw;
   font-family: var(--font-body);
-  font-size: var(--text-lg);
-  line-height: 1.6;
-  color: var(--text-primary);
-  white-space: pre-line;
+  font-size: min(3cqh, 17px);
+  line-height: 1.65;
+  color: var(--paper-text, #302719);
+  text-align: center;
+  min-height: 3.3em;
 }
 
 .world-announcement-fade-enter-active,
 .world-announcement-fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.35s ease;
 }
 
 .world-announcement-fade-enter-from,

@@ -385,6 +385,23 @@ const costRows = computed<readonly AlchemyCostRow[]>(() => {
     })
   }
 
+  for (const special of selectedRecipe.value?.specialIngredients ?? []) {
+    if (special.amount <= 0) continue
+    const owned = gameManager.materialBag.getAmount(special.materialId)
+    const material = gameManager.materialRegistry.has(special.materialId)
+      ? gameManager.materialRegistry.get(special.materialId)
+      : null
+    rows.push({
+      id: `special_${special.materialId}`,
+      label: material?.name ?? special.materialId,
+      value: `${owned} / ${special.amount}`,
+      icon: materialIcon(special.materialId),
+      owned,
+      enough: owned >= special.amount,
+      description: material?.description,
+    })
+  }
+
   return rows
 })
 

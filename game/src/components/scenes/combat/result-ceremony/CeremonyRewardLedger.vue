@@ -62,7 +62,7 @@ const rows = computed<VictorySlotView[]>(() => [
         :style="{ '--row-delay': `${Math.min(index, 5) * 65}ms` }"
       >
         <span class="ceremony-ledger__icon" aria-hidden="true">
-          <InkNineSlice chrome-id="frame-s-slot" layer="surface" />
+          <InkNineSlice chrome-id="frame-s-slot" layer="surface" :thickness="12" />
           <HuyenKimSymbol v-if="row.symbol" :name="row.symbol" />
           <img v-else-if="row.icon" :src="row.icon" alt="" />
           <HuyenKimSymbol v-else :name="row.kind === 'equipment' ? 'equipment' : 'inventory'" />
