@@ -11,8 +11,7 @@ defineExpose({ prepareArt: (signal: AbortSignal) => {
 defineProps<{ resumeAvailable: boolean; ready: boolean; busy: boolean; error: string }>()
 const emit = defineEmits<{ authenticate: [mode: 'login' | 'register']; play: []; settings: []; exit: [] }>()
 const { t } = useI18n()
-const allowSelfSignup =
-  !import.meta.env.PROD || import.meta.env.VITE_ALLOW_SELF_SIGNUP === 'true'
+const allowSelfSignup = import.meta.env.VITE_ALLOW_SELF_SIGNUP !== 'false'
 </script>
 
 <template>

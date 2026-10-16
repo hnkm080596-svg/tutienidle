@@ -46,8 +46,7 @@ function confirmExit() {
   exited.value = true
 }
 
-const allowSelfSignup =
-  !import.meta.env.PROD || import.meta.env.VITE_ALLOW_SELF_SIGNUP === 'true'
+const allowSelfSignup = import.meta.env.VITE_ALLOW_SELF_SIGNUP !== 'false'
 
 function revealAuthentication(nextMode: 'login' | 'register') {
   if (submitting.value) return
