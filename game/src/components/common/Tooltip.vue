@@ -8,7 +8,7 @@ import { useTooltip } from '@/composables/useTooltip'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import ItemCardBody from '@/components/common/ItemCardBody.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
-import type { EquipmentTooltipContent, GradedItemTooltipContent, StatBreakdownTooltipContent, TalentTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
+import type { EquipmentTooltipContent, GradedItemTooltipContent, StatBreakdownTooltipContent, TalentTooltipContent, TechniqueTooltipContent, RealmPassiveTooltipContent } from '@/composables/useTooltip'
 import { i18n } from '@/i18n'
 
 const { content, reference } = useTooltip()
@@ -50,8 +50,8 @@ const comparePair = computed(() => {
 
 // Technique keeps its own header + the shared flat section loop -
 // spec section 3 leaves the technique kind unchanged.
-const techniqueContent = computed<TechniqueTooltipContent | null>(() =>
-  content.value?.kind === 'technique' ? content.value : null,
+const techniqueContent = computed<TechniqueTooltipContent | RealmPassiveTooltipContent | null>(() =>
+  content.value?.kind === 'technique' || content.value?.kind === 'realm-passive' ? content.value : null,
 )
 // Stat-breakdown kind (character board) shares the flat section loop.
 const statContent = computed<StatBreakdownTooltipContent | null>(() =>
@@ -162,6 +162,7 @@ function hideBrokenImage(event: Event) {
         role="tooltip"
         class="tooltip"
         :data-contained="contained || undefined"
+        :data-rarity="talentContent?.rarity"
         :class="[content.kind ? `tooltip--${content.kind}` : 'tooltip--plain', content.kind === 'element' ? `tooltip--element-${content.element}` : '', content.kind === 'equipment' ? 'tooltip--detailed' : '', content.kind && content.kind !== 'plain' ? 'tooltip--rich' : '', itemAuraColor ? 'tooltip--aura' : '']"
         :style="{ ...floatingStyles, '--tooltip-accent': qualityAccentColor ?? itemAuraColor, '--tooltip-aura': itemAuraColor, zIndex: OVERLAY_LAYERS.tooltip }"
       >
@@ -220,7 +221,9 @@ function hideBrokenImage(event: Event) {
               <p class="tooltip__meta">{{ talentContent.rarityLabel }}</p>
             </div>
           </header>
-          <p v-if="talentContent.description" class="tooltip__description tooltip__description--rich">{{ talentContent.description }}</p>
+          <p v-if="talentContent.flavor" class="tooltip-talent-flavor">{{ talentContent.flavor }}</p>
+          <section class="tooltip-talent-mechanics"><p class="tooltip__section-label">{{ i18n.global.t('talents.mechanics') }}</p><p>{{ talentContent.mechanics ?? talentContent.description }}</p></section>
+          <section v-if="talentContent.tradeoff" class="tooltip-talent-tradeoff"><p class="tooltip__section-label">{{ i18n.global.t('talents.tradeoff') }}</p><p>{{ talentContent.tradeoff }}</p></section>
           <section v-if="talentContent.tagLabels.length" class="tooltip__section">
             <p class="tooltip__section-label">{{ talentContent.featuresLabel }}</p>
             <div v-for="label in talentContent.tagLabels" :key="label" class="tooltip__section-row">
@@ -344,4 +347,12 @@ function hideBrokenImage(event: Event) {
 .tooltip-fade-enter-active { transition: opacity 35ms linear; } .tooltip-fade-leave-active { transition: opacity 30ms linear; }
 .tooltip-fade-enter-from, .tooltip-fade-leave-to { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .tooltip-fade-enter-active, .tooltip-fade-leave-active { transition: opacity 1ms linear; } }
+[data-rarity='dia'] { --talent-tone: #dcb36b; } [data-rarity='thien'] { --talent-tone: #db9e76; } [data-rarity='di'] { --talent-tone: #c19bd1; }
+.tooltip--talent .tooltip__icon-shell { width: 64px; height: 64px; flex-basis: 64px; background: #15241f; border-color: var(--talent-tone,#96b59b); }
+.tooltip--talent .tooltip__icon { padding: 0; background: transparent; }
+.tooltip--talent .tooltip__meta { color: var(--talent-tone,#96b59b); letter-spacing: .08em; }
+.tooltip-talent-flavor { font-style: italic; line-height: 1.6; color: var(--hk-text-muted); }
+.tooltip-talent-mechanics,.tooltip-talent-tradeoff { margin-top: 12px; padding: 10px 12px; border-left: 2px solid #8ca78c; background: #65856712; }
+.tooltip-talent-mechanics p:last-child,.tooltip-talent-tradeoff p:last-child { margin: 4px 0 0; line-height: 1.65; }
+.tooltip-talent-tradeoff { border-color: #b77d66; background: #ad634412; }
 </style>

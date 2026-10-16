@@ -256,3 +256,47 @@ describe('MaterialBag — round-trip add/remove đầy đủ', () => {
     expect(bag.getAmount('test_material')).toBe(5)
   })
 })
+
+describe('MaterialBag — multi-slot stacking khi vượt 1000 mà túi còn chỗ trống', () => {
+  it('nguyên liệu thường đạt 999/1000 vẫn cộng tiếp sang ô mới khi túi còn chỗ trống', () => {
+    const bag = new MaterialBag()
+
+    expect(bag.add(MATERIAL, 999)).toBe(0)
+    expect(bag.getUsedSlots()).toBe(1)
+    expect(bag.getFreeSlots()).toBe(99)
+
+    // Add 500 -> total 1499 (occupies 2 slots: 1000 + 499), does not report bag full.
+    expect(bag.canAcceptAmount(MATERIAL, 500)).toBe(500)
+    expect(bag.add(MATERIAL, 500)).toBe(0)
+    expect(bag.getAmount('test_material')).toBe(1_499)
+    expect(bag.getUsedSlots()).toBe(2)
+    expect(bag.getFreeSlots()).toBe(98)
+  })
+
+  it('khi túi đã dùng 99 ô bởi nguyên liệu khác, nguyên liệu mới chỉ nhận tối đa 1 ô (1000)', () => {
+    const bag = new MaterialBag()
+    const filler: Material = {
+      id: 'filler_mat',
+      name: 'Filler',
+      category: 'herb',
+      sourceType: 'building',
+    }
+
+    // 99 slots * 1000 = 99_000
+    expect(bag.add(filler, 99_000)).toBe(0)
+    expect(bag.getUsedSlots()).toBe(99)
+    expect(bag.getFreeSlots()).toBe(1)
+
+    // Only 1 free slot left -> MATERIAL accepts at most 1000, remaining 250 overflows.
+    expect(bag.canAcceptAmount(MATERIAL, 1_250)).toBe(1_000)
+    expect(bag.add(MATERIAL, 1_250)).toBe(250)
+    expect(bag.getAmount('test_material')).toBe(1_000)
+    expect(bag.getUsedSlots()).toBe(100)
+    expect(bag.getFreeSlots()).toBe(0)
+
+    // Full 100/100 slots -> cannot accept more.
+    expect(bag.canAcceptAmount(MATERIAL, 1)).toBe(0)
+    expect(bag.add(MATERIAL, 1)).toBe(1)
+  })
+})
+

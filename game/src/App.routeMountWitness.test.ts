@@ -246,7 +246,7 @@ describe('App.vue route-witness invariant — every renderRoute has exactly one 
       // quoted route literals in that expression must resolve to exactly
       // the declared stages' routes, no more and no less.
       const routeLiterals = new Set(
-        [...(branch.routeExp ?? branch.routeProp ?? '').matchAll(/'([a-z]+)'/g)].map((m) => m[1]),
+        [...(branch.routeExp ?? branch.routeProp ?? '').replace(/entryStage\s*===\s*'[a-z]+'/g, 'condition').matchAll(/'([a-z]+)'/g)].map((m) => m[1]),
       )
       expect(
         routeLiterals,

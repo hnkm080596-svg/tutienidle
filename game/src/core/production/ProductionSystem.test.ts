@@ -238,7 +238,7 @@ describe('ProductionSystem - autonomous site cycles', () => {
     const view = system.getSiteView('thanh_van_lam', 1_000)!
     expect(view.cycleTotalMs).toBe(100_000)
     expect(view.cycleRemainingMs).toBeUndefined()
-    expect(view.baseOutputPerSecond).toEqual({ min: 0.01, max: 0.03 })
+    expect(view.baseOutputPerSecond).toEqual({ min: 0.01, max: 0.04 })
   })
 
   it('restoreStates drops a stale activeCycle key - tolerated, whitelisted out, never migrated', () => {
@@ -843,7 +843,7 @@ describe('age-only production resources', () => {
         const cycle = system.getState(siteId)!.productionCycles![0]!
         expect(cycle.completesAtMs - cycle.startedAtMs).toBe(100_000)
         expect(system.rollRewards({ ...cycle, rollSeed: 314159 })).toEqual(reference)
-        expect(system.getSiteView(siteId, 1_000)!.baseOutputPerSecond).toEqual({ min: .01, max: .03 })
+        expect(system.getSiteView(siteId, 1_000)!.baseOutputPerSecond).toEqual({ min: .01, max: .04 })
         const offline = createSystem()
         const offlineBag = new MaterialBag()
         offline.setAutoRestart(siteId, true)

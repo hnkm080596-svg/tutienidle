@@ -297,3 +297,11 @@ export type StableSymbolId = (typeof STABLE_SYMBOL_IDS)[number]
 export function stableSymbolUrl(id: StableSymbolId): string {
   return resolveAssetUrl(`${STABLE_ART_BASE}symbols/${id}.svg`)
 }
+
+// Painted talent illustrations preserve authored color instead of using a tint mask.
+const PAINTED_TALENT_IDS = new Set(["thu_phat","pham_cot","hap_linh","kiem_quang","pha_giap","tat_phong","trong_kich","thach_giap","vo_anh","can_than","hai_na","ho_the","ho_tich_bat_phat","bat_tu_the","loi_kiep","ngo_dao","van_dao","lk_linh_mach","hoa_hau_thong_than","bach_luyen_thanh_khi","lk_dung_nap","lk_tam_tue","lk_bac_hai","tc_dia_can","tc_truc_hon","lk_ngo_tinh","tc_kim_lan","tc_thien_co","tc_linh_giac","tc_huyet_nhuc","kd_linh_dan","kd_thanh_dan","pham_nhan_chi_cot","phu_van","tran_tam"])
+export function talentIllustrationUrl(talentId: string): string | undefined {
+  return PAINTED_TALENT_IDS.has(talentId)
+    ? resolveAssetUrl(`/assets/ui/tien-hiep-2026-10/character-presentation/talents-painted-v1/${talentId}.webp`)
+    : undefined
+}

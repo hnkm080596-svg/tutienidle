@@ -356,19 +356,19 @@ describe('AssetBundleManager', () => {
     const signal = new AbortController().signal
 
     await manager.ensureFor({ target: 'home' }, signal)
-    expect(ensureSpy).toHaveBeenCalledWith(['core-ui', 'home', 'ui-chrome'], signal)
+    expect(ensureSpy).toHaveBeenCalledWith(['core-ui', 'home', 'ui-chrome'], signal, undefined)
 
     await manager.ensureFor(
       { target: 'combat', session: { kind: 'combat', sessionId: 1 } },
       signal,
     )
-    expect(ensureSpy).toHaveBeenCalledWith(['core-ui', 'combat'], signal)
+    expect(ensureSpy).toHaveBeenCalledWith(['core-ui', 'combat'], signal, undefined)
 
     await manager.ensureFor(
       { target: 'tribulation', session: { kind: 'tribulation', sessionId: 2 } },
       signal,
     )
-    expect(ensureSpy).toHaveBeenCalledWith(['core-ui', 'tribulation'], signal)
+    expect(ensureSpy).toHaveBeenCalledWith(['core-ui', 'tribulation'], signal, undefined)
   })
 })
 

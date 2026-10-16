@@ -1,3 +1,6 @@
+import { useI18n } from 'vue-i18n'
+import { realmPassiveAppearance } from '@/presentation/realm/realmPassiveAppearance'
+import type { RealmPassiveTooltipContent } from './useTooltip'
 import { computed } from 'vue'
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '@/stores/player'
@@ -13,6 +16,11 @@ export interface RealmStatPassiveRow {
 
   description: string
 
+  iconUrl: string
+  tierLabel: string
+  tierIndex: number
+  tierCount: number
+  tooltip: RealmPassiveTooltipContent
   effectLines: string[]
 }
 
@@ -25,6 +33,7 @@ export interface RealmStatPassiveRow {
  */
 export function useRealmStatPassives() {
   useGameManager()
+  const { t } = useI18n()
 
   const { stateVersion } = useStateVersion()
   const player = usePlayerStore()
@@ -51,7 +60,16 @@ export function useRealmStatPassives() {
           .filter(modifier => (modifier.percent ?? 0) !== 0)
           .map(modifier => `${statLabel(modifier.stat)} +${formatStat('realmPassivePercent', modifier.percent ?? 0)}`)
 
+        const appearance = realmPassiveAppearance(passive.id, player.$state,
+          isBetaFeature('hiddenContent') && getHiddenBreakthroughRealmIds(player.$state).includes(passive.id), t)
+        const tooltip: RealmPassiveTooltipContent = {
+          kind: 'realm-passive', name: passive.name, imagePath: appearance.iconUrl,
+          levelLabel: appearance.tierLabel, description: passive.description,
+          sections: [{ label: t('realmPassive.effects'), rows: effectLines.map((line) => ({ label: line, value: '' })) },
+            { label: t('realmPassive.origin'), rows: [{ label: t('realmPassive.recorded'), value: appearance.tierLabel }] }],
+        }
         return {
+          ...appearance, tooltip,
           id: passive.id,
           name: passive.name,
           description: passive.description,

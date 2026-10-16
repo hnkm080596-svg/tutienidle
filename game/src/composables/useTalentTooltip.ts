@@ -1,5 +1,5 @@
 import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentTag } from '@/core/talent/Talent'
-import { stableSymbolUrl, talentSymbolId, type StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'
+import { stableSymbolUrl, talentSymbolId, talentIllustrationUrl, type StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'
 import type { TalentTooltipContent } from './useTooltip'
 
 // Single owner for "what a talent looks like" (tooltip + inline cards):
@@ -16,11 +16,16 @@ export function talentTagLabel(tag: TalentTag, t: (key: string) => string): stri
 }
 
 export function talentIconUrl(talent: TalentDefinition): string {
-  return stableSymbolUrl(talentSymbolId(talent.id, TALENT_TAG_SYMBOLS[talent.tags[0] ?? 'cultivation']))
+  return talentIllustrationUrl(talent.id) ?? stableSymbolUrl(talentSymbolId(talent.id, TALENT_TAG_SYMBOLS[talent.tags[0] ?? 'cultivation']))
 }
 
 export function buildTalentTooltip(talent: TalentDefinition, t: (key: string) => string): TalentTooltipContent {
+  const [main = '', tradeoff] = talent.description.split(/Ngược lại:\s*/, 2)
+  const opening = main.match(/^(.+?[.!?])\s+([\s\S]+)$/)
+  const flavor = opening?.[1]
+  const mechanics = opening?.[2] ?? main
   return {
+    flavor, mechanics, tradeoff,
     kind: 'talent',
     name: talent.name,
     rarityLabel: TALENT_RARITY_LABELS[talent.rarity],

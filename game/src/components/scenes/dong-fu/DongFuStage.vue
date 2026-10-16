@@ -29,12 +29,11 @@ import { ARTIFACT_UNLOCK_REALM_ID, isArtifactDomainUnlocked } from '@/core/artif
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { isFormationUnlocked } from '@/core/game/FormationPlacement'
 import { isRealmAvailable } from '@/core/realm/ReleasePolicy'
-import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { useAudioStore } from '@/stores/audio'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { trackedHomeQuest } from '@/presentation/questUi'
-import { pcPaperIconUrl, type PcPaperIcon } from '@/presentation/assets/PcPaperIcons'
+import type { PcPaperIcon } from '@/presentation/assets/PcPaperIcons'
 import '@/assets/pc-paper-scene.css'
 import { pcPaperControlStyles, pcPaperResourceUrl, type PcPaperResource } from '@/presentation/assets/PcPaperControls'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
@@ -43,6 +42,7 @@ import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
 import ExpeditionBattleStage from '@/components/game/ExpeditionBattleStage.vue'
 import DongFuWheel from './fidelity/DongFuWheel.vue'
 import DongFuBoard from './fidelity/DongFuBoard.vue'
+import DongFuChatbox from './fidelity/DongFuChatbox.vue'
 import type { DongFuUiAction } from './fidelity/dongFuUi'
 
 const ui = useUiStore()
@@ -148,14 +148,14 @@ function slotAction(slot: CommandWheelSlot): DongFuUiAction {
 
 const wheelActions = computed<DongFuUiAction[]>(() => renderedSlots.value.map(slotAction))
 
-// Thien Co Bang board - kept alongside the new chrome pending its
-// redesign (owner ruling: keep for now).
 const KIND_SYMBOL: Record<string, string> = {
   breakthrough: 'realm',
   quest: 'quest',
   ready: 'auto-farm',
+  attribute_points: 'character',
   active: 'exploration',
   upgradeable: 'equipment',
+  auto_farm: 'auto-farm',
 }
 
 const boardEntries = computed(() =>
@@ -218,9 +218,7 @@ function navAction(id: PcPaperIcon) {
 
 
 
-// ================= Profile / currencies / quest ========================
-const realmName = computed(() => getCurrentRealm(player.realmId).name)
-
+// ================= Currencies / quest ==================================
 const CHIP_ICON_BY_ID: Record<string, PcPaperResource> = {
   attribute_points: 'crystal',
 }
@@ -265,8 +263,6 @@ const questCard = computed(() => {
     percent: Math.min(100, Math.round((Math.min(model.progress, model.target) / target) * 100)),
   }
 })
-
-const profileProgress = computed(() => Math.min(100, Math.round(player.cultivationProgress * 100)))
 
 // ================= Action routing (wheel + entries) ====================
 function activateSlot(slot: CommandWheelSlot) {
@@ -366,31 +362,11 @@ onBeforeUnmount(() => {
       :style="sceneStyle"
       @click.stop="onSceneClick"
     >
-      <header class="home-design-profile" data-df-ui>
-        <div class="home-design-avatar"><img :src="pcPaperIconUrl('character')" alt=""></div>
-        <div>
-          <h2>{{ player.name }}</h2>
-          <p>{{ realmName }} {{ player.realmLevel }} <span class="home-design-progress"><i :style="{ width: `${profileProgress}%` }" /></span></p>
-        </div>
-      </header>
       <div class="home-design-currencies" data-df-ui>
         <PcPaperButton v-for="chip in currencyChips" :key="chip.id" variant="currency" :aria-label="chip.label" :data-material="chip.id" :data-currency-id="chip.id">
           <img :src="chip.iconFile ? resolveAssetUrl(chip.iconFile) : pcPaperResourceUrl(chip.icon)" alt=""><b>{{ chip.value }}</b><span>＋</span>
         </PcPaperButton>
       </div>
-      <button
-        v-if="questCard"
-        type="button"
-        class="home-design-quest"
-        :class="{ 'is-claimable': questCard.claimable }"
-        :aria-label="t('home.questTracker.aria', { name: questCard.name })"
-        @click="ui.openStandalonePanel('quest')"
-      >
-        <h3>{{ t('dongFu.nav.quest') }} <span>›</span></h3>
-        <p>{{ questCard.name }}</p>
-        <span>{{ questCard.detail }}</span>
-        <div class="home-design-progress"><i :style="{ width: `${questCard.percent}%` }" /></div>
-      </button>
       <aside class="home-navigation-surface" data-df-ui @transitionend="onRailTransitionEnd">
         <img class="home-navigation-backing" :src="navBackingUrl" alt="">
         <nav class="home-independent-navigation">
@@ -425,10 +401,13 @@ onBeforeUnmount(() => {
       />
       <DongFuBoard
         :entries="boardEntries"
+        :quest="questCard"
         :open="boardOpen"
         @toggle="boardOpen = !boardOpen"
         @action="onWheelAction"
+        @quest-click="ui.openStandalonePanel('quest')"
       />
+      <DongFuChatbox />
       <ExpeditionBattleStage v-if="!surfaceOpen" />
       <div class="df-notice" role="status" aria-live="polite" data-df-ui>{{ notice }}</div>
       <div class="pc-paper-scene__frame" aria-hidden="true" />
@@ -478,32 +457,18 @@ onBeforeUnmount(() => {
 .home-independent-navigation button::before { content:"";position:absolute;inset:0;z-index:-1;background:var(--home-nav-art) center/contain no-repeat; }
 .home-independent-navigation button.locked { filter:grayscale(1);opacity:.48;cursor:default; }
 
-/* ------ mock-verbatim: top chrome ------------------------------------ */
-.home-design-profile { position:absolute;left:32px;top:14px;display:flex;align-items:center;gap:25px; }
-.home-design-avatar { width:95px;height:95px;border:4px double #b28a43;border-radius:50%;background:#f1dfbb;display:grid;place-items:center; }
-.home-design-avatar img { width:75px;height:75px;object-fit:contain; }
-.home-design-profile h2 { font-size:25px;margin:0 0 8px;color:#251907; }
-.home-design-profile p { margin:0;font-size:17px;display:flex;align-items:center;gap:15px;color:#4c3a21; }
-.home-design-progress { display:inline-block;width:145px;height:8px;background:#2b2a20;border:1px solid #aa8040;border-radius:8px;overflow:hidden; }
-.home-design-progress i { display:block;height:100%;background:#d6a852; }
+/* ------ top right currencies + Thien Co Bang ------------------------- */
 .home-design-currencies { position:absolute;right:30px;top:14px;display:flex;gap:8px; }
 .home-design-currencies .pc-paper-button { display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 8px;min-height:38px;font-size:15px;min-width:122px; }
 .home-design-currencies img { width:24px;height:24px;object-fit:contain; }
-.home-design-quest { position:absolute;right:30px;top:85px;width:245px;padding:14px 18px 20px;background:#f9edd5df;border:3px double #a67c34;color:#2b2113;font-family:inherit;text-align:left;cursor:pointer; }
-.home-design-quest h3 { margin:-14px -18px 17px;padding:10px 16px;background:#28271f;color:#f1dfb9;font-size:22px; }
-.home-design-quest h3 span { float:right; }
-.home-design-quest p { margin:0 0 13px;font-size:17px; }
-.home-design-quest>span { display:block;text-align:right; }
-.home-design-quest .home-design-progress { width:100%;margin-top:7px; }
-.home-design-quest.is-claimable { box-shadow:0 0 14px #d9a93f; }
 
-/* Thien Co Bang parks below the quest card while it awaits its
-   redesign - the old top-right slot now belongs to the rail seam. */
-.df-scene :deep(.df-board) { top: 290px; right: 30px; width: 245px; }
+/* Thien Co Bang unified board (quest tracker + actionable entries). */
+.df-scene :deep(.df-board) { top: 76px; right: 30px; width: 295px; }
 .df-scene :deep(.df-board__heading) { font-size: 20px; }
 
 /* Floating chrome hidden while an overlay surface owns the screen. */
 .df-scene--covered :deep(.df-board),
+.df-scene--covered :deep(.df-chatbox),
 .df-scene--covered :deep(.df-notice) { display: none; }
 .df-notice { position:absolute;top:110px;left:420px;color:#392e1d;text-shadow:0 1px #fff1d7;background:#f4e8cfcc; }
 .df-notice:empty { display:none; }

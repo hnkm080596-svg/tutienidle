@@ -20,6 +20,7 @@ import { enumerateResources } from '@/presentation/assets/AssetBundleCatalog'
 
 const GAME_ROOT = process.cwd()
 const ALL_BUNDLES = [
+  'auth-opening',
   'core-ui',
   'home',
   'combat',

@@ -119,11 +119,11 @@ describe('BattleLootSystem - physique essence intake cap', () => {
     )
   })
 
-  it('an essence with no consuming chapter yields nothing', () => {
-    // tinh_hoa_bao_the is authored but no body chapter spends it today:
-    // remainingEssenceNeed is 0, so even an empty bag is at the cap.
+  it('tinh_hoa_bao_the yields nothing once all meridians are complete', () => {
+    // tinh_hoa_bao_the is spent by meridianChapter: once all 8 meridians
+    // reach 100%, remainingEssenceNeed is 0, so even an empty bag is at cap.
     vi.spyOn(Math, 'random').mockReturnValue(0.999)
-    const { killEnemy, materialBag, deps, eventBus } = createLootTestSetup({
+    const { killEnemy, materialBag, player, deps, eventBus } = createLootTestSetup({
       signatureDrops: [
         {
           kind: 'material',
@@ -134,6 +134,16 @@ describe('BattleLootSystem - physique essence intake cap', () => {
       ],
       materialIds: ['tinh_hoa_bao_the'],
     })
+    player.bodyProgression.meridian.progress = {
+      nham_mach: 100,
+      doi_mach: 100,
+      am_kieu_mach: 100,
+      am_duy_mach: 100,
+      duong_duy_mach: 100,
+      duong_kieu_mach: 100,
+      xung_mach: 100,
+      doc_mach: 100,
+    }
 
     killEnemy()
 

@@ -2,6 +2,12 @@
 import { useI18n } from 'vue-i18n'
 import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import LoginLogoBlock from './LoginLogoBlock.vue'
+import { useTemplateRef } from 'vue'
+const logo = useTemplateRef<InstanceType<typeof LoginLogoBlock>>('logo')
+defineExpose({ prepareArt: (signal: AbortSignal) => {
+  if (!logo.value) return Promise.reject(new Error('Auth wordmark not mounted'))
+  return logo.value.prepare(signal)
+} })
 defineProps<{ resumeAvailable: boolean; ready: boolean; busy: boolean; error: string }>()
 const emit = defineEmits<{ authenticate: [mode: 'login' | 'register']; play: []; settings: []; exit: [] }>()
 const { t } = useI18n()
@@ -11,7 +17,7 @@ const allowSelfSignup =
 
 <template>
   <section class="login-opening" data-testid="login-opening">
-    <LoginLogoBlock />
+    <LoginLogoBlock ref="logo" />
     <nav class="login-opening__actions" :aria-label="t('onboarding.auth.eyebrow')">
       <PcPaperButton variant="secondary" data-testid="opening-login-button" :disabled="busy" @click="emit('authenticate', 'login')">{{ t('onboarding.auth.tabs.login') }}</PcPaperButton>
       <PcPaperButton variant="secondary" data-testid="opening-register-button" :disabled="busy || !allowSelfSignup" @click="emit('authenticate', 'register')">{{ t('onboarding.auth.createAccount') }}</PcPaperButton>
@@ -57,4 +63,41 @@ const allowSelfSignup =
 .login-opening__actions .pc-paper-button:disabled { opacity: .55; cursor: not-allowed; }
 .login-opening__actions .pc-paper-button[aria-busy="true"]:disabled { cursor: wait; }
 .login-opening__error { color: #983a23; background: #f5ead6e6; padding: 10px; margin: 0; font-size: 17px; }
+
+/* The parent owns readiness; CSS only sequences the visible menu. */
+.auth-entry-pending .login-opening :deep(.login-logo),
+.auth-entry-pending .login-opening__actions > .pc-paper-button {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-18px);
+}
+.auth-entry-ready .login-opening :deep(.login-logo),
+.auth-entry-ready .login-opening__actions > .pc-paper-button {
+  animation: auth-menu-enter 280ms ease-out both;
+}
+.auth-entry-ready .login-opening__actions > .pc-paper-button:nth-child(1) { animation-delay: 280ms; }
+.auth-entry-ready .login-opening__actions > .pc-paper-button:nth-child(2) { animation-delay: 360ms; }
+.auth-entry-ready .login-opening__actions > .pc-paper-button:nth-child(3) { animation-delay: 440ms; }
+.auth-entry-ready .login-opening__actions > .pc-paper-button:nth-child(4) { animation-delay: 520ms; }
+.auth-entry-ready .login-opening__actions > .pc-paper-button:nth-child(5) { animation-delay: 600ms; }
+@keyframes auth-menu-enter {
+  from { visibility: hidden; opacity: 0; transform: translateY(-18px); }
+  to { visibility: visible; opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-entry-ready .login-opening :deep(.login-logo),
+  .auth-entry-ready .login-opening__actions > .pc-paper-button {
+    animation: none;
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+  }
+}
+:global(html[data-reduced-motion='true'] .auth-entry-ready .login-logo),
+:global(html[data-reduced-motion='true'] .auth-entry-ready .login-opening__actions > .pc-paper-button) {
+  animation: none;
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+}
 </style>

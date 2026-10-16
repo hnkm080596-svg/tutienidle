@@ -31,9 +31,8 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 // Equipment item-slot chrome for the cells (owner ruling 2026-10-11:
 // Tru Vat cells wear the same ornate slot art as the Trang Bi bag).
 const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png')
-// Design capacity label shared with the equipment bag - no real bag cap
-// exists yet; 100 is the designed display cap.
-const BAG_DISPLAY_CAPACITY = 100
+import { MAX_STACK_AMOUNT, MATERIAL_BAG_SLOT_CAPACITY } from '@/core/inventory/StackLimits'
+const BAG_DISPLAY_CAPACITY = MATERIAL_BAG_SLOT_CAPACITY
 import { createMaterialTooltipBuilder, materialRealmLabel, professionRankOfMaterial } from '@/composables/useMaterialTooltip'
 
 const { t } = useI18n()
@@ -251,7 +250,7 @@ const filterInput = computed(() =>
   entries.value.map((entry) => ({ material: entry.material, amount: entry.amount })),
 )
 
-const { filtered, visibleCount } = useBagFilter(filterInput, { searchQuery, activeGroup })
+const { filtered } = useBagFilter(filterInput, { searchQuery, activeGroup })
 
 // O filter bar: tim kiem theo ten + chip nhom (bam lai chip dang chon
 // de bo filter nhom). Nhan chip qua key-mapping composable (useBagFilter
@@ -291,6 +290,24 @@ function comparePinned(a: FilteredMaterial, b: FilteredMaterial): number {
   return aPinned ? -1 : 1
 }
 
+function buildMaterialCell(item: FilteredMaterial, cellAmount: number, key: string): MaterialBagCell {
+  return {
+    key,
+    label: item.material.name,
+    accessibleLabel: materialAccessibleLabel(item.material.name, item.material),
+    description: item.material.description,
+    amount: cellAmount,
+    icon: item.material.icon,
+    accentVar: accentFor(item.material),
+    tooltip: buildTooltip(item.material, { owned: item.amount }),
+    // Owner ruling 2026-10-11 (xem block material cell tren):
+    // Pham seal <- grade, Chat streak <- nien dai (thang 1-5).
+    equipmentQualityRank: professionRankOfMaterial(item.material),
+    rarityRank: materialChatRank(item.material),
+    nameSegments: materialNameSegments(item.material),
+  }
+}
+
 const cells = computed<MaterialBagCell[]>(() => {
   const sortState = ui.bagSorts[props.sortKey]
 
@@ -304,32 +321,39 @@ const cells = computed<MaterialBagCell[]>(() => {
     (a, b) => comparePinned(a, b) || normalCompare(a, b),
   )
 
-  const mapped: MaterialBagCell[] = sorted.map((item) => ({
-    key: item.material.id,
-    label: item.material.name,
-    accessibleLabel: materialAccessibleLabel(item.material.name, item.material),
-    description: item.material.description,
-    amount: item.amount,
-    icon: item.material.icon,
-    accentVar: accentFor(item.material),
-    tooltip: buildTooltip(item.material, { owned: item.amount }),
-    // Owner ruling 2026-10-11 (xem block material cell tren):
-    // Pham seal <- grade, Chat streak <- nien dai (thang 1-5).
-    equipmentQualityRank: professionRankOfMaterial(item.material),
-    rarityRank: materialChatRank(item.material),
-    nameSegments: materialNameSegments(item.material),
-  }))
+  if (props.mode === 'pick') {
+    return sorted.map((item) => {
+      const cell = buildMaterialCell(item, item.amount, item.material.id)
+      return {
+        ...cell,
+        state: {
+          ...(cell.state ?? {}),
+          interaction: pickedSet.value.has(cell.key) ? ('selected' as const) : ('idle' as const),
+        },
+      }
+    })
+  }
 
-  if (props.mode !== 'pick') return mapped
-
-  return mapped.map((cell) => ({
-    ...cell,
-    state: {
-      ...(cell.state ?? {}),
-      interaction: pickedSet.value.has(cell.key) ? ('selected' as const) : ('idle' as const),
-    },
-  }))
+  const mapped: MaterialBagCell[] = []
+  for (const item of sorted) {
+    if (item.material.stackLimit === undefined && item.amount > MAX_STACK_AMOUNT) {
+      let remaining = item.amount
+      let slotIndex = 0
+      while (remaining > 0) {
+        const chunk = Math.min(remaining, MAX_STACK_AMOUNT)
+        const key = slotIndex === 0 ? item.material.id : `${item.material.id}#${slotIndex}`
+        mapped.push(buildMaterialCell(item, chunk, key))
+        remaining -= chunk
+        slotIndex++
+      }
+    } else {
+      mapped.push(buildMaterialCell(item, item.amount, item.material.id))
+    }
+  }
+  return mapped
 })
+
+const slotCount = computed(() => cells.value.length)
 
 const { currentPage, totalPages, goToPage, resetPage, gridCells } = useBagPagination(cells, pageSize)
 
@@ -394,7 +418,7 @@ watch(activeGroup, () => resetPage())
       <!-- Owner ruling 2026-10-11: "N loai" IS the slot count - render
            it in the equipment bag's x/100 capacity format. Pick-mode
            hosts (Phan Giai) hide it - a bag-view concern. -->
-      <span v-if="showCount" class="bag-section__count-label">{{ visibleCount }}/{{ BAG_DISPLAY_CAPACITY }}</span>
+      <span v-if="showCount" class="bag-section__count-label">{{ slotCount }}/{{ BAG_DISPLAY_CAPACITY }}</span>
     </div>
 
     <div ref="gridRef" class="bag-section__grid" :style="gridStyle">

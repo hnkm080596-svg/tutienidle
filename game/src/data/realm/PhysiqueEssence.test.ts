@@ -155,10 +155,10 @@ describe('bodyChapterEssenceGrade (M-QI-08 namespace rule)', () => {
     expect(bodyChapterEssenceGrade(refinement!.currency)).toBe('pham')
   })
 
-  it('resolves the meridian pill currency to undefined', () => {
+  it('resolves the meridian material currency to bao', () => {
     const meridian = BODY_CHAPTERS.find(chapter => chapter.id === 'meridian')
     expect(meridian).toBeDefined()
-    expect(bodyChapterEssenceGrade(meridian!.currency)).toBeUndefined()
+    expect(bodyChapterEssenceGrade(meridian!.currency)).toBe('bao')
   })
 
   it('a synthetic pill currency carrying a family-member id is NOT physique essence', () => {

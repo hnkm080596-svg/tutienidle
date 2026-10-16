@@ -35,7 +35,7 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(10)
   })
 
-  it('pill channel: adds progress to the next meridian and debits 1 thong_mach_dan from pillBag', () => {
+  it('material channel: adds progress to the next meridian and debits 1 tinh_hoa_bao_the from materialBag', () => {
     const manager = managerWithCatalogs()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
@@ -45,25 +45,25 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
     manager.setActivePlayer(player)
-    manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+    manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_bao_the'), 5)
 
     const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'meridian')
 
     expect(consumed).toBe(1)
-    expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(4)
-    // Progressive rule: one pill rolls a 5~10 gain on nham_mach.
+    expect(manager.materialBag.getAmount('tinh_hoa_bao_the')).toBe(4)
+    // Progressive rule: one essence rolls a 5~10 gain on nham_mach.
     const progress = player.bodyProgression.meridian.progress.nham_mach
     expect(progress).toBeGreaterThanOrEqual(5)
     expect(progress).toBeLessThanOrEqual(10)
 
     // At 100 the dispatch rebuild emits the full bat-mach modifier.
     player.bodyProgression.meridian.progress.nham_mach = 100
-    manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+    manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_bao_the'), 5)
     expect(manager.realmAdvanceOps.investBodyChapter(player, 'meridian')).toBe(1)
     expect(player.modifiers.some(m => m.id.startsWith('bat-mach:'))).toBe(true)
   })
 
-  it('the final meridian opens on pills alone - no material gate (sec.19: ninth meridian + aux retired)', () => {
+  it('the final meridian opens on tinh_hoa_bao_the alone - no aux gate (sec.19: ninth meridian + aux retired)', () => {
     const manager = managerWithCatalogs()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
@@ -74,15 +74,15 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     player.bodyProgression.body_refinement.completedTiers = 6
     manager.setActivePlayer(player)
     player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.slice(0, 7).map((m) => [m.id, 100]))
-    manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
+    manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_bao_the'), 40)
 
     // doc_mach rolls 0.1~1 per invest and asks for no material aux -
-    // the invest goes through on a single pill.
+    // the invest goes through on a single essence.
     expect(manager.realmAdvanceOps.investBodyChapter(player, 'meridian')).toBe(1)
     const docProgress = player.bodyProgression.meridian.progress.doc_mach
     expect(docProgress).toBeGreaterThanOrEqual(0.1)
     expect(docProgress).toBeLessThanOrEqual(1)
-    expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(39)
+    expect(manager.materialBag.getAmount('tinh_hoa_bao_the')).toBe(39)
   })
 
   it('gated invest returns 0 without touching either bag', () => {

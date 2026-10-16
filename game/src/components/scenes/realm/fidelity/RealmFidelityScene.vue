@@ -28,8 +28,9 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
     <section class="realm-earned">
       <h3>{{ t('panels.realm.sections.passives', { realm: model.name }) }}</h3>
       <ul v-if="model.passives.length">
-        <li v-for="passive in model.passives" :key="passive.id" v-tooltip="{title:passive.name,description:passive.description}">
-          <strong>{{ passive.name }}</strong><small v-for="line in passive.effectLines" :key="line">{{ line }}</small>
+        <li v-for="passive in model.passives" :key="passive.id" tabindex="0" :data-tier="passive.tierIndex" v-tooltip="passive.tooltip ?? {title:passive.name,description:passive.description}">
+          <img v-if="passive.iconUrl" class="realm-passive-seal" :src="passive.iconUrl" alt="">
+          <div class="realm-passive-copy"><strong>{{ passive.name }}</strong><span v-if="passive.tierLabel" class="realm-passive-tier">{{ passive.tierLabel }}</span><span v-if="passive.tierCount" class="realm-passive-ranks" aria-hidden="true"><i v-for="tier in passive.tierCount" :key="tier" :class="{ earned: tier <= (passive.tierIndex ?? 0) }" /></span><small v-for="line in passive.effectLines" :key="line">{{ line }}</small></div>
         </li>
       </ul>
       <p v-else class="realm-earned-empty">{{ t('realm.noPassives') }}</p>
@@ -53,4 +54,17 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 /* Layout instances are relative to the owning panel content. */
 .realm-paper-scene :deep(.game-panel__content .realm-timeline) { left: 0; top: 0; width: 100%; height: calc(100% - 124px); }
 .realm-paper-scene :deep(.game-panel__content .realm-earned) { left: 0; top: auto; bottom: 0; width: 100%; height: 112px; }
+.realm-earned ul { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; max-height: 86px; }
+.realm-earned li { align-items: center; padding: 7px 12px; border: 1px solid #b79a6266; background: linear-gradient(110deg,#e7d4a666,#fbf1d680); }
+.realm-earned li:focus-visible { outline: 2px solid #597560; outline-offset: 2px; }
+.realm-passive-seal { flex: 0 0 56px; width: 56px; height: 56px; }
+.realm-passive-copy { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.realm-passive-copy strong { font-size: 16px; }
+.realm-passive-tier { padding: 2px 7px; border: 1px solid #8e7145; color: #6b4d24; font-size: 12px; background: #f6e9c8; }
+.realm-passive-copy small { font-size: 11px; }
+.realm-passive-ranks { display: flex; gap: 3px; }
+.realm-passive-ranks i { width: 5px; height: 8px; transform: skew(-15deg); background: #b5ac9380; }
+.realm-passive-ranks .earned { background: #62846a; box-shadow: 0 0 3px #8caa6d55; }
+[data-tier='5'] .realm-passive-ranks .earned,[data-tier='6'] .realm-passive-ranks .earned { background: #b78b35; }
+[data-tier='7'] .realm-passive-ranks .earned { background: #a46f9c; }
 </style>

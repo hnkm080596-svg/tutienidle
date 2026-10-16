@@ -351,12 +351,12 @@ describe('BodySurface (scene 08 fidelity)', () => {
       view.unmount()
     })
 
-    it('invests the next meridian on click: progress grows, 1 pill debited, bumpState fired', async () => {
+    it('invests the next meridian on click: progress grows, 1 essence debited, bumpState fired', async () => {
       let state!: ReturnType<typeof usePlayerStore>['$state']
       const view = mountBodyScene((player, manager) => {
         state = player.$state
         qiPlayer(player)
-        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+        manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_bao_the'), 5)
       })
       await nextTick()
 
@@ -369,13 +369,13 @@ describe('BodySurface (scene 08 fidelity)', () => {
       button!.click()
       await nextTick()
 
-      // Progressive invest: one pill adds a partial gain (nham 5~10),
+      // Progressive invest: one essence adds a partial gain (nham 5~10),
       // the meridian stays 'next' until it reaches 100.
       const progress = state.bodyProgression.meridian.progress.nham_mach
       expect(progress).toBeGreaterThanOrEqual(5)
       expect(progress).toBeLessThanOrEqual(10)
       expect(view.bumpState).toHaveBeenCalledTimes(1)
-      expect(view.manager.pillBag.getAmount('thong_mach_dan')).toBe(4)
+      expect(view.manager.materialBag.getAmount('tinh_hoa_bao_the')).toBe(4)
 
       const orbs = view.container.querySelectorAll('.body-orb')
       // The still-investable nham stays 'current'; locked nodes dim.
@@ -386,7 +386,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       view.unmount()
     })
 
-    it('disables the CTA when thong_mach_dan is insufficient', async () => {
+    it('disables the CTA when tinh_hoa_bao_the is insufficient', async () => {
       const view = mountBodyScene((player) => {
         qiPlayer(player)
       })
@@ -404,7 +404,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
     it('paces the CTA by in-page-realm level', async () => {
       const low = mountBodyScene((player, manager) => {
         qiPlayer(player, 1) // nham_mach needs level 2
-        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+        manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_bao_the'), 5)
       })
       await nextTick()
       await selectChapter(low, 'meridian')
@@ -413,7 +413,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
 
       const high = mountBodyScene((player, manager) => {
         qiPlayer(player, 2)
-        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+        manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_bao_the'), 5)
       })
       await nextTick()
       await selectChapter(high, 'meridian')
@@ -430,7 +430,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
           body_refinement: { completedTiers: 6, currentTierProgress: 0 },
           meridian: { progress: {} },
         })
-        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+        manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_bao_the'), 5)
       })
       await nextTick()
       await selectChapter(view, 'meridian')
@@ -442,7 +442,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       view.unmount()
     })
 
-    it('the final meridian needs no material aux - pills alone progress it', async () => {
+    it('the final meridian needs no material aux - tinh_hoa_bao_the alone progresses it', async () => {
       const opened7 = MERIDIANS.slice(0, 7).map(m => m.id)
 
       const view = mountBodyScene((player, manager) => {
@@ -450,7 +450,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
         setBodyProgression(player, {
           meridian: { progress: Object.fromEntries(opened7.map((id) => [id, 100])) },
         })
-        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
+        manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_bao_the'), 40)
       })
       await nextTick()
       await selectChapter(view, 'meridian')
@@ -463,8 +463,8 @@ describe('BodySurface (scene 08 fidelity)', () => {
       await nextTick()
 
       expect(view.bumpState).toHaveBeenCalledTimes(1)
-      // Exactly 1 pill per invest - doc_mach rolls 0.1~1 per invest.
-      expect(view.manager.pillBag.getAmount('thong_mach_dan')).toBe(39)
+      // Exactly 1 essence per invest - doc_mach rolls 0.1~1 per invest.
+      expect(view.manager.materialBag.getAmount('tinh_hoa_bao_the')).toBe(39)
 
       view.unmount()
     })

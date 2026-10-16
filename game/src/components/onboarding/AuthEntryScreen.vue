@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef } from 'vue'
+import { computed, onMounted, ref, shallowRef, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import LoginLocaleChips from '@/components/scenes/login/LoginLocaleChips.vue'
@@ -22,6 +22,11 @@ import { cloudSaveCoordinator } from '@/services/cloudSave/CloudSaveServiceFacto
 // every functional surface below comes from the existing read-models
 // (resumeSession / authService / locale composable) - no invented data.
 const emit = defineEmits<{ authenticated: [session: AuthSession] }>()
+const opening = useTemplateRef<InstanceType<typeof LoginOpening>>('opening')
+defineExpose({ prepareArt: (signal: AbortSignal) => {
+  if (!opening.value) return Promise.reject(new Error('Auth opening content not mounted'))
+  return opening.value.prepareArt(signal)
+} })
 const mode = ref<'login' | 'register'>('login')
 const loginId = ref('')
 const password = ref('')
@@ -205,7 +210,7 @@ function submitGate() {
       <h2>{{ t('onboarding.auth.exit.exited') }}</h2>
       <PcPaperButton data-testid="auth-exit-return" @click="exited = false">{{ t('onboarding.auth.exit.return') }}</PcPaperButton>
     </section>
-    <LoginOpening v-else :resume-available="Boolean(resume)" :ready="resumeReady" :busy="submitting" :error="drawer === null ? error : ''"
+    <LoginOpening v-else ref="opening" :resume-available="Boolean(resume)" :ready="resumeReady" :busy="submitting" :error="drawer === null ? error : ''"
       @authenticate="revealAuthentication" @play="playOrContinue" @settings="drawer = 'settings'" @exit="drawer = 'exit'" />
     <LoginSideDrawer :open="drawer !== null" :busy="submitting" :title="drawer === 'settings' ? t('paperNav.settings') : drawer === 'exit' ? t('onboarding.auth.exit.title') : t(`onboarding.auth.tabs.${mode}`)" @close="drawer = null">
       <template v-if="drawer === 'auth'">
@@ -274,7 +279,7 @@ function submitGate() {
   display: grid;
   justify-items: end;
   align-items: center;
-  overflow: hidden auto;
+  overflow: clip;
   color: var(--paper-text, #211f1a);
 }
 .auth-exited { position: absolute; left: 480px; top: 315px; width: 530px; padding: 35px; text-align: center; background: #f5e6c9eb; border: 3px double #aa8645; }

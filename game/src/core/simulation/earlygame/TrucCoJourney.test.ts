@@ -182,7 +182,7 @@ function seedLqSideState(s: EarlyGameSession): void {
   // Tiers 1-3 ride the real invest seam (the earth-grade input and the
   // persisted pre-TC progression slice).
   feedRefinementTo(s, 3)
-  s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 133)
+  s.holdMaterial(THONG_MACH_DAN_MATERIAL_ID, 133)
 }
 
 /** Pumps essence into the refinement chapter until `tiers` complete.
@@ -192,7 +192,10 @@ function seedLqSideState(s: EarlyGameSession): void {
 function feedRefinementTo(s: EarlyGameSession, tiers: number): void {
   let guard = 0
   while (getBodyRefinementCompletedTiers(s.player) < tiers && guard++ < 200) {
-    s.holdMaterial(TINH_HOA_PHAM_THE_MATERIAL_ID, 1000)
+    const cur = s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
+    if (cur < 1000) {
+      s.holdMaterial(TINH_HOA_PHAM_THE_MATERIAL_ID, 1000 - cur)
+    }
     expect(s.investChapter('body_refinement')).toBeGreaterThan(0)
   }
   expect(getBodyRefinementCompletedTiers(s.player)).toBe(tiers)
@@ -416,7 +419,7 @@ describe('TrucCoJourney - ordered journey', () => {
       })
       expect(s.holdPill(TRUC_CO_DAN_ID, 1)).toBe(1)
       feedRefinementTo(s, 3)
-      s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 133)
+      s.holdMaterial(THONG_MACH_DAN_MATERIAL_ID, 133)
 
       // Leg H (inline): capacity-0 zhou_tian arm at the seeded pre-TC
       // state (realmId qi_refining - zhou_tian steps do not exist below
@@ -590,9 +593,9 @@ describe('TrucCoJourney - ordered journey', () => {
 
       // (b) Leg H (inline): meridian invest rejects at 5/6 - nothing
       // debits, no page-lock half-state.
-      const pillsAtReject = s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)
+      const pillsAtReject = s.materialAmount(THONG_MACH_DAN_MATERIAL_ID)
       expect(s.investChapter('meridian')).toBe(0)
-      expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(pillsAtReject)
+      expect(s.materialAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(pillsAtReject)
       expect(s.player.bodyProgression.meridian.progress).toEqual({})
 
       // Drain the pham stack into the open tier before the pham top-up
@@ -635,13 +638,13 @@ describe('TrucCoJourney - ordered journey', () => {
       // (d) Meridian strict-prefix 8/8 - pace gates lifted at TC;
       // the sequential constraint remains (the 9th meridian retired
       // with Thien Dia Chi Kieu, 2026-09-23 hidden-perfection-lineage).
-      // Progressive rule: each invest consumes exactly 1 pill and rolls
+      // Progressive rule: each invest consumes exactly 1 essence and rolls
       // the meridian's range gain - drive invests until each hits 100.
       let pillsSpent = 0
       for (const meridian of MERIDIANS) {
         let guard = 0
         while ((s.player.bodyProgression.meridian.progress[meridian.id] ?? 0) < 100) {
-          s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 1)
+          s.holdMaterial(THONG_MACH_DAN_MATERIAL_ID, 1)
           expect(s.investChapter('meridian')).toBe(1)
           pillsSpent += 1
           guard += 1
@@ -654,11 +657,11 @@ describe('TrucCoJourney - ordered journey', () => {
         }
       }
       expect(getOpenedMeridianCount(s.player)).toBe(8)
-      // Exactly one pill debited per invest.
+      // Exactly one essence debited per invest.
       expect(pillsSpent).toBeGreaterThan(0)
-      // Each invest debited exactly the 1 pill topped up - the bag nets
+      // Each invest debited exactly the 1 essence topped up - the bag nets
       // back to the seeded 133.
-      expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(133)
+      expect(s.materialAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(133)
 
       // bat-mach:* emissions live on the meridian modifier channel
       // ONLY; intrinsic baseStats remain untouched.
@@ -1113,7 +1116,7 @@ describe('TrucCoJourney - determinism', () => {
       for (const meridian of MERIDIANS.slice(0, 3)) {
         let guard = 0
         while ((s.player.bodyProgression.meridian.progress[meridian.id] ?? 0) < 100) {
-          s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 1)
+          s.holdMaterial(THONG_MACH_DAN_MATERIAL_ID, 1)
           expect(s.investChapter('meridian')).toBe(1)
           guard += 1
           expect(guard).toBeLessThan(2000)
@@ -1166,13 +1169,13 @@ describe('TrucCoJourney - grade ladder', () => {
   }
 
   const openMeridians = (s: EarlyGameSession, count: number): void => {
-    s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 133)
+    s.holdMaterial(THONG_MACH_DAN_MATERIAL_ID, 133)
     feedRefinementTo(s, 6)
-    // Progressive rule: drive 1-pill invests until each meridian is 100.
+    // Progressive rule: drive 1-essence invests until each meridian is 100.
     for (const meridian of MERIDIANS.slice(0, count)) {
       let guard = 0
       while ((s.player.bodyProgression.meridian.progress[meridian.id] ?? 0) < 100) {
-        s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 1)
+        s.holdMaterial(THONG_MACH_DAN_MATERIAL_ID, 1)
         expect(s.investChapter('meridian')).toBe(1)
         guard += 1
         expect(guard).toBeLessThan(2000)

@@ -1,3 +1,4 @@
+import { talentIllustrationUrl, stableSymbolUrl, talentSymbolId } from '@/presentation/huyenKim/StableSceneArt'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 const tienHiep = '/assets/ui/tien-hiep-2026-10/'
 export const CHARACTER_ART = Object.freeze({
@@ -8,7 +9,7 @@ export const CHARACTER_ART = Object.freeze({
 // Element ivory pucks from the landscape-design pack (metal/wood/water/fire/earth).
 export const elementArt = (id: string) => resolveAssetUrl(`${tienHiep}icons/element-${id}-ivory-v1.png`)
 // Per-talent glyph seals (talent-<id>.svg), 'technique' symbol as fallback.
-export const talentGlyph = (id: string) => resolveAssetUrl(`/assets/ui/huyen-kim/symbols/talent-${id}.svg`)
+export const talentGlyph = (id: string) => talentIllustrationUrl(id) ?? stableSymbolUrl(talentSymbolId(id, 'technique'))
 
 /** Committed dao identity for the name plate: every dao lo declares
  *  its display name and (optionally) a couplet verse here, keyed by

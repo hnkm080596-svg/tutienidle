@@ -117,7 +117,8 @@ describe('AssetBundleCatalog', () => {
     // exists once PhaserCanvas mounts - they timed out and left the
     // coordinator stuck off-route for the rest of the session.
     expect(getBundlesForRoute('boot')).toEqual([])
-    expect(getBundlesForRoute('auth')).toEqual([])
+    expect(getBundlesForRoute('auth')).toEqual(['auth-opening'])
+    expect(enumerateResources(getBundlesForRoute('auth')).every((descriptor) => descriptor.kind === 'dom-image')).toBe(true)
     expect(getBundlesForRoute('character')).toEqual([])
     expect(getBundlesForRoute('error')).toEqual([])
   })

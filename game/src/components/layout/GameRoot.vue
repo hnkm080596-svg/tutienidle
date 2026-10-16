@@ -197,7 +197,7 @@ function closeSidePanels() {
 
       <Tooltip />
 
-      <ToastContainer />
+      <ToastContainer v-if="ui.hasHomeOverlayOpen || isFullSceneActive" />
 
       <ActionFeedbackLog />
 

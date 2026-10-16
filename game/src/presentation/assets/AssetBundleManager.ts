@@ -114,6 +114,11 @@ export function descriptorsMatch(a: AssetResourceDescriptor, b: AssetResourceDes
   return false
 }
 
+export interface AssetLoadProgress {
+  readonly completed: number
+  readonly total: number
+}
+
 export interface AssetBundleManagerOptions {
   loaderScene?: AssetLoaderScene | null
   domImageLoader?: DomImageLoader
@@ -206,13 +211,18 @@ export class AssetBundleManager implements AssetPort {
     return descriptors.every((d) => this.isResourceLoaded(d.key))
   }
 
-  async ensureFor(request: RouteRequest, signal: AbortSignal): Promise<void> {
-    await this.ensureLoaded(getBundlesForRoute(request.target), signal)
+  async ensureFor(
+    request: RouteRequest,
+    signal: AbortSignal,
+    onProgress?: (progress: AssetLoadProgress) => void,
+  ): Promise<void> {
+    await this.ensureLoaded(getBundlesForRoute(request.target), signal, onProgress)
   }
 
   async ensureLoaded(
     bundleIds: readonly AssetBundleId[],
     signal?: AbortSignal,
+    onProgress?: (progress: AssetLoadProgress) => void,
   ): Promise<void> {
     if (this.disposed) {
       throw new Error('AssetBundleManager disposed')
@@ -223,6 +233,14 @@ export class AssetBundleManager implements AssetPort {
 
     const descriptors = enumerateResources(bundleIds)
     this.validateDescriptorCollisions(descriptors)
+    const report = () => {
+      if (signal?.aborted || this.disposed) return
+      onProgress?.({
+        completed: descriptors.filter((descriptor) => this.isResourceLoaded(descriptor.key)).length,
+        total: descriptors.length,
+      })
+    }
+    report()
 
     const needed = descriptors.filter((d) => !this.isResourceLoaded(d.key))
     if (needed.length === 0) {
@@ -246,7 +264,7 @@ export class AssetBundleManager implements AssetPort {
     const MAX_CONCURRENT_DOM_IMAGES = 12
     if (domDescriptors.length <= MAX_CONCURRENT_DOM_IMAGES) {
       for (const domDesc of domDescriptors) {
-        tasks.push(this.loadSingleDomImage(domDesc, signal))
+        tasks.push(this.loadSingleDomImage(domDesc, signal).then(report))
       }
     } else {
       let cursor = 0
@@ -254,6 +272,7 @@ export class AssetBundleManager implements AssetPort {
         while (cursor < domDescriptors.length) {
           const domDesc = domDescriptors[cursor++]!
           await this.loadSingleDomImage(domDesc, signal)
+          report()
         }
       })
       tasks.push(...workers)
@@ -261,7 +280,7 @@ export class AssetBundleManager implements AssetPort {
 
     // 1b. Load DOM audio (deduped per key; fail-soft per the optional contract)
     for (const audioDesc of domAudioDescriptors) {
-      tasks.push(this.loadSingleDomAudio(audioDesc, signal))
+      tasks.push(this.loadSingleDomAudio(audioDesc, signal).then(report))
     }
 
     // 2. Load Phaser textures via loader scene (serialized batch)
@@ -274,7 +293,7 @@ export class AssetBundleManager implements AssetPort {
       while (loader !== this.loaderScene) {
         loader = this.loaderScene ?? (await this.waitForLoaderScene(signal))
       }
-      tasks.push(this.loadPhaserBatch(loader, phaserDescriptors, signal))
+      tasks.push(this.loadPhaserBatch(loader, phaserDescriptors, signal).then(report))
     }
 
     await Promise.all(tasks)

@@ -42,7 +42,7 @@ describe('quoteSiteUpgrade - quote/commit parity (AR-23)', () => {
     const { system, bag, siteId } = setupWithSite(1)
     // Fill generously: the real upgrade costs come from the catalog.
     for (const material of materials) {
-      bag.add(material, 1_000_000)
+      bag.add(material, 1_000)
     }
     bag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
 
@@ -63,7 +63,7 @@ describe('quoteSiteUpgrade - quote/commit parity (AR-23)', () => {
   it('realm-gated quote -> upgradeSite fails with the same gate', () => {
     const { system, bag, siteId } = setupWithSite(3)
     for (const material of materials) {
-      bag.add(material, 1_000_000)
+      bag.add(material, 1_000)
     }
     bag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
 
@@ -88,7 +88,7 @@ describe('quoteSiteUpgrade - quote/commit parity (AR-23)', () => {
   it('max level -> quote reports max_level', () => {
     const { system, bag, siteId } = setupWithSite(1)
     for (const material of materials) {
-      bag.add(material, 1_000_000)
+      bag.add(material, 1_000)
     }
     bag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
 

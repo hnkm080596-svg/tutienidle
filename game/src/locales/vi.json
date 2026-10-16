@@ -1,4 +1,6 @@
 {
+  "realmPassive": { "tier": "Bậc {tier}", "perfected": "Viên mãn ẩn", "effects": "Hiệu lực đang có", "origin": "Dấu ấn nhập môn", "recorded": "Bậc đã đạt", "foundation": { "human": "Nhân Đạo", "earth": "Địa Đạo", "heaven": "Thiên Đạo", "great_dao": "Đại Đạo", "unknown": "Chưa ghi nhận" } },
+  "authOpening": { "loading": "Đang tải" },
   "testSandbox": {
     "enter": "Vào chế độ test",
     "tools": "Dev Power",
@@ -774,7 +776,7 @@
         "stateOpened": "Đã mở",
         "stateNext": "Kế tiếp",
         "stateLocked": "Chưa mở",
-        "cost": "{count} Thông Mạch Đan",
+        "cost": "{count} Tinh Hoa Bảo Thể",
         "realmGate": "{realm} tầng {level}",
         "pageLocked": "Mở khóa ở {realm}",
         "invest": "Xung Mạch",
@@ -801,6 +803,28 @@
       "body": {
         "title": "Đạo Thể — Kinh Mạch",
         "navAria": "Chương Đạo Thể"
+      },
+      "growthModal": {
+        "title": "Căn Cơ Thăng Tiến",
+        "eyebrowMinor": "Tiểu Đột Phá Thành Công",
+        "eyebrowMajor": "Đại Cảnh Giới Khai Mở",
+        "floor": "Tầng {level}",
+        "foundationHeading": "Đạo Cơ Trụ Cột Tăng Trưởng",
+        "freePointGain": "+{count} Điểm Ngũ Căn Tự Do",
+        "freePointTotal": "Hiện có {total} điểm chưa phân bổ",
+        "allocateCta": "Phân Bổ Điểm",
+        "continueCta": "Tiếp Tục Tu Luyện",
+        "stats": {
+          "maxHp": "Sinh Mệnh",
+          "might": "Uy Lực",
+          "defense": "Phòng Ngự",
+          "hpRegenPerTurn": "Hồi Huyết / Hiệp",
+          "speed": "Tốc Độ",
+          "cultivationPercent": "Hấp Linh Đan Dược",
+          "productionSpeedMultiplier": "Linh Mạch Động Phủ",
+          "affixDeltaPercent": "Cảm Ứng Luyện Khí",
+          "realmPassivePercent": "Uy Áp Đạo Cơ"
+        }
       }
     },
     "settings": {
@@ -1951,6 +1975,20 @@
         "detail": "Đủ nguyên liệu cho cấp kế tiếp.",
         "cta": "Nâng cấp"
       },
+      "minorBreakthrough": {
+        "title": "{realm} tầng {level} viên mãn",
+        "detail": "Tu vi đã đầy — tiến cảnh lên tầng kế tiếp để rèn vững đạo cơ."
+      },
+      "attributePoints": {
+        "title": "Còn {count} điểm Ngũ Căn tự do",
+        "detail": "Phân bổ điểm thuộc tính để gia tăng chiến lực.",
+        "cta": "Phân bổ"
+      },
+      "autoFarm": {
+        "title": "Chưa bật Tự Động Viễn Chinh",
+        "detail": "Chọn ải đã vượt qua để treo máy thu thập nguyên liệu và Cảm Ngộ.",
+        "cta": "Xuất chinh"
+      },
       "expand": "Mở Thiên Cơ Bảng"
     },
     "questTracker": {
@@ -2230,6 +2268,28 @@
       "guild": "Bang Hội",
       "sect": "Kiến Trúc",
       "portal": "Bí Cảnh"
+    },
+    "chatbox": {
+      "title": "Truyền Âm Ngọc Giản",
+      "aria": "Truyền Âm Ngọc Giản — nhật ký Động Phủ",
+      "empty": "Chưa có động tĩnh mới tại Động Phủ.",
+      "clear": "Xóa nhật ký",
+      "expand": "Mở rộng nhật ký",
+      "collapse": "Thu gọn nhật ký",
+      "offlineSummary": "Bế quan kết thúc ({duration}): +{cultivation} Linh Lực",
+      "filters": {
+        "all": "Tất cả",
+        "loot": "Thu hoạch",
+        "system": "Hệ thống"
+      },
+      "tags": {
+        "loot": "Thu hoạch",
+        "craft": "Luyện chế",
+        "upgrade": "Thăng cấp",
+        "save": "Lưu trữ",
+        "warning": "Nhắc nhở",
+        "error": "Cảnh báo"
+      }
     }
   },
   "paperNav": {
@@ -2300,7 +2360,7 @@
     "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
     "active": "TÂM PHÁP ĐANG TU LUYỆN",
     "artifact": "Bí kíp tâm pháp",
-    "artifactAlt": "Bí kíp mở với nét mực và đường linh khí vàng",
+    "artifactAlt": "Bí kíp tâm pháp với bìa lụa và linh ấn",
     "temporaryArt": "Minh họa tạm · Có thể thay theo tâm pháp",
     "training": "Tiến Cảnh Tâm Pháp",
     "mastery": "Độ thuần thục",
@@ -2506,6 +2566,8 @@
     "back": "Trở Về"
   },
   "talents": {
+    "mechanics": "Cơ chế",
+    "tradeoff": "Đánh đổi",
     "features": "Đặc Điểm",
     "tags": {
       "combat": "Chiến Đấu",

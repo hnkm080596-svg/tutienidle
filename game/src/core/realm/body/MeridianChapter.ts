@@ -14,7 +14,7 @@
 // legacy-shaped slice never reaches the rules.
 import {
   MERIDIANS,
-  THONG_MACH_DAN_MATERIAL_ID,
+  TINH_HOA_BAO_THE_MATERIAL_ID,
 } from '../../../data/realm/Meridians'
 import type { MeridianDefinition } from '../../../data/realm/Meridians'
 import type { PlayerData } from '../../player/Player'
@@ -177,14 +177,27 @@ export const meridianChapter: ModifierBodyChapter = {
   chapterKind: 'meridian',
   id: 'meridian',
   modifierPrefix: MODIFIER_PREFIX,
-  // thong_mach_dan is a type:'material' PILL (data/pill/pills.ts) -
-  // lives in pillBag, not materialBag.
-  currency: { bag: 'pill', id: THONG_MACH_DAN_MATERIAL_ID },
+  // Khai Mach uses Tinh Hoa Bao The (physique essence grade 'bao' in
+  // materialBag) to align with Luyen The (Tinh Hoa Pham The) and Chu
+  // Thien (Tinh Hoa Phap The).
+  currency: { bag: 'material', id: TINH_HOA_BAO_THE_MATERIAL_ID },
   // M-F-CHU-THIEN (C2C-59) - system-wide sequentiality: meridian only
   // unlocks once body_refinement completes, so the canonical chain
   // body_refinement -> meridian -> zhou_tian holds at the dispatch gate
   // and as a persisted-state invariant.
   unlocksAfterChapters: ['body_refinement'],
+
+  remainingCurrencyNeed(player: PlayerData): number {
+    const progress = readMeridianProgress(player)
+    let need = 0
+    for (const meridian of MERIDIANS) {
+      const rem = MERIDIAN_FULL_PROGRESS - (progress[meridian.id] ?? 0)
+      if (rem > 0) {
+        need += Math.ceil(rem / meridian.investGainRange.min) * meridian.thongMachDanCost
+      }
+    }
+    return need
+  },
 
   // Dau tu 1 Thong Mach Dan vao duong ke tiep: cong mot gain ngau nhien
   // dong deu trong investGainRange (Math.random), clamp o 100. Tra ve

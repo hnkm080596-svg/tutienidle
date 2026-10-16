@@ -11,6 +11,8 @@
 import { describe, expect, it } from 'vitest'
 import { createApp, h, ref } from 'vue'
 import { createPinia, type Pinia } from 'pinia'
+import { createI18n } from 'vue-i18n'
+import vi from '@/locales/vi.json'
 import type { ComputedRef } from 'vue'
 import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
@@ -37,6 +39,7 @@ function mountRows(prepare?: (pinia: Pinia) => void): ComputedRef<RealmStatPassi
     },
   })
   app.use(pinia)
+  app.use(createI18n({ legacy: false, locale: 'vi', messages: { vi } }))
   app.provide(GAME_MANAGER_KEY, manager)
   app.provide(STATE_VERSION_KEY, version)
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })

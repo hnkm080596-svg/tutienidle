@@ -341,28 +341,23 @@ function realmCostBasket(realmId: string): CostBasket[] {
   }
   basket.push({ label: 'alchemy-x1-each', spiritStones: alchStones, essenceTinhHoa: 0, materials: alchMats, herbUnits })
 
-  // Meridian pills (qi page only - realm LK+). Progressive Khai Mach:
-  // each invest consumes exactly 1 pill and rolls a uniform gain in
-  // investGainRange, so the expected pill total to complete a meridian
+  // Meridian essence (qi page only - realm LK+). Progressive Khai Mach:
+  // each invest consumes 1 Tinh Hoa Bao The and rolls a uniform gain in
+  // investGainRange, so the expected essence total to complete a meridian
   // is 100 / mean-gain invests.
   if (realmIndex >= 1) {
-    const pills = Math.ceil(
+    const essence = Math.ceil(
       MERIDIANS.reduce(
         (s, m) => s + 100 / ((m.investGainRange.min + m.investGainRange.max) / 2),
         0,
       ),
     )
-    const recipe = alchemyRecipes.find((r) => r.pillId === 'thong_mach_dan')
     basket.push({
-      label: `bat-mach pills x${pills}`,
-      spiritStones: (recipe?.spiritStoneCost ?? 0) * pills,
-      essenceTinhHoa: 0,
-      materials: {
-        yeu_dan_hung_giao: pills,
-        bui_go: (recipe?.fuelWoodAmount ?? 0) * pills,
-        luyen_dan_tinh_hoa: (recipe?.luyenDanTinhHoaAmount ?? 0) * pills,
-      },
-      herbUnits: (recipe?.herbAmount ?? 0) * pills,
+      label: `bat-mach essence x${essence}`,
+      spiritStones: 0,
+      essenceTinhHoa: essence,
+      materials: {},
+      herbUnits: 0,
     })
   }
   // Zhou Tian (TC only): essence phap

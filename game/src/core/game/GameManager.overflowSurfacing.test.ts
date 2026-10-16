@@ -178,10 +178,13 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
     expect(rewards.length).toBeGreaterThan(0)
 
     // Deterministic seed -> the SAME rewards the settle will grant. Fill
-    // every rolled material's stack to its cap so delivery clamps to 0.
-    const rolled = rewards.map((reward) => {
+    // every rolled material's stack (and remaining bag slots) to its cap
+    // so delivery clamps to 0.
+    const rolled = rewards.map((reward, index) => {
       const material = manager.materialRegistry.get(reward.materialId)
-      const limit = material.stackLimit ?? MAX_STACK_AMOUNT
+      const limit = index < rewards.length - 1
+        ? (material.stackLimit ?? MAX_STACK_AMOUNT)
+        : manager.materialBag.canAcceptAmount(material, Number.MAX_SAFE_INTEGER)
 
       manager.materialBag.add(material, limit)
 

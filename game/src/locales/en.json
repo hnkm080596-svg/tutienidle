@@ -1,4 +1,6 @@
 {
+  "realmPassive": { "tier": "Tier {tier}", "perfected": "Hidden perfection", "effects": "Active effects", "origin": "Initiation record", "recorded": "Earned tier", "foundation": { "human": "Human", "earth": "Earth", "heaven": "Heaven", "great_dao": "Great Dao", "unknown": "Not recorded" } },
+  "authOpening": { "loading": "Loading" },
   "testSandbox": {
     "enter": "Enter test sandbox",
     "tools": "Dev Power",
@@ -774,7 +776,7 @@
         "stateOpened": "Opened",
         "stateNext": "Next",
         "stateLocked": "Sealed",
-        "cost": "{count} Meridian Pills",
+        "cost": "{count} Treasure Physique Essence",
         "realmGate": "{realm} floor {level}",
         "pageLocked": "Unlocks at {realm}",
         "invest": "Surge Meridian",
@@ -801,6 +803,28 @@
       "body": {
         "title": "Body — Meridians",
         "navAria": "Body chapters"
+      },
+      "growthModal": {
+        "title": "Foundation Ascent",
+        "eyebrowMinor": "Stage Breakthrough Complete",
+        "eyebrowMajor": "Major Realm Awakened",
+        "floor": "Floor {level}",
+        "foundationHeading": "Dao Foundation Pillar Growth",
+        "freePointGain": "+{count} Free Five-Root Point",
+        "freePointTotal": "{total} unallocated points available",
+        "allocateCta": "Allocate Points",
+        "continueCta": "Continue Cultivating",
+        "stats": {
+          "maxHp": "Max HP",
+          "might": "Might",
+          "defense": "Defense",
+          "hpRegenPerTurn": "HP Regen / Turn",
+          "speed": "Speed",
+          "cultivationPercent": "Pill Absorption",
+          "productionSpeedMultiplier": "Grotto Spirit Vein",
+          "affixDeltaPercent": "Refining Resonance",
+          "realmPassivePercent": "Realm Foundation"
+        }
       }
     },
     "settings": {
@@ -1951,6 +1975,20 @@
         "detail": "Materials ready for the next level.",
         "cta": "Upgrade"
       },
+      "minorBreakthrough": {
+        "title": "{realm} stage {level} complete",
+        "detail": "Cultivation is full — advance to the next stage to temper your foundation."
+      },
+      "attributePoints": {
+        "title": "{count} free Five-Root points",
+        "detail": "Allocate attribute points to strengthen your combat power.",
+        "cta": "Allocate"
+      },
+      "autoFarm": {
+        "title": "Auto Expedition is idle",
+        "detail": "Select a cleared stage to farm materials and Insight automatically.",
+        "cta": "Expedition"
+      },
       "expand": "Expand Thien Co board"
     },
     "questTracker": {
@@ -2230,6 +2268,28 @@
       "guild": "Guild",
       "sect": "Architecture",
       "portal": "Secret Realm"
+    },
+    "chatbox": {
+      "title": "Voice Jade Slip",
+      "aria": "Voice Jade Slip — Grotto activity log",
+      "empty": "No recent activity in the Grotto-Heaven.",
+      "clear": "Clear log",
+      "expand": "Expand log",
+      "collapse": "Collapse log",
+      "offlineSummary": "Seclusion complete ({duration}): +{cultivation} Cultivation",
+      "filters": {
+        "all": "All",
+        "loot": "Rewards",
+        "system": "System"
+      },
+      "tags": {
+        "loot": "Rewards",
+        "craft": "Alchemy",
+        "upgrade": "Upgrade",
+        "save": "Save",
+        "warning": "Notice",
+        "error": "Alert"
+      }
     }
   },
   "paperNav": {
@@ -2506,6 +2566,8 @@
     "back": "Return"
   },
   "talents": {
+    "mechanics": "Mechanics",
+    "tradeoff": "Trade-off",
     "features": "Features",
     "tags": {
       "combat": "Combat",

@@ -5,13 +5,21 @@ import { useUiStore } from '@/stores/ui'
 import { useBuildingNavigation } from '@/composables/useBuildingNavigation'
 import { DONG_FU_BUILDING_IDS } from '@/presentation/background/DongFuBuildingArt'
 import { isBetaBuildingSurface } from '@/core/betaScopeSurface'
+import { getCurrentRealm } from '@/core/realm/realmSystem'
 
 // Spec SS12 Thien Co Bang -- "what is worth doing right now", max a few
 // actionable entries, never a quest log. Read-only over existing
 // read-models (realm advance ops, quest ops, alchemy ops, building
 // status); every entry's action is pure navigation into an existing
 // surface -- no gameplay writes happen here.
-export type ThienCoEntryKind = 'breakthrough' | 'quest' | 'ready' | 'active' | 'upgradeable'
+export type ThienCoEntryKind =
+  | 'breakthrough'
+  | 'quest'
+  | 'ready'
+  | 'attribute_points'
+  | 'active'
+  | 'upgradeable'
+  | 'auto_farm'
 
 export interface ThienCoEntry {
   id: string
@@ -32,8 +40,10 @@ const PRIORITY: Record<ThienCoEntryKind, number> = {
   breakthrough: 0,
   quest: 1,
   ready: 2,
+  attribute_points: 2.5,
   active: 3,
   upgradeable: 4,
+  auto_farm: 5,
 }
 
 export function useThienCoEntries() {
@@ -65,6 +75,7 @@ export function useThienCoEntries() {
     void nowMs.value
 
     const list: ThienCoEntry[] = []
+    const currentRealm = getCurrentRealm(player.realmId)
 
     if (gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state)) {
       list.push({
@@ -73,6 +84,20 @@ export function useThienCoEntries() {
         priority: PRIORITY.breakthrough,
         titleKey: 'home.thienCo.breakthrough.title',
         detailKey: 'home.thienCo.breakthrough.detail',
+        ctaKey: 'home.thienCo.breakthrough.cta',
+        run: () => ui.openStandalonePanel('realm'),
+      })
+    } else if (
+      player.realmLevel < currentRealm.maxLevel &&
+      player.cultivation >= player.cultivationRequired
+    ) {
+      list.push({
+        id: 'minor_breakthrough',
+        kind: 'breakthrough',
+        priority: PRIORITY.breakthrough,
+        titleKey: 'home.thienCo.minorBreakthrough.title',
+        detailKey: 'home.thienCo.minorBreakthrough.detail',
+        detailParams: { realm: currentRealm.name, level: player.realmLevel + 1 },
         ctaKey: 'home.thienCo.breakthrough.cta',
         run: () => ui.openStandalonePanel('realm'),
       })
@@ -92,6 +117,19 @@ export function useThienCoEntries() {
         detailParams: { count: claimable },
         ctaKey: 'home.thienCo.quest.cta',
         run: () => ui.openStandalonePanel('quest'),
+      })
+    }
+
+    if (player.attributePoints > 0) {
+      list.push({
+        id: 'attribute_points',
+        kind: 'attribute_points',
+        priority: PRIORITY.attribute_points,
+        titleKey: 'home.thienCo.attributePoints.title',
+        detailKey: 'home.thienCo.attributePoints.detail',
+        detailParams: { count: player.attributePoints },
+        ctaKey: 'home.thienCo.attributePoints.cta',
+        run: () => ui.openLeftPanel('character'),
       })
     }
 
@@ -152,6 +190,18 @@ export function useThienCoEntries() {
           run: () => navigation.openBuilding(buildingId),
         })
       }
+    }
+
+    if (player.completedStageIds.length > 0 && !player.autoFarmStage) {
+      list.push({
+        id: 'auto_farm',
+        kind: 'auto_farm',
+        priority: PRIORITY.auto_farm,
+        titleKey: 'home.thienCo.autoFarm.title',
+        detailKey: 'home.thienCo.autoFarm.detail',
+        ctaKey: 'home.thienCo.autoFarm.cta',
+        run: () => ui.openLeftPanel('stage_select'),
+      })
     }
 
     return list

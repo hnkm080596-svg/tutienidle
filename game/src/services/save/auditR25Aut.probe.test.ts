@@ -431,9 +431,9 @@ describe('arm C - QUEST_LIST_CAP and sibling collections', () => {
     const result = restoreGameSession(player, manager, save, undefined)
     expect(result.status).toBe('ok')
     if (result.status !== 'ok') throw new Error(result.message)
-    // MaterialBag.add clamps at material.stackLimit ?? MAX_STACK_AMOUNT -
-    // the crafted 1e12 never lands.
-    expect(manager.materialBag.getAmount('tinh_hoa_pham_the')).toBe(MAX_STACK_AMOUNT)
+    // MaterialBag.add clamps at the bag's total slot capacity (100 slots *
+    // MAX_STACK_AMOUNT = 100_000) - the crafted 1e12 never lands.
+    expect(manager.materialBag.getAmount('tinh_hoa_pham_the')).toBe(100 * MAX_STACK_AMOUNT)
   })
 })
 

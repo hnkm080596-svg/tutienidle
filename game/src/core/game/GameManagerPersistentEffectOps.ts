@@ -13,9 +13,11 @@ import {
 import type { PlayerData } from '../player/Player'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import {
+  getActiveElement,
   getCultivationPathStatModifiers,
   resolveActiveWayStatDomains,
 } from '../player/CultivationPathSystem'
+import { getRealmFoundationModifiers } from '../realm/RealmFoundationGrowth'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
 import { isBetaFeature } from '../betaScope'
@@ -97,7 +99,7 @@ export class GameManagerPersistentEffectOps {
       // scaling applies.
       ...this.deps.skillSystem.getScaledPassiveModifiers(),
       ...(player ? this.getTechniqueTierModifiers(player) : []),
-      ...(player ? getCultivationPathStatModifiers(player) : []),
+      ...(player ? [...getCultivationPathStatModifiers(player), ...getRealmFoundationModifiers(player)] : []),
       // Node levels (plan sec6.8) - node modifiers derived from (registry,
       // nodeLevels), scaled by current level; no longer inside
       // player.modifiers.
@@ -136,7 +138,11 @@ export class GameManagerPersistentEffectOps {
   getBattleBaseChannels(player: PlayerData): readonly ResolvedModifierChannel[] {
     return [
       { channel: 'technique_tier', partition: 'static', modifiers: this.getTechniqueTierModifiers(player) },
-      { channel: 'cultivation_path', partition: 'static', modifiers: getCultivationPathStatModifiers(player) },
+      {
+        channel: 'cultivation_path',
+        partition: 'static',
+        modifiers: [...getCultivationPathStatModifiers(player), ...getRealmFoundationModifiers(player)],
+      },
       { channel: 'node_levels', partition: 'static', modifiers: this.admittedNodeModifiers(player) },
       { channel: 'technique_combat', partition: 'static', modifiers: this.getTechniqueCombatModifiers() },
     ]
@@ -200,7 +206,8 @@ export class GameManagerPersistentEffectOps {
     if (levelSig === '') return []
     const allNodes = this.deps.nodeRegistry.getAll()
     const scopeFlags = `${isBetaFeature('hiddenContent') ? 1 : 0}:${isBetaFeature('swordPath') ? 1 : 0}`
-    const sig = `${allNodes.length}:${allNodes[0]?.id ?? ''}:${allNodes[allNodes.length - 1]?.id ?? ''}:${scopeFlags}|${player.cultivationPath ?? ''}|${player.cultivationWay ?? ''}|${player.spellPath?.element ?? ''}|${levelSig}`
+    const activeElement = getActiveElement(player) ?? ''
+    const sig = `${allNodes.length}:${allNodes[0]?.id ?? ''}:${allNodes[allNodes.length - 1]?.id ?? ''}:${scopeFlags}|${player.cultivationPath ?? ''}|${player.cultivationWay ?? ''}|${activeElement}|${levelSig}`
     if (sig === this.cachedNodeModSig) {
       return [...this.cachedNodeMods]
     }

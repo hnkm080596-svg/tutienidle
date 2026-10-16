@@ -49,20 +49,6 @@ const generatedRecipes: AlchemyRecipe[] = REALM_TIERS.flatMap((realmId, tierInde
 // first-pass, playtest chinh (spec sec9).
 export const SPECIAL_ALCHEMY_RECIPES: AlchemyRecipe[] = [
   {
-    id: 'alchemy_thong_mach_dan',
-    pillId: 'thong_mach_dan',
-    realmId: 'qi_refining',
-    herbVariants: grottoVariants('tu_linh_thao_qi_refining'),
-    herbAmount: 3,
-    fuelWoodRealmId: 'qi_refining',
-    fuelWoodAmount: 6,
-    // qi_refining tier index = 1 -> 2 + 1 = 3 (same formula).
-    luyenDanTinhHoaAmount: 3,
-    spiritStoneCost: 1500,
-    baseDurationSeconds: 900,
-    specialIngredients: [{ materialId: 'yeu_dan_hung_giao', amount: 1 }],
-  },
-  {
     id: 'alchemy_truc_co_dan',
     pillId: 'truc_co_dan',
     realmId: 'qi_refining',
@@ -77,6 +63,21 @@ export const SPECIAL_ALCHEMY_RECIPES: AlchemyRecipe[] = [
     spiritStoneCost: 5000,
     baseDurationSeconds: 1200,
     specialIngredients: [{ materialId: 'yeu_dan_hung_giao', amount: 1 }],
+  },
+  {
+    id: 'alchemy_thong_mach_dan',
+    pillId: 'thong_mach_dan',
+    realmId: 'qi_refining',
+    herbVariants: grottoVariants('tu_linh_thao_qi_refining'),
+    herbAmount: 3,
+    fuelWoodRealmId: 'qi_refining',
+    fuelWoodAmount: 6,
+    // qi_refining tier index = 1 -> 2 + 1 = 3 (same formula).
+    luyenDanTinhHoaAmount: 3,
+    spiritStoneCost: 1500,
+    baseDurationSeconds: 900,
+    specialIngredients: [{ materialId: 'yeu_dan_hung_giao', amount: 1 }],
+    retired: true,
   },
 ]
 

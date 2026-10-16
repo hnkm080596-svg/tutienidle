@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { LOGIN_ART } from './loginArt'
+import { useTemplateRef } from 'vue'
+import { prepareRenderedImage } from '@/presentation/assets/prepareRenderedImage'
+const wordmark = useTemplateRef<HTMLImageElement>('wordmark')
+defineExpose({ prepare: (signal: AbortSignal) => prepareRenderedImage(wordmark.value, signal) })
 
 const { t } = useI18n()
 </script>
@@ -8,7 +12,7 @@ const { t } = useI18n()
 <template>
   <header class="login-logo" data-hk-region="logo-block">
     <h1 class="login-logo__title">
-      <img class="login-logo__wordmark" :src="LOGIN_ART.wordmark" :alt="t('onboarding.auth.wordmark')" />
+      <img ref="wordmark" class="login-logo__wordmark" :src="LOGIN_ART.wordmark" :alt="t('onboarding.auth.wordmark')" />
     </h1>
   </header>
 </template>

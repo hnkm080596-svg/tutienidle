@@ -93,4 +93,50 @@ describe('notification queue', () => {
     expect(messages[0]).toBe('msg 0')
     expect(messages).not.toContain('msg 119')
   })
+
+  it('pushInstanceBatch aggregates multiple loot items received in the same instance into a single log entry', () => {
+    const notification = useNotificationStore()
+
+    notification.pushInstanceBatch([
+      {
+        kind: 'loot',
+        message: 'Hạ phẩm Linh Thạch ×120',
+        loot: { name: 'Hạ phẩm Linh Thạch', amountLabel: '×120' },
+      },
+      {
+        kind: 'loot',
+        message: 'Thập Niên Linh Mộc ×4',
+        loot: { name: 'Thập Niên Linh Mộc', amountLabel: '×4' },
+      },
+      {
+        kind: 'loot',
+        message: 'Hạ phẩm Linh Thạch ×30',
+        loot: { name: 'Hạ phẩm Linh Thạch', amountLabel: '×30' },
+      },
+    ])
+
+    expect(notification.logEntries).toHaveLength(1)
+    expect(notification.logEntries[0]?.lootItems).toEqual([
+      {
+        name: 'Hạ phẩm Linh Thạch',
+        count: 150,
+        amountLabel: '×150',
+        icon: undefined,
+        nameColorVar: undefined,
+        nameTone: undefined,
+        gradeLabel: undefined,
+      },
+      {
+        name: 'Thập Niên Linh Mộc',
+        count: 4,
+        amountLabel: '×4',
+        icon: undefined,
+        nameColorVar: undefined,
+        nameTone: undefined,
+        gradeLabel: undefined,
+      },
+    ])
+  })
 })
+
+

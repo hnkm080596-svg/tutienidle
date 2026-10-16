@@ -51,7 +51,7 @@ import { useOfflineSummaryStore } from './stores/offlineSummary'
 import { useSaveIssueStore } from './stores/saveIssue'
 import { installAutomationFlagsPersistence } from './stores/uiFlagsPersistence'
 import { useAppLifecycle, type BootOutcome } from './composables/useAppLifecycle'
-import { hasResumeCandidate, markResetNotice } from './composables/resumeSession'
+import { markResetNotice } from './composables/resumeSession'
 import { accountIdForSession, setSaveAccountId, resolveSaveKey } from './services/save/saveKeys'
 import {
   getDiagnosticRecorder,
@@ -231,24 +231,40 @@ const transitionOverlayRef = ref<{
 } | null>(null)
 
 const onboardingStageRef = ref<InstanceType<typeof OnboardingStage> | null>(null)
+const authEntryScreenRef = ref<InstanceType<typeof AuthEntryScreen> | null>(null)
 const onboardingTransitionId = ref<number | null>(null)
+const onboardingTransitionKind = ref<'entry' | 'scroll' | null>(null)
+const authAssetProgress = ref(0)
 const curtainPort: CurtainPort = {
   close: async (id, signal) => {
     const { currentRoute, targetRoute } = coordinator.getSnapshot()
+    if (targetRoute === 'auth' && onboardingStageRef.value?.isEntryPending()) {
+      onboardingTransitionId.value = id
+      onboardingTransitionKind.value = 'entry'
+      await onboardingStageRef.value.closeEntry(id, signal)
+      return
+    }
     const exchangesScroll = (currentRoute === 'auth' && targetRoute === 'character')
       || (currentRoute === 'character' && targetRoute === 'auth')
     if (exchangesScroll && onboardingStageRef.value) {
       onboardingTransitionId.value = id
+      onboardingTransitionKind.value = 'scroll'
       await onboardingStageRef.value.close(id, signal)
       return
     }
     onboardingTransitionId.value = null
+    onboardingTransitionKind.value = null
     await transitionOverlayRef.value?.close(id, signal)
   },
   open: async (id, signal) => {
     if (onboardingTransitionId.value === id && onboardingStageRef.value) {
-      try { await onboardingStageRef.value.open(id, signal) }
-      finally { onboardingTransitionId.value = null }
+      try {
+        if (onboardingTransitionKind.value === 'entry') await onboardingStageRef.value.openEntry(id, signal)
+        else await onboardingStageRef.value.open(id, signal)
+      } finally {
+        onboardingTransitionId.value = null
+        onboardingTransitionKind.value = null
+      }
       return
     }
     await transitionOverlayRef.value?.open(id, signal)
@@ -270,9 +286,28 @@ const deadlineScheduler: DeadlineScheduler | undefined =
 
 const coordinator = new GamePresentationCoordinator({
   sessionPort: gameManager.getPresentationPort(),
-  renderer: compositeRenderer,
+  renderer: {
+    deactivate: (route) => compositeRenderer.deactivate(route),
+    prepare: async (request, id, signal) => {
+      await compositeRenderer.prepare(request, id, signal)
+      if (request.target === 'auth') {
+        const stage = onboardingStageRef.value
+        const auth = authEntryScreenRef.value
+        if (!stage || !auth) throw new Error('Auth scene is not mounted')
+        await Promise.all([
+          auth.prepareArt(signal),
+          stage.isEntryPending() ? stage.prepareEntry(signal) : Promise.resolve(),
+        ])
+      }
+    },
+  },
   curtain: curtainPort,
-  assets: assetBundleManager,
+  assets: {
+    ensureFor: (request, signal) => assetBundleManager.ensureFor(request, signal,
+      request.target === 'auth'
+        ? ({ completed, total }) => { authAssetProgress.value = total === 0 ? 1 : completed / total }
+        : undefined),
+  },
   scheduler: deadlineScheduler,
   initialRoute: 'boot',
   initialBootSubphase: 'intro',
@@ -419,7 +454,6 @@ function onTransitionBack() {
 const bootFlow = useBootFlow(coordinator, routeAdapter)
 const entryStage = bootFlow.stage
 const bootError = ref('')
-let introHandle: number | undefined
 
 // BETA-FINAL PR11 / spec B8 - late-bind the diagnostic context now that the
 // coordinator and save coordinator exist: every recorded event then carries
@@ -1000,14 +1034,16 @@ function tick() {
     // buff/skill cooldown luon chay dung nhip thoi gian thuc.
     gameManager.tickOps.update(simulatedDelta)
 
-    // Beta Phase 4 (Notification/UX) - rut toast phat sinh TRONG
-    // GameManager (hien chi loot, xem GameManager.grantItemDrops())
-    // moi tick, day vao notificationStore de ToastContainer hien.
-    for (const event of gameManager.drainNotifications()) {
-      notification.push(
-        event.kind,
-        event.messageKey ? t(event.messageKey, event.messageParams ?? {}) : event.message,
-        event.loot,
+    // Beta Phase 4 (Notification/UX) - aggregate all notifications drained
+    // from a single tick/instance into the Dong Fu activity chatbox.
+    const drainedEvents = gameManager.drainNotifications()
+    if (drainedEvents.length > 0) {
+      notification.pushInstanceBatch(
+        drainedEvents.map((event) => ({
+          kind: event.kind,
+          message: event.messageKey ? t(event.messageKey, event.messageParams ?? {}) : event.message,
+          loot: event.loot,
+        })),
       )
     }
 
@@ -1265,15 +1301,8 @@ onMounted(() => {
     return
   }
 
-  // ui-audit creation-meta - reload used to replay the full 3s title intro
-  // even with a session+save on disk; resume candidates get a short beat.
-  // B1.8: async - the durable guest credential is hydrated here so the
-  // Electron restart path also earns the short intro.
-  void hasResumeCandidate().then((resumable) => {
-    introHandle = window.setTimeout(() => {
-      bootFlow.showAuth()
-    }, resumable ? 450 : 3000)
-  })
+  bootFlow.showAuth()
+
 })
 
 onUnmounted(() => {
@@ -1295,9 +1324,6 @@ onUnmounted(() => {
   automationFlagsUnsubscribe()
   disposeCombatPause()
 
-  if (introHandle) {
-    clearTimeout(introHandle)
-  }
 
   // Remediation Task 5 - symmetric cleanup: event-bus handlers, DOM
   // listeners, tick + autosave intervals (idempotent, goi lai mot cach an toan).
@@ -1334,22 +1360,16 @@ onUnmounted(() => {
 
 <template>
   <TestSandboxControls :entry-stage="entryStage" :leave-sandbox="leaveTestSandbox" />
-  <RouteMount v-if="entryStage === 'intro'" route="boot">
-    <LoadingScreen />
-  </RouteMount>
-
-  <!-- auth + character share ONE persistent OnboardingStage: the curtain
-       port exchanges the scroll inside a single backdrop (see
-       onboardingTransitionId). The RouteMount sits OUTSIDE that stage and
-       re-witnesses the active route via a bound :route - RouteMount's prop
-       watch re-marks auth->character without remounting the shared tree. -->
+  <!-- One persistent stage keeps the environment mounted from cold boot
+       through auth and character creation. RouteMount still witnesses the
+       exact active route; clouds own only the cold-boot presentation. -->
   <RouteMount
-    v-else-if="entryStage === 'auth' || entryStage === 'character'"
-    :route="entryStage === 'auth' ? 'auth' : 'character'"
+    v-if="entryStage === 'intro' || entryStage === 'auth' || entryStage === 'character'"
+    :route="entryStage === 'intro' ? 'boot' : entryStage === 'auth' ? 'auth' : 'character'"
   >
-    <OnboardingStage ref="onboardingStageRef">
-      <AuthEntryScreen v-if="entryStage === 'auth'" @authenticated="onAuthenticated" />
-      <CharacterCreationScreen v-else @back="bootFlow.showAuth" @complete="onCharacterCreated" />
+    <OnboardingStage ref="onboardingStageRef" :initial-opening="entryStage === 'intro'" :progress="authAssetProgress">
+      <AuthEntryScreen v-if="entryStage === 'auth'" ref="authEntryScreenRef" @authenticated="onAuthenticated" />
+      <CharacterCreationScreen v-else-if="entryStage === 'character'" @back="bootFlow.showAuth" @complete="onCharacterCreated" />
     </OnboardingStage>
   </RouteMount>
 
@@ -1407,7 +1427,7 @@ onUnmounted(() => {
     ref="transitionOverlayRef"
     :inert="authorityOverlayActive"
     :phase="routeAdapter.phase.value"
-    :paint-suppressed="onboardingTransitionId !== null"
+    :paint-suppressed="onboardingTransitionId !== null && !routeAdapter.error.value"
     :is-locked="routeAdapter.isLocked.value"
     :error="routeAdapter.error.value"
     :can-return-home="canRecoverToHome"

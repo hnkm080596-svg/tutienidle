@@ -15,7 +15,8 @@ import type { StatType } from '../../core/stats/StatTypes'
 // (Math.random, capped at 100, no pity). Stats apply per 20% milestone:
 // floor(progress/20) milestones grant percentAtFullTier * milestones/5
 // of each stat in `stats` (full value at 100).
-export const THONG_MACH_DAN_MATERIAL_ID = 'thong_mach_dan'
+export const TINH_HOA_BAO_THE_MATERIAL_ID = 'tinh_hoa_bao_the'
+export const THONG_MACH_DAN_MATERIAL_ID = TINH_HOA_BAO_THE_MATERIAL_ID
 
 export interface MeridianDefinition {
   id: string

@@ -211,10 +211,10 @@ describe('MeridianChapter - milestone stat emission', () => {
 })
 
 describe('MeridianChapter - chapter contract', () => {
-  it('descriptor: id/prefix/currency channels - thong_mach_dan la PILL', () => {
+  it('descriptor: id/prefix/currency channels - tinh_hoa_bao_the la MATERIAL', () => {
     expect(meridianChapter.id).toBe('meridian')
     expect(meridianChapter.modifierPrefix).toBe('bat-mach:')
-    expect(meridianChapter.currency).toEqual({ bag: 'pill', id: 'thong_mach_dan' })
+    expect(meridianChapter.currency).toEqual({ bag: 'material', id: 'tinh_hoa_bao_the' })
     expect(meridianChapter.auxCurrency).toBeUndefined()
   })
 

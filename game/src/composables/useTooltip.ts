@@ -80,6 +80,10 @@ export interface TechniqueTooltipContent {
 // rieng, Tooltip.vue render CHUNG 1 nhanh cho ca 3. Builder o tung
 // BagSection tuong ung (PillBagSection.vue/TalismanBagSection.vue/
 // FormationBagSection.vue).
+export interface RealmPassiveTooltipContent extends Omit<TechniqueTooltipContent, 'kind'> {
+  kind: 'realm-passive'
+}
+
 export interface GradedItemTooltipContent {
   kind: 'material' | 'pill' | 'talisman' | 'formation'
 
@@ -220,6 +224,9 @@ export interface StatBreakdownTooltipContent {
 // tag feature list. Single builder at useTalentTooltip.ts - every
 // talent surface reads it, none formats its own.
 export interface TalentTooltipContent {
+  flavor?: string
+  mechanics?: string
+  tradeoff?: string
   kind: 'talent'
 
   name: string
@@ -240,6 +247,7 @@ export interface TalentTooltipContent {
 export type TooltipContent =
   | PlainTooltipContent
   | TechniqueTooltipContent
+  | RealmPassiveTooltipContent
   | GradedItemTooltipContent
   | EquipmentTooltipContent
   | BuildingTooltipContent

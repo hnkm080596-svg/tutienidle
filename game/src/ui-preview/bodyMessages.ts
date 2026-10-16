@@ -5,7 +5,7 @@ export const bodyMessages = { vi: {
   vesselNames:['Nhâm Mạch','Đới Mạch','Âm Kiều Mạch','Âm Duy Mạch','Dương Duy Mạch','Dương Kiều Mạch','Xung Mạch','Đốc Mạch'],
   meridianGate:'Mở khóa ở Luyện Khí', cycleGate:'Hoàn thành Kỳ Kinh Bát Mạch trước', tieu:'Tiểu Chu Thiên',
   hp:'Khí huyết', might:'Sức mạnh', defense:'Phòng ngự', invest:'Tu Luyện',
-  resource:{refinement:'Tinh Hoa Phàm Thể',meridian:'Thông Mạch Đan',cycle:'Tinh Hoa Pháp Thể'},
+  resource:{refinement:'Tinh Hoa Phàm Thể',meridian:'Tinh Hoa Bảo Thể',cycle:'Tinh Hoa Pháp Thể'},
   lockedHint:'Điều kiện mở mốc sẽ được cung cấp khi nối logic.',
   notice:'Chỉ xem trước UI — chưa tu luyện hay tiêu hao nguyên liệu.', navNotice:'{name} — chưa có bản duyệt trong màn này.',
   // Mirrors the production `body.*` + `dongFu.aria` keys the fidelity

@@ -61,6 +61,7 @@ import {
   stableParallaxStack,
   stableSceneArtUrl,
   stableSymbolUrl,
+  talentIllustrationUrl,
 } from '@/presentation/huyenKim/StableSceneArt'
 import { HUYEN_KIM_CHROME } from '@/ui/huyenKimChrome'
 import { PC_PAPER_ICON_PATHS } from './PcPaperIcons'
@@ -86,6 +87,7 @@ import { STATUS_ICON_TEXTURES } from '@/data/vfx/StatusVfxPresets'
 export type AudioBundleId = 'audio-core' | 'audio-combat' | 'audio-tribulation'
 
 export type AssetBundleId =
+  | 'auth-opening'
   | 'core-ui'
   | 'home'
   | 'combat'
@@ -849,6 +851,14 @@ export function getUiChromeDescriptors(): readonly AssetResourceDescriptor[] {
  */
 export function getUiSceneDescriptors(): readonly AssetResourceDescriptor[] {
   const urls: string[] = []
+  for (const id of STABLE_SYMBOL_IDS) {
+    if (!id.startsWith('talent-')) continue
+    const illustration = talentIllustrationUrl(id.slice(7))
+    if (illustration) urls.push(illustration)
+  }
+  urls.push(...['talent-field-v1.png', 'technique-codex-v1.png', 'technique-fire-codex-v1.png'].map(
+    (filename) => `/assets/ui/tien-hiep-2026-10/character-presentation/${filename}`,
+  ))
   const density = preferredDomDensity()
 
   // HuyenKimParallaxStack srcset picks one density per DPR - warm the
@@ -878,6 +888,17 @@ export function getUiSceneDescriptors(): readonly AssetResourceDescriptor[] {
 
 export function getBundleDescriptors(bundleId: AssetBundleId): readonly AssetResourceDescriptor[] {
   switch (bundleId) {
+    case 'auth-opening':
+      return domImageDescriptors([
+        '/assets/ui/tien-hiep-2026-10/auth-opening/backdrop-clean-v1.png',
+        '/assets/ui/tien-hiep-2026-10/auth-opening/mortal-wind-strip-v1.png',
+        '/assets/ui/tien-hiep-2026-10/auth-opening/crane-flight-strip-v1.png',
+        '/assets/ui/tien-hiep-2026-10/auth-opening/cloud-curtain-v1.png',
+        '/assets/ui/huyen-kim/scene/login-v2/wordmark.png',
+        '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png',
+        '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png',
+        '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png',
+      ])
     case 'core-ui':
       return getCoreUiDescriptors()
     case 'home':
@@ -923,8 +944,9 @@ export function getBundlesForRoute(target: Route): readonly AssetBundleId[] {
       return ['core-ui', 'combat']
     case 'tribulation':
       return ['core-ui', 'tribulation']
-    case 'boot':
     case 'auth':
+      return ['auth-opening']
+    case 'boot':
     case 'character':
     case 'error':
       return []

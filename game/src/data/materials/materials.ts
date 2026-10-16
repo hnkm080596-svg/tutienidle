@@ -85,7 +85,7 @@ const legacyMaterials: Material[] = [
     category: 'other',
     sourceType: 'boss',
     icon: '/assets/materials/yeu_dan_hung_giao.png',
-    description: 'Đan hạch ngưng tụ trong thân Hung Giao Xà — nguyên liệu chính luyện Thông Mạch Đan.',
+    description: 'Đan hạch ngưng tụ trong thân Hung Giao Xà — nguyên liệu chính luyện Trúc Cơ Đan.',
     stackLimit: 100,
   },
   // Companion gacha (2026-09-12, companion-gacha plan Task 6) - pull

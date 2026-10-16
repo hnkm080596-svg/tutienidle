@@ -31,7 +31,7 @@ import {
   isMeridianPageUnlocked,
   listMeridianPages,
 } from '@/core/realm/body/MeridianPages'
-import { MERIDIANS, THONG_MACH_DAN_MATERIAL_ID } from '@/data/realm/Meridians'
+import { MERIDIANS, TINH_HOA_BAO_THE_MATERIAL_ID } from '@/data/realm/Meridians'
 import { MERIDIAN_FULL_PROGRESS, readMeridianProgress } from '@/core/realm/body/MeridianChapter'
 import { REALMS } from '@/data/realms/realm'
 import {
@@ -73,10 +73,10 @@ function materialName(manager: GameManager, id: string): string {
     : id
 }
 
-function pillName(manager: GameManager, id: string): { name: string; icon?: string } {
-  if (!manager.pillRegistry.has(id)) return { name: id }
-  const pill = manager.pillRegistry.get(id)
-  return { name: pill.name, icon: pill.icon }
+function materialIcon(manager: GameManager, id: string): string | undefined {
+  return manager.materialRegistry.has(id)
+    ? manager.materialRegistry.get(id).icon
+    : undefined
 }
 
 function buildRefinementUnits(
@@ -163,8 +163,9 @@ function buildMeridianUnits(
     (meridian) => (meridianProgress[meridian.id] ?? 0) < 100,
   )
   const seqUnlocked = isBodyChapterUnlocked(player, 'meridian')
-  const ownedPills = manager.pillBag.getAmount(THONG_MACH_DAN_MATERIAL_ID)
-  const pill = pillName(manager, THONG_MACH_DAN_MATERIAL_ID)
+  const ownedEssence = manager.materialBag.getAmount(TINH_HOA_BAO_THE_MATERIAL_ID)
+  const essenceName = materialName(manager, TINH_HOA_BAO_THE_MATERIAL_ID)
+  const essenceIcon = materialIcon(manager, TINH_HOA_BAO_THE_MATERIAL_ID)
 
   // Paged model (M-E D2): a page whose realm the player has not reached
   // renders its rows locked with a page-level gate line.
@@ -232,17 +233,17 @@ function buildMeridianUnits(
         percent: true,
       })),
       costs: [{
-        id: THONG_MACH_DAN_MATERIAL_ID,
-        name: pill.name,
-        icon: pill.icon,
-        have: ownedPills,
+        id: TINH_HOA_BAO_THE_MATERIAL_ID,
+        name: essenceName,
+        icon: essenceIcon,
+        have: ownedEssence,
         need: meridian.thongMachDanCost,
-        met: ownedPills >= meridian.thongMachDanCost,
+        met: ownedEssence >= meridian.thongMachDanCost,
       }],
       gates,
       actionable: status === 'next',
       canInvest: pageUnlocked && seqUnlocked && status === 'next'
-        && ownedPills >= meridian.thongMachDanCost && paced,
+        && ownedEssence >= meridian.thongMachDanCost && paced,
       progress: { value: progressPercent, max: 100 },
       progressPercent,
     }
@@ -595,7 +596,7 @@ export function useBodySceneModel() {
       meridian => (progressBefore[meridian.id] ?? 0) < MERIDIAN_FULL_PROGRESS,
     )
     const targetId = targetIndex >= 0 ? MERIDIANS[targetIndex]!.id : undefined
-    const haveBefore = gameManager.pillBag.getAmount(THONG_MACH_DAN_MATERIAL_ID)
+    const haveBefore = gameManager.materialBag.getAmount(TINH_HOA_BAO_THE_MATERIAL_ID)
     const consumed = investActive(chapterId)
     if (consumed <= 0) {
       return { consumed, pour: null }
@@ -612,7 +613,7 @@ export function useBodySceneModel() {
         : {
           consumed,
           haveFrom: haveBefore,
-          haveTo: gameManager.pillBag.getAmount(THONG_MACH_DAN_MATERIAL_ID),
+          haveTo: gameManager.materialBag.getAmount(TINH_HOA_BAO_THE_MATERIAL_ID),
           progressPerMaterial: progressDelta / consumed,
           tierProgress: targetBefore,
           tierStartIndex: targetIndex,

@@ -1,7 +1,13 @@
+import type { RealmPassiveTooltipContent } from '@/composables/useTooltip'
 export interface RealmUiPassive {
   id: string
   name: string
   description: string
+  iconUrl?: string
+  tierLabel?: string
+  tierIndex?: number
+  tierCount?: number
+  tooltip?: RealmPassiveTooltipContent
   effectLines: readonly string[]
 }
 

@@ -1,7 +1,14 @@
 import { parseMaterialReceiptState, sameMaterialReceipt, receiptId, MAX_PENDING_MATERIAL_DELIVERIES, type MaterialGrant, type MaterialReceipt, type MaterialReceiptState } from './MaterialReceipt'
 import type { Material } from './Material'
 import type { MaterialStack } from './MaterialStack'
-import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
+import { MAX_STACK_AMOUNT, MATERIAL_BAG_SLOT_CAPACITY } from '../inventory/StackLimits'
+
+
+function slotsForStack(material: Material, amount: number): number {
+  if (amount <= 0) return 0
+  if (material.stackLimit !== undefined) return 1
+  return Math.ceil(amount / MAX_STACK_AMOUNT)
+}
 
 
 export class MaterialBag {
@@ -125,9 +132,42 @@ export class MaterialBag {
   private readonly materials =
     new Map<string, MaterialStack>()
 
+  /** Total bag slots currently occupied across all materials. */
+  getUsedSlots(): number {
+    let used = 0
+    for (const stack of this.materials.values()) {
+      used += slotsForStack(stack.material, stack.amount)
+    }
+    return used
+  }
+
+  /** Remaining empty bag slots out of MATERIAL_BAG_SLOT_CAPACITY (100). */
+  getFreeSlots(): number {
+    return Math.max(0, MATERIAL_BAG_SLOT_CAPACITY - this.getUsedSlots())
+  }
+
+  private maxTotalAmountForMaterial(material: Material, existingAmount: number): number {
+    if (material.stackLimit === Number.MAX_SAFE_INTEGER) {
+      return Number.MAX_SAFE_INTEGER
+    }
+    if (material.stackLimit !== undefined) {
+      if (existingAmount > 0 || this.getFreeSlots() > 0) {
+        return material.stackLimit
+      }
+      return 0
+    }
+    const ownSlots = slotsForStack(material, existingAmount)
+    const otherSlots = this.getUsedSlots() - ownSlots
+    const availableSlots = Math.max(0, MATERIAL_BAG_SLOT_CAPACITY - otherSlots)
+    return availableSlots * MAX_STACK_AMOUNT
+  }
 
   /**
-   * Cong don stack, clamp tai stackLimit (mac dinh MAX_STACK_AMOUNT).
+   * Cong don stack:
+   * - Neu material co explicit stackLimit (vd: yeu_dan_hung_giao=100,
+   *   chieu_hien_lenh=999, currency=MAX_SAFE_INTEGER), clamp theo stackLimit.
+   * - Neu material khong co stackLimit rieng, moi o chua MAX_STACK_AMOUNT (1000)
+   *   va tu dong mo sang o moi mien la tui con cho trong (toi da 100 o).
    * Tra ve luong TRAN bi mat (0 neu vua du cho) - caller duong reward
    * dung de bao "tui day" thay vi mat lang le.
    */
@@ -142,17 +182,17 @@ export class MaterialBag {
       return 0
     }
 
-    const limit = material.stackLimit ?? MAX_STACK_AMOUNT
-
     const existing =
       this.materials.get(
         material.id,
       )
+    const existingAmount = existing?.amount ?? 0
+    const limit = this.maxTotalAmountForMaterial(material, existingAmount)
 
     if (existing) {
-      const next = Math.min(existing.amount + amount, limit)
+      const next = Math.max(existingAmount, Math.min(existingAmount + amount, limit))
 
-      const overflow = existing.amount + amount - next
+      const overflow = existingAmount + amount - next
 
       existing.amount = next
 
@@ -160,6 +200,9 @@ export class MaterialBag {
     }
 
     const stored = Math.min(amount, limit)
+    if (stored <= 0) {
+      return amount
+    }
 
     this.materials.set(
       material.id,
@@ -187,18 +230,14 @@ export class MaterialBag {
       return 0
     }
 
-    const limit = material.stackLimit ?? MAX_STACK_AMOUNT
-
     const existing =
       this.materials.get(
         material.id,
       )
+    const existingAmount = existing?.amount ?? 0
+    const limit = this.maxTotalAmountForMaterial(material, existingAmount)
 
-    if (!existing) {
-      return Math.min(amount, limit)
-    }
-
-    return Math.max(0, Math.min(amount, limit - existing.amount))
+    return Math.max(0, Math.min(amount, limit - existingAmount))
   }
 
 

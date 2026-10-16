@@ -13,7 +13,8 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { formatNumber } from '@/core/format/NumberFormatter'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { techniqueCodexUrl } from '@/presentation/technique/techniqueArt'
+import { getActiveElement } from '@/core/player/CultivationPathSystem'
 import { TECHNIQUE_TIER_LABELS } from '@/core/technique/TechniqueProgression'
 import { ITEM_QUALITY_LABELS } from '@/core/item/ItemQuality'
 import type { TechniqueTier } from '@/core/technique/Technique'
@@ -23,7 +24,6 @@ import TechniqueFidelityScene from './fidelity/TechniqueFidelityScene.vue'
 import type { TechniqueUiModel } from './fidelity/techniqueUi'
 
 const TIER_ORDER: readonly TechniqueTier[] = ['so_nhap', 'tieu_thanh', 'dai_thanh', 'vien_man']
-const FALLBACK_ART = '/assets/ui/huyen-kim/scene/technique-v2/temporary-manual-v1.png'
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -68,10 +68,8 @@ const model = computed<TechniqueUiModel>(() => {
     name: m.name ?? '',
     quality: m.quality !== undefined ? ITEM_QUALITY_LABELS[m.quality] : '',
     description: m.description ?? t('panels.skillPath.technique.emptyNoTechnique'),
-    // Centerpiece is a 433x404 vista slot; m.icon is a 32px bag/spellbook
-    // icon that flattens into a blob when scaled up. The scroll manual art
-    // stands in until per-technique illustrations land.
-    art: resolveAssetUrl(FALLBACK_ART),
+    // The codex is shared decorative art; technique identity stays in the model.
+    art: techniqueCodexUrl(m.element ?? getActiveElement(player.$state)),
     sections: m.sections.map((section, s) => ({
       id: `section-${s}`,
       title: section.label,
@@ -102,7 +100,7 @@ const model = computed<TechniqueUiModel>(() => {
     materialNote: '',
     advanceDisabled: !advance.available,
     disabledReason: disabledReasonLabel(advance.disabledReason),
-    artTemporary: true,
+    artTemporary: false,
   }
 })
 

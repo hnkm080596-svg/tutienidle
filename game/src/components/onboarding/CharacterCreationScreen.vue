@@ -162,7 +162,7 @@ const art = {
   cloud: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament@2x.png'),
   lock: resolveAssetUrl('/assets/ui/huyen-kim/symbols/lock.svg'),
 }
-const style = { '--trial-panel': `url('${art.panel}')` }
+const style = { '--trial-panel': `url('${art.panel}')`, '--talent-field': `url('${resolveAssetUrl('/assets/ui/tien-hiep-2026-10/character-presentation/talent-field-v1.png')}')` }
 </script>
 
 <template>
@@ -180,14 +180,16 @@ const style = { '--trial-panel': `url('${art.panel}')` }
       <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}</h2>
       <div class="trial-talent-workspace">
         <div class="trial-talent-grid" data-hk-region="talent-grid" role="radiogroup" :aria-label="t('onboarding.creation.talentStep.sectionTitle')">
-          <button v-for="talent in talents" :key="talent.id" type="button" role="radio" :aria-checked="selectedTalentIds.includes(talent.id)" :data-testid="`creation-talent-${talent.id}`" :class="{ selected: selectedTalentIds.includes(talent.id) }" :disabled="rolling || creating" v-tooltip="buildTalentTooltip(talent, t)" @click="toggleTalent(talent)"><span class="trial-talent-seal"><img :src="talentIconUrl(talent)" alt=""></span><b>{{ talent.name }}</b></button>
+          <button v-for="talent in talents" :key="talent.id" :data-rarity="talent.rarity" type="button" role="radio" :aria-checked="selectedTalentIds.includes(talent.id)" :data-testid="`creation-talent-${talent.id}`" :class="{ selected: selectedTalentIds.includes(talent.id) }" :disabled="rolling || creating" v-tooltip="buildTalentTooltip(talent, t)" @click="toggleTalent(talent)"><span class="trial-talent-seal"><img :src="talentIconUrl(talent)" alt=""></span><b>{{ talent.name }}</b></button>
           <button v-for="slot in lockedTalentSlots" :key="`locked-${slot}`" type="button" disabled class="locked" :data-testid="`creation-locked-talent-${slot}`"><b>?</b><i>{{ t('onboarding.creation.talentStep.locked') }}</i></button>
         </div>
         <aside class="trial-talent-detail" aria-live="polite">
           <template v-if="selectedTalentCard">
             <span class="trial-talent-seal"><img :src="selectedTalentCard.imagePath" alt=""></span>
-            <h3>{{ selectedTalentCard.name }} · {{ selectedTalentCard.rarityLabel }}</h3>
-            <p>{{ selectedTalentCard.description }}</p>
+            <span class="trial-talent-rarity" :data-rarity="selectedTalentCard.rarity">{{ selectedTalentCard.rarityLabel }}</span><h3>{{ selectedTalentCard.name }}</h3>
+            <p v-if="selectedTalentCard.flavor" class="trial-talent-flavor">{{ selectedTalentCard.flavor }}</p>
+            <section class="trial-talent-mechanics"><h4>{{ t('talents.mechanics') }}</h4><p>{{ selectedTalentCard.mechanics ?? selectedTalentCard.description }}</p></section>
+            <section v-if="selectedTalentCard.tradeoff" class="trial-talent-tradeoff"><h4>{{ t('talents.tradeoff') }}</h4><p>{{ selectedTalentCard.tradeoff }}</p></section>
             <h4 class="trial-section-title">{{ selectedTalentCard.featuresLabel }}</h4>
             <ul><li v-for="label in selectedTalentCard.tagLabels" :key="label">{{ label }}</li></ul>
           </template>
@@ -293,4 +295,23 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 .trial-creation-art .pc-paper-button:not(:disabled):not([aria-disabled="true"]):is(:hover, :focus-visible)::after { background: linear-gradient(180deg, #f6e7c4 0%, #e7cb92 100%); }
 .trial-notice { position: absolute; bottom: -35px; left: 0; right: 0; text-align: center; color: #543d21; font-size: 16px; margin: 0; min-height: 1.2em; }
 .creation-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.trial-talent-workspace { position: relative; gap: 14px; height: 276px; padding: 10px; grid-template-columns: 320px minmax(0,1fr); border: 1px solid #a68a5266; background: #101c18 var(--talent-field) center/cover no-repeat; box-shadow: inset 0 0 30px #0005; }
+.trial-talent-grid { gap: 6px; min-height: 0; }
+.trial-talent-grid button { position: relative; min-height: 0; padding: 5px; gap: 3px; border: 1px solid #b09a6366; background: #10241cbb; box-shadow: inset 0 0 12px #0c181c; font-size: 13px; }
+.trial-talent-grid button.selected { border: 1px solid #f1d394; background: linear-gradient(150deg,#b0894566,#16291ee6); box-shadow: inset 0 0 0 2px #d4ae5b55,0 0 10px #dfc27b44; }
+.trial-talent-grid button.selected::after { content: ''; position: absolute; right: 5px; top: 5px; width: 5px; height: 5px; background: #f7dfa2; transform: rotate(45deg); }
+.trial-talent-grid button:focus-visible { outline: 2px solid #f4e6ba; outline-offset: 2px; }
+.trial-talent-seal { width: 52px; height: 52px; border: 0; border-radius: 0; background: none; }
+.trial-talent-seal img { width: 52px; height: 52px; filter: drop-shadow(0 2px 3px #0006); }
+.trial-talent-detail { padding: 12px; border: 0; border-left: 1px solid #d4b47855; background: #0f1d16c9; text-align: left; }
+.trial-talent-detail .trial-talent-seal { width: 82px; height: 82px; float: left; margin: 0 12px 9px 0; }
+.trial-talent-detail .trial-talent-seal img { width: 82px; height: 82px; }
+.trial-talent-detail h3 { margin: 4px 0 12px; font-size: 22px; }
+.trial-talent-rarity { color: #d8b77f; font-size: 12px; letter-spacing: .12em; }
+.trial-talent-detail .trial-talent-flavor { clear: both; color: #b9b39d; font-style: italic; font-size: 13px; }
+.trial-talent-mechanics,.trial-talent-tradeoff { margin: 10px 0; padding-left: 9px; border-left: 2px solid #799a7c; }
+.trial-talent-tradeoff { border-color: #b77d66; }
+.trial-talent-detail .trial-talent-mechanics h4,.trial-talent-detail .trial-talent-tradeoff h4 { font-size: 12px; color: #b7c5a5; margin: 0; letter-spacing: .08em; }
+.trial-talent-detail .trial-talent-tradeoff h4 { color: #d4a28e; }
+.trial-talent-detail .trial-talent-mechanics p,.trial-talent-detail .trial-talent-tradeoff p { margin: 5px 0; font-size: 14px; line-height: 1.6; }
 </style>

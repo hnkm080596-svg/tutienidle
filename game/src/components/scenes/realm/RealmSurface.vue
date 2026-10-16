@@ -16,12 +16,17 @@ import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequiremen
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
 import { playBreakthroughFx } from '@/components/fx/breakthroughFx'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
+import {
+  buildBreakthroughGrowthSnapshot,
+  type BreakthroughGrowthSnapshot,
+} from '@/core/realm/RealmFoundationGrowth'
 import { betaNextRealmSurfaceFor } from '@/core/betaScopeSurface'
 import { isActivePath } from '@/core/player/CultivationPathSystem'
 import { isScopeHidden } from '@/core/betaScope'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
+import BreakthroughGrowthModal from './BreakthroughGrowthModal.vue'
 import RealmFidelityScene from './fidelity/RealmFidelityScene.vue'
 import type { RealmUiModel } from './fidelity/realmUi'
 
@@ -37,6 +42,7 @@ const { realmStatPassiveRows } = useRealmStatPassives()
 const selected = ref(0)
 const advancing = ref(false)
 const displayedFloor = ref<number | null>(null)
+const growthSnapshot = ref<BreakthroughGrowthSnapshot | null>(null)
 
 const canBreakthrough = computed(() => gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state))
 const nextRealmSurface = computed(() => betaNextRealmSurfaceFor(player.$state))
@@ -104,7 +110,10 @@ function onSelectFloor(floor: number) {
 // floor until playBreakthroughFx resolves at the qi-burst peak.
 async function onAdvanceFloor() {
   if (!model.value.canAdvanceFloor || advancing.value) return
+  const fromRealmId = player.realmId
   const previousFloor = player.realmLevel
+  const fromAttributePoints = player.attributePoints
+  const fromStats = { ...player.finalStats }
   displayedFloor.value = previousFloor
   selected.value = previousFloor
   const result = gameManager.realmAdvanceOps.breakthroughWithConsequences(player)
@@ -122,7 +131,22 @@ async function onAdvanceFloor() {
     displayedFloor.value = null
     selected.value = player.realmLevel
     advancing.value = false
+    growthSnapshot.value = buildBreakthroughGrowthSnapshot({
+      fromRealmId,
+      fromLevel: previousFloor,
+      fromAttributePoints,
+      fromStats,
+      toRealmId: player.realmId,
+      toLevel: player.realmLevel,
+      toAttributePoints: player.attributePoints,
+      toStats: player.finalStats,
+    })
   }
+}
+
+function onOpenAttributesFromGrowth() {
+  growthSnapshot.value = null
+  ui.openLeftPanel('character')
 }
 
 function onBreakthrough() {
@@ -142,9 +166,20 @@ function onQuanKhi() {
 // minor FX inhale, wait for the FX peak finally-block to flip selected.
 watch(
   () => [player.realmId, player.realmLevel] as const,
-  () => {
+  ([nextRealmId, nextLevel], [prevRealmId, prevLevel]) => {
     if (displayedFloor.value === null) {
       selected.value = player.realmLevel
+    }
+    if (prevRealmId && nextRealmId !== prevRealmId) {
+      growthSnapshot.value = buildBreakthroughGrowthSnapshot({
+        fromRealmId: prevRealmId,
+        fromLevel: prevLevel,
+        fromAttributePoints: player.attributePoints,
+        toRealmId: nextRealmId,
+        toLevel: nextLevel,
+        toAttributePoints: player.attributePoints,
+        toStats: player.finalStats,
+      })
     }
   },
 )
@@ -160,6 +195,11 @@ watch(
       @breakthrough="onBreakthrough"
       @quan-khi="onQuanKhi"
       @back="ui.closeHomeOverlays()"
+    />
+    <BreakthroughGrowthModal
+      :snapshot="growthSnapshot"
+      @close="growthSnapshot = null"
+      @open-attributes="onOpenAttributesFromGrowth"
     />
   </SceneDesignCanvas>
 </template>
