@@ -444,3 +444,104 @@ describe('logout - B1.9 ordered legs with honest outcome', () => {
     expect(outcome.signout).toBe('confirmed')
   })
 })
+
+describe('SupabaseAuthService with publishable key (sb_publishable_...)', () => {
+  it('omits Authorization on unauthenticated signup/login/refresh and attaches Bearer user token on claim', async () => {
+    const pubConfig = { url: 'https://example.supabase.co', anonKey: 'sb_publishable_live_key' }
+    const pubService = new SupabaseAuthService(pubConfig, BUILD)
+    const recordedHeaders: Array<{ url: string; headers: Record<string, string> }> = []
+
+    vi.stubGlobal('navigator', { userAgent: 'VitestBrowser/1.0' })
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+      recordedHeaders.push({
+        url,
+        headers: (init?.headers ?? {}) as Record<string, string>,
+      })
+      if (url.includes('/auth/v1/signup')) {
+        return new Response(JSON.stringify({
+          access_token: 'jwt-guest-token',
+          refresh_token: 'rt-guest-token',
+          expires_in: 3600,
+          user: { id: 'u-guest-pub' },
+        }), { status: 200 })
+      }
+      if (url.includes('/rest/v1/rpc/claim_active_session')) {
+        return new Response(JSON.stringify({
+          status: 'ADMITTED',
+          sessionId: 'gs-pub-1',
+          protocolVersion: 1,
+        }), { status: 200 })
+      }
+      return new Response('{}', { status: 500 })
+    }))
+
+    const res = await pubService.authenticate('guest')
+    expect(res.ok).toBe(true)
+    expect(recordedHeaders).toHaveLength(2)
+
+    // 1. Unauthenticated /auth/v1/signup -> apikey only, NO Authorization header
+    expect(recordedHeaders[0]!.url).toContain('/auth/v1/signup')
+    expect(recordedHeaders[0]!.headers.apikey).toBe('sb_publishable_live_key')
+    expect(recordedHeaders[0]!.headers.Authorization).toBeUndefined()
+
+    // 2. Authenticated /rest/v1/rpc/claim_active_session -> apikey + Bearer user JWT
+    expect(recordedHeaders[1]!.url).toContain('/rest/v1/rpc/claim_active_session')
+    expect(recordedHeaders[1]!.headers.apikey).toBe('sb_publishable_live_key')
+    expect(recordedHeaders[1]!.headers.Authorization).toBe('Bearer jwt-guest-token')
+  })
+
+  it('falls back to provision_game_account + password grant when GoTrue blocks anonymous signup or .invalid email', async () => {
+    const pubConfig = { url: 'https://example.supabase.co', anonKey: 'sb_publishable_live_key' }
+    const pubService = new SupabaseAuthService(pubConfig, BUILD)
+
+    vi.stubGlobal('navigator', { userAgent: 'VitestBrowser/1.0' })
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.includes('/auth/v1/signup')) {
+        return new Response(
+          JSON.stringify({ code: 400, error_code: 'email_address_invalid', msg: 'Email invalid' }),
+          { status: 400 },
+        )
+      }
+      if (url.includes('/rest/v1/rpc/provision_game_account')) {
+        return new Response(
+          JSON.stringify({
+            status: 'CREATED',
+            userId: 'u-reg-prov',
+            email: 'daohuu1@accounts.tien-hiep-idle.invalid',
+            loginId: 'daohuu1',
+          }),
+          { status: 200 },
+        )
+      }
+      if (url.includes('/auth/v1/token?grant_type=password')) {
+        return new Response(
+          JSON.stringify({
+            access_token: 'jwt-reg-token',
+            refresh_token: 'rt-reg-token',
+            expires_in: 3600,
+            user: { id: 'u-reg-prov' },
+          }),
+          { status: 200 },
+        )
+      }
+      if (url.includes('/rest/v1/rpc/claim_active_session')) {
+        return new Response(
+          JSON.stringify({ status: 'ADMITTED', sessionId: 'gs-reg-1', protocolVersion: 1 }),
+          { status: 200 },
+        )
+      }
+      return new Response('{}', { status: 500 })
+    }))
+
+    const res = await pubService.authenticate('register', { loginId: 'daohuu1', password: 'password123' })
+    expect(res).toEqual({
+      ok: true,
+      session: {
+        sessionId: 'gs-reg-1',
+        mode: 'register',
+        loginId: 'daohuu1',
+        userId: 'u-reg-prov',
+      },
+    })
+  })
+})

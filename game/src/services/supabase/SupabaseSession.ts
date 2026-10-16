@@ -276,7 +276,11 @@ async function performRefresh(
 export async function resolveSupabaseSession(config: SupabaseConfig): Promise<StoredSupabaseSession | null> {
   const session = readSupabaseSession()
   if (!session) return null
-  if (session.expiresAtMs !== undefined && session.expiresAtMs - REFRESH_SKEW_MS > Date.now()) {
+  if (
+    session.accessToken.trim().length > 0 &&
+    session.expiresAtMs !== undefined &&
+    session.expiresAtMs - REFRESH_SKEW_MS > Date.now()
+  ) {
     return session
   }
 

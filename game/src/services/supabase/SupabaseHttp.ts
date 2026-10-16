@@ -1,4 +1,4 @@
-import type { SupabaseConfig } from './SupabaseConfig'
+import { isSupabasePublishableKey, type SupabaseConfig } from './SupabaseConfig'
 
 export class SupabaseHttpError extends Error {
   constructor(readonly status: number, readonly payload: unknown) {
@@ -9,6 +9,41 @@ export class SupabaseHttpError extends Error {
 // Audit T3-24 - no request may hang forever: every Supabase call carries
 // a 10s deadline, merged with any caller-provided signal.
 export const SUPABASE_REQUEST_TIMEOUT_MS = 10_000
+
+export function buildSupabaseHeaders(
+  config: SupabaseConfig,
+  accessToken?: string,
+  extraHeaders?: HeadersInit,
+): Record<string, string> {
+  const apiKey = config.anonKey.trim()
+  const trimmedToken = accessToken?.trim()
+  const headers: Record<string, string> = {
+    apikey: apiKey,
+    'Content-Type': 'application/json',
+  }
+
+  if (trimmedToken) {
+    headers.Authorization = `Bearer ${trimmedToken}`
+  } else if (!isSupabasePublishableKey(apiKey)) {
+    headers.Authorization = `Bearer ${apiKey}`
+  }
+
+  if (extraHeaders) {
+    if (extraHeaders instanceof Headers) {
+      extraHeaders.forEach((value, key) => {
+        headers[key] = value
+      })
+    } else if (Array.isArray(extraHeaders)) {
+      for (const [key, value] of extraHeaders) {
+        headers[key] = value
+      }
+    } else {
+      Object.assign(headers, extraHeaders)
+    }
+  }
+
+  return headers
+}
 
 export async function requestSupabase<T>(
   config: SupabaseConfig,
@@ -24,12 +59,7 @@ export async function requestSupabase<T>(
   const response = await fetch(`${config.url}${path}`, {
     ...init,
     signal,
-    headers: {
-      apikey: config.anonKey,
-      Authorization: `Bearer ${accessToken ?? config.anonKey}`,
-      'Content-Type': 'application/json',
-      ...init.headers,
-    },
+    headers: buildSupabaseHeaders(config, accessToken, init.headers),
   })
 
   const text = await response.text()

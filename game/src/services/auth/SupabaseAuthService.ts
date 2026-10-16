@@ -99,11 +99,84 @@ function isEmailExistsError(error: SupabaseHttpError): boolean {
   )
 }
 
+interface ProvisionGameAccountResponse {
+  status?: string
+  code?: string
+  email?: string
+  password?: string
+  loginId?: string
+}
+
+function shouldFallbackToProvision(mode: 'guest' | 'register', error: SupabaseHttpError): boolean {
+  const raw = JSON.stringify(error.payload ?? '')
+  if (mode === 'guest') {
+    return error.status === 422 || /anonymous_provider_disabled/i.test(raw)
+  }
+  return /email_address_invalid/i.test(raw)
+}
+
 export class SupabaseAuthService implements AuthService {
   constructor(
     private readonly config: SupabaseConfig,
     private readonly build: ClientBuildInfo,
   ) {}
+
+  private async provisionAndSignIn(
+    mode: 'guest' | 'register',
+    credentials?: AuthCredentials,
+  ): Promise<GoTrueResponse> {
+    const provisioned = await requestSupabase<ProvisionGameAccountResponse>(
+      this.config,
+      '/rest/v1/rpc/provision_game_account',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          p_mode: mode,
+          p_login_id: credentials?.loginId ?? null,
+          p_password: credentials?.password ?? null,
+        }),
+      },
+    )
+    if (provisioned.status === 'REJECTED' && provisioned.code === 'ID_TAKEN') {
+      throw new SupabaseHttpError(400, { error_code: 'user_already_exists' })
+    }
+    const email = provisioned.email
+    const password = mode === 'guest' ? provisioned.password : credentials?.password
+    if (provisioned.status !== 'CREATED' || !email || !password) {
+      throw new SupabaseHttpError(500, provisioned)
+    }
+    return requestSupabase<GoTrueResponse>(this.config, '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+  }
+
+  private async signupOrProvision(
+    mode: 'guest' | 'register',
+    credentials?: AuthCredentials,
+  ): Promise<GoTrueResponse> {
+    try {
+      const auth = await requestSupabase<GoTrueResponse>(this.config, '/auth/v1/signup', {
+        method: 'POST',
+        body: JSON.stringify(
+          mode === 'guest'
+            ? { data: { account_kind: 'guest' } }
+            : {
+                email: accountEmail(credentials!.loginId),
+                password: credentials!.password,
+                data: { login_id: credentials!.loginId.toLowerCase(), account_kind: 'registered' },
+              },
+        ),
+      })
+      if (auth?.access_token) return auth
+      return this.provisionAndSignIn(mode, credentials)
+    } catch (error) {
+      if (error instanceof SupabaseHttpError && shouldFallbackToProvision(mode, error)) {
+        return this.provisionAndSignIn(mode, credentials)
+      }
+      throw error
+    }
+  }
 
   private async claim(accessToken: string): Promise<{ ok: true; sessionId: string } | { ok: false; result: AuthResult }> {
     const claim = await requestSupabase<ClaimActiveSessionResponse>(this.config, '/rest/v1/rpc/claim_active_session', {
@@ -141,12 +214,7 @@ export class SupabaseAuthService implements AuthService {
         ? await requestSupabase<GoTrueResponse>(this.config, '/auth/v1/token?grant_type=password', {
             method: 'POST', body: JSON.stringify({ email: accountEmail(credentials!.loginId), password: credentials!.password }),
           })
-        : await requestSupabase<GoTrueResponse>(this.config, '/auth/v1/signup', {
-            method: 'POST',
-            body: JSON.stringify(mode === 'guest'
-              ? { data: { account_kind: 'guest' } }
-              : { email: accountEmail(credentials!.loginId), password: credentials!.password, data: { login_id: credentials!.loginId.toLowerCase(), account_kind: 'registered' } }),
-          })
+        : await this.signupOrProvision(mode, credentials)
 
       const claim = await this.claim(auth.access_token)
       if (!claim.ok) return claim.result

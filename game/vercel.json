@@ -3,6 +3,14 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "build": {
+    "env": {
+      "VITE_BACKEND_MODE": "supabase",
+      "VITE_SUPABASE_URL": "https://ohndbcpnevljwytstbxq.supabase.co",
+      "VITE_SUPABASE_ANON_KEY": "sb_publishable_MVcy3nW2SIYkT_QirG96Gw_8SY1Zjte",
+      "VITE_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_MVcy3nW2SIYkT_QirG96Gw_8SY1Zjte"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",

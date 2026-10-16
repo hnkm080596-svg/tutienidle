@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { cpSync, existsSync, readdirSync, rmSync } from 'node:fs'
 import path from 'node:path'
 
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import electron from 'vite-plugin-electron/simple'
@@ -89,6 +89,70 @@ function productionCspPlugin(): Plugin {
           `</title>\n    <meta http-equiv="Content-Security-Policy" content="${PRODUCTION_CSP}">`,
         )
       },
+    },
+  }
+}
+
+function isDisallowedSupabaseServerKey(rawKey: string): boolean {
+  const trimmed = rawKey.trim()
+  if (/^(?:sb_secret_|sbp_)/i.test(trimmed)) return true
+  const parts = trimmed.split('.')
+  if (parts.length !== 3 || !parts[1]) return false
+  try {
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')
+    const parsed: unknown = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'))
+    return typeof parsed === 'object' && parsed !== null && (parsed as { role?: unknown }).role === 'service_role'
+  } catch {
+    return false
+  }
+}
+
+// Fails closed at build time on Vercel / beta release builds so a deployment
+// missing VITE_BACKEND_MODE=supabase, VITE_SUPABASE_URL, or a valid public key
+// is rejected before publishing a broken bundle.
+function backendBuildGatePlugin(): Plugin {
+  let mode = 'production'
+  return {
+    name: 'tutien-backend-build-gate',
+    apply: 'build',
+    configResolved(config) {
+      mode = config.mode
+    },
+    buildStart() {
+      const enforceGate = Boolean(
+        process.env.VERCEL ||
+        process.env.RELEASE_CHANNEL === 'beta' ||
+        process.env.REQUIRE_BACKEND_CONFIG === '1',
+      )
+      if (!enforceGate) return
+
+      const fileEnv = loadEnv(mode, gameRoot, 'VITE_')
+      const backendMode = (process.env.VITE_BACKEND_MODE ?? fileEnv.VITE_BACKEND_MODE ?? '').trim()
+      const supabaseUrl = (process.env.VITE_SUPABASE_URL ?? fileEnv.VITE_SUPABASE_URL ?? '').trim()
+      const supabaseKey = (
+        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+        fileEnv.VITE_SUPABASE_PUBLISHABLE_KEY ??
+        process.env.VITE_SUPABASE_ANON_KEY ??
+        fileEnv.VITE_SUPABASE_ANON_KEY ??
+        ''
+      ).trim()
+
+      if (backendMode !== 'supabase') {
+        throw new Error(
+          `[backend-build-gate] Production deployment requires VITE_BACKEND_MODE=supabase (got "${backendMode || '<unset>'}").`,
+        )
+      }
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error(
+          '[backend-build-gate] VITE_BACKEND_MODE=supabase requires VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY).',
+        )
+      }
+      if (isDisallowedSupabaseServerKey(supabaseKey)) {
+        throw new Error(
+          '[backend-build-gate] Refusing to build with a Supabase secret/service_role key in the frontend — use a publishable key (sb_publishable_...) or anon key.',
+        )
+      }
     },
   }
 }
@@ -191,6 +255,7 @@ export default defineConfig({
     // vite-plugin-vue-devtools is apply:'serve' internally (dev-only); it is
     // listed here for the dev server only and contributes nothing to builds.
     vueDevTools(),
+    backendBuildGatePlugin(),
     buildIdentityManifestPlugin(),
     productionCspPlugin(),
     pruneUnusedPublicAssetsPlugin(),

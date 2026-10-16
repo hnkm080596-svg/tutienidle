@@ -1,4 +1,8 @@
-import { getSupabaseConfig, type SupabaseConfig } from '../supabase/SupabaseConfig'
+import {
+  getSupabaseConfig,
+  isForbiddenSupabaseServerKey,
+  type SupabaseConfig,
+} from '../supabase/SupabaseConfig'
 
 // Beta-final B1.2 - the backend bundle is composed from ONE explicit
 // mode declaration, never inferred: `VITE_BACKEND_MODE = mock | supabase`.
@@ -37,6 +41,7 @@ export interface BackendEnv {
   VITE_BACKEND_MODE?: string
   VITE_SUPABASE_URL?: string
   VITE_SUPABASE_ANON_KEY?: string
+  VITE_SUPABASE_PUBLISHABLE_KEY?: string
   /** Vite sets PROD only on production builds; everything else (dev
    *  server, vitest, preview of a dev build) resolves as development. */
   PROD?: boolean
@@ -64,6 +69,13 @@ export function resolveBackendComposition(env: BackendEnv): BackendComposition {
     return runtime === 'release'
       ? fatal('VITE_BACKEND_MODE=mock cannot produce a release build — the mock bundle is local-authority only.')
       : { status: 'ready', mode: 'mock', runtime, admission: 'admitted', config: null }
+  }
+
+  const rawKey = env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() || env.VITE_SUPABASE_ANON_KEY?.trim()
+  if (rawKey && isForbiddenSupabaseServerKey(rawKey)) {
+    return fatal(
+      'VITE_BACKEND_MODE=supabase forbids server secret or service_role keys in the frontend — use a publishable key (sb_publishable_...) or anon key.',
+    )
   }
 
   const config = getSupabaseConfig(env)

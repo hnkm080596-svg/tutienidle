@@ -95,6 +95,54 @@ describe('resolveBackendComposition - explicit mode matrix', () => {
       admission: 'blocked',
     })
   })
+
+  it('supabase mode accepts sb_publishable_... via VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY', () => {
+    const viaAnon = resolveBackendComposition({
+      PROD: true,
+      VITE_BACKEND_MODE: 'supabase',
+      VITE_SUPABASE_URL: 'https://example.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'sb_publishable_prod_123',
+    })
+    expect(viaAnon).toMatchObject({
+      status: 'ready',
+      mode: 'supabase',
+      config: { url: 'https://example.supabase.co', anonKey: 'sb_publishable_prod_123' },
+    })
+
+    const viaPublishable = resolveBackendComposition({
+      PROD: true,
+      VITE_BACKEND_MODE: 'supabase',
+      VITE_SUPABASE_URL: 'https://example.supabase.co',
+      VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_explicit_456',
+    })
+    expect(viaPublishable).toMatchObject({
+      status: 'ready',
+      mode: 'supabase',
+      config: { url: 'https://example.supabase.co', anonKey: 'sb_publishable_explicit_456' },
+    })
+  })
+
+  it('supabase mode rejects sb_secret_... and service_role JWTs as FATAL', () => {
+    const secretKeyResult = resolveBackendComposition({
+      PROD: true,
+      VITE_BACKEND_MODE: 'supabase',
+      VITE_SUPABASE_URL: 'https://example.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'sb_secret_live_key',
+    })
+    expect(secretKeyResult.status).toBe('fatal')
+
+    const serviceRoleJwt =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+      btoa(JSON.stringify({ role: 'service_role' })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') +
+      '.sig'
+    const serviceRoleResult = resolveBackendComposition({
+      PROD: true,
+      VITE_BACKEND_MODE: 'supabase',
+      VITE_SUPABASE_URL: 'https://example.supabase.co',
+      VITE_SUPABASE_ANON_KEY: serviceRoleJwt,
+    })
+    expect(serviceRoleResult.status).toBe('fatal')
+  })
 })
 
 describe('createBackendBundle - one compatible bundle per mode', () => {
