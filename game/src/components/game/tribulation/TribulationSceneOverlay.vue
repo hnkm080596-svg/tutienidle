@@ -15,16 +15,25 @@ const { t } = useI18n()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
-const active = computed(() => { stateVersion.value; return gameManager.tribulationDirector.getState() })
+const active = computed(() => {
+  stateVersion.value
+  return gameManager.tribulationDirector.getState()
+})
 const hp = computed(() => active.value?.hp ?? 0)
 const maxHp = computed(() => active.value?.maxHp ?? 1)
-const chapterProgress = computed(() => `${(active.value?.chapterIndex ?? 0) + 1} / ${active.value?.chaptersTotal ?? 1}`)
+const chapterProgress = computed(
+  () => `${(active.value?.chapterIndex ?? 0) + 1} / ${active.value?.chaptersTotal ?? 1}`,
+)
 const isMindChapter = computed(() => active.value?.currentQuestion != null)
 const isFinished = computed(() => active.value?.state === 'victory' || active.value?.state === 'defeat')
 const realmName = computed(() => {
   const id = active.value?.targetRealmId
   if (!id) return ''
-  try { return getCurrentRealm(id).name } catch { return id }
+  try {
+    return getCurrentRealm(id).name
+  } catch {
+    return id
+  }
 })
 const resultTitle = computed(() =>
   t(active.value?.state === 'victory' ? 'tribulation.overlay.resultVictory' : 'tribulation.overlay.resultDefeat'),
@@ -43,44 +52,55 @@ function answer(index: number) {
 </script>
 
 <template>
-  <CombatPanel v-if="active"><div class="tribulation-ui">
-    <TribulationChapterTracker
-      :chapter-names="active.chapterNames"
-      :chapter-index="active.chapterIndex"
-      :label="t('tribulation.overlay.chapter', { progress: chapterProgress })"
-    />
+  <CombatPanel v-if="active">
+    <div class="tribulation-ui">
+      <TribulationRealmCard
+        :realm-name="realmName"
+        :chapter-progress="chapterProgress"
+        :strikes-taken="active.lightningStrikesTaken"
+      />
 
-    <TribulationStatusCard
-      :chapter-name="active.chapterName"
-      :chapter-progress="chapterProgress"
-      :seconds-remaining="active.secondsRemaining"
-      :strikes-taken="active.lightningStrikesTaken"
-      :show-tank="!isMindChapter && !isFinished"
-    />
+      <TribulationChapterTracker
+        :chapter-names="active.chapterNames"
+        :chapter-index="active.chapterIndex"
+        :label="t('tribulation.overlay.chapter', { progress: chapterProgress })"
+      />
 
-    <TribulationRealmCard
-      :realm-name="realmName"
-      :chapter-progress="chapterProgress"
-      :strikes-taken="active.lightningStrikesTaken"
-    />
+      <TribulationStatusCard
+        :chapter-name="active.chapterName"
+        :chapter-progress="chapterProgress"
+        :seconds-remaining="active.secondsRemaining"
+        :strikes-taken="active.lightningStrikesTaken"
+        :show-tank="!isMindChapter && !isFinished"
+      />
 
-    <TribulationHpCluster :hp="hp" :max-hp="maxHp" />
+      <TribulationHpCluster :hp="hp" :max-hp="maxHp" />
 
-    <TribulationMindCard
-      v-if="isMindChapter"
-      :question="active.currentQuestion!.question"
-      :answers="active.currentQuestion!.answers"
-      :seconds-remaining="active.questionSecondsRemaining"
-      :seconds-limit="active.questionSecondsLimit"
-      @answer="answer"
-    />
+      <TribulationMindCard
+        v-if="isMindChapter"
+        :question="active.currentQuestion!.question"
+        :answers="active.currentQuestion!.answers"
+        :seconds-remaining="active.questionSecondsRemaining"
+        :seconds-limit="active.questionSecondsLimit"
+        @answer="answer"
+      />
 
-    <TribulationResultBanner v-if="isFinished" :title="resultTitle" :text="resultText" />
-  </div></CombatPanel>
+      <TribulationResultBanner v-if="isFinished" :title="resultTitle" :text="resultText" />
+    </div>
+  </CombatPanel>
 </template>
 
 <style scoped>
-.tribulation-ui { position:absolute; inset:0; z-index:15; pointer-events:none; color:var(--scene-tribulation-text); text-align:center; }
-.tribulation-ui :deep(.bar__fill) { transition:width .15s linear; }
-.tribulation-ui :deep(.tribulation-ui__tracker) { top: 191px; width: 580px; font-size: 13px; }
+.tribulation-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  color: var(--scene-tribulation-text, #f1e6cc);
+  text-align: center;
+}
+
+.tribulation-ui :deep(.bar__fill) {
+  transition: width 0.15s linear;
+}
 </style>

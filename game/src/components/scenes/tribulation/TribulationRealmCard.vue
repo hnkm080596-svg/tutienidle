@@ -1,67 +1,61 @@
 <script setup lang="ts">
-// Spec 14 title-band 436/120/800/80: the realm card IS the centered
-// title band - realm name + chapter progress move here from the
-// top-right corner (audit CORRECTED: realm label from tribulation
-// targetRealmId, progress = chapter x/y). The flame row is the
-// temp-art strike marker row.
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import CombatArtSurface from '@/components/scenes/combat/CombatArtSurface.vue'
+import GameCard from '@/components/common/GameCard.vue'
 
-const props = defineProps<{
+defineProps<{
   realmName: string
   chapterProgress: string
   strikesTaken: number
 }>()
 const { t } = useI18n()
-const flames = computed(() => Math.min(props.strikesTaken, 7))
 </script>
 
 <template>
-  <CombatArtSurface family="tribulation" art="title-plaque" class="tribulation-realm-card" data-hk-region="realm-card">
-    <h1 class="tribulation-realm-card__scene-title">{{ t('tribulation.overlay.sceneTitle') }}</h1>
-    <p class="tribulation-realm-card__title">{{ t('tribulation.overlay.realmCardTitle', { name: realmName }) }}</p>
-    <p class="tribulation-realm-card__progress">{{ t('tribulation.overlay.progressLabel') }}: {{ chapterProgress }}</p>
-    <div class="tribulation-realm-card__flames" aria-hidden="true">
-      <i v-for="n in flames" :key="n" class="tribulation-realm-card__flame art-needed" data-art-id="tribulation-realm-flame" />
+  <GameCard as="section" class="tribulation-realm-card" data-hk-region="realm-card">
+    <div class="tribulation-realm-card__inner">
+      <span class="tribulation-realm-card__ornament" aria-hidden="true" />
+      <h1 class="tribulation-realm-card__title">
+        {{ t('tribulation.overlay.realmCardTitle', { name: realmName }) }}
+      </h1>
+      <span class="tribulation-realm-card__ornament" aria-hidden="true" />
     </div>
-  </CombatArtSurface>
+  </GameCard>
 </template>
 
 <style scoped>
 .tribulation-realm-card {
   position: absolute;
-  top: 12.75%;
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(47.85%, 800px);
-  min-width: 150px;
-  padding: 10px 14px;
+  width: min(460px, 84vw);
+  padding: 10px 24px;
   text-align: center;
   isolation: isolate;
-  border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(16, 23, 24, .72), rgba(16, 23, 24, .5));
-  border: 1px solid color-mix(in srgb, var(--hk-gold-muted, #b99a55) 45%, transparent);
 }
+
+.tribulation-realm-card__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.tribulation-realm-card__ornament {
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  background: rgba(213, 183, 116, 0.75);
+  box-shadow: 0 0 6px rgba(213, 183, 116, 0.45);
+}
+
 .tribulation-realm-card__title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--text-sm);
+  font-size: 20px;
   font-weight: 700;
-  color: var(--hk-gold-muted, #b99a55);
+  letter-spacing: 0.06em;
+  color: #f3e7bd;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.75);
 }
-.tribulation-realm-card__progress { margin: 4px 0 0; font-size: var(--text-xs); color: var(--scene-tribulation-text-soft); }
-.tribulation-realm-card__flames { display:flex; justify-content:center; gap:4px; margin-top:6px; }
-.tribulation-realm-card__flame {
-  width: 11px;
-  height: 15px;
-  clip-path: polygon(50% 0%, 82% 28%, 100% 62%, 84% 100%, 16% 100%, 0% 62%, 18% 28%);
-  background: radial-gradient(circle at 50% 70%, #ffd489, var(--hk-gold-muted, #b99a55) 60%, #6b4c1e);
-  box-shadow: 0 0 6px color-mix(in srgb, #ffd489 70%, transparent);
-}
-.tribulation-realm-card.combat-art-surface { top: 52px; width: 700px; height: 130px; box-sizing: border-box; padding: 16px 110px; background: transparent; border: 0; border-radius: 0; }
-.tribulation-realm-card__scene-title { margin: 0 0 3px; font: 700 43px/1.15 var(--font-display); color: #f3e7bd; }
-.tribulation-realm-card__title { margin: 0 0 4px; font-size: 18px; color: #dbbb75; }
-.tribulation-realm-card__progress { margin: 0; font-size: 15px; color: #e9dcc4; }
-.tribulation-realm-card__flames { display: none; }
 </style>

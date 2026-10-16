@@ -443,8 +443,21 @@ export function getTribulationDescriptors(): readonly AssetResourceDescriptor[] 
     })
   }
 
+  descriptors.push({
+    kind: 'atlas',
+    key: TRIBULATION_LIGHTNING_VFX_KEY,
+    textureUrl: TRIBULATION_LIGHTNING_VFX_TEXTURE_URL,
+    atlasUrl: TRIBULATION_LIGHTNING_VFX_ATLAS_URL,
+  })
+
   return descriptors
 }
+
+export const TRIBULATION_LIGHTNING_VFX_KEY = 'vfx-tribulation-lightning'
+export const TRIBULATION_LIGHTNING_VFX_TEXTURE_URL =
+  'assets/vfx/spritesheets/Lightning_Tribulation.png'
+export const TRIBULATION_LIGHTNING_VFX_ATLAS_URL =
+  'assets/vfx/spritesheets/Lightning_Tribulation.json'
 
 export const TRIBULATION_SCENE_ASSET_IDS = [
   'tribulation-storm-far',

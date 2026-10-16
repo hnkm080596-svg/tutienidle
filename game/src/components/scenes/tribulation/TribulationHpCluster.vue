@@ -1,11 +1,7 @@
 <script setup lang="ts">
-// Scene 13 hp-cluster region (spec: 616/736/440/84, hud family,
-// entity-bar frame - delivered). Audit CORRECTED: single canonical HP
-// bar + strikes counter (second resource bar INVALID). The resolve
-// caption under the bar is the ref's bottom flavor line.
 import { useI18n } from 'vue-i18n'
 import Bar from '@/components/common/primitives/Bar.vue'
-import CombatArtSurface from '@/components/scenes/combat/CombatArtSurface.vue'
+import GameCard from '@/components/common/GameCard.vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 defineProps<{
@@ -16,26 +12,59 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <CombatArtSurface family="tribulation" art="caption-plaque" class="tribulation-ui__hp-cluster" data-hk-region="hp-cluster">
-    <CombatArtSurface family="tribulation" art="hp-frame" class="tribulation-ui__hp-frame">
-
-      <Bar class="tribulation-ui__hp-track" :value="hp" :max="maxHp" :height="14" />
-      <div class="tribulation-ui__hp">{{ t('tribulation.overlay.hp', { hp: formatNumber(Math.ceil(hp)), max: formatNumber(maxHp) }) }}</div>
-    </CombatArtSurface>
-    <div class="tribulation-ui__resolve">{{ t('tribulation.overlay.resolve') }}</div>
-  </CombatArtSurface>
+  <GameCard as="section" class="tribulation-ui__hp-cluster" data-hk-region="hp-cluster">
+    <div class="tribulation-ui__hp-head">
+      <span class="tribulation-ui__hp">
+        {{ t('tribulation.overlay.hp', { hp: formatNumber(Math.ceil(hp)), max: formatNumber(maxHp) }) }}
+      </span>
+      <span class="tribulation-ui__resolve">{{ t('tribulation.overlay.resolve') }}</span>
+    </div>
+    <Bar class="tribulation-ui__hp-track" :value="hp" :max="maxHp" :height="12" />
+  </GameCard>
 </template>
 
 <style scoped>
-/* Spec 14 hp-cluster 616/736/440/84: centered 26.32vw band at
-   78.21% top. */
-.tribulation-ui__hp-cluster { position:absolute; top:78.21%; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; width:min(26.32vw, 440px); }
-.tribulation-ui__hp-frame { position:relative; width:100%; padding:2px 4px; }
-.tribulation-ui__hp-track { width:100%; border-radius:4px; --bar-track: var(--scene-tribulation-deep); --bar-from: var(--scene-tribulation-hp); --bar-to: var(--scene-tribulation-hp); }
-.tribulation-ui__hp { margin-top:6px; font-size:var(--text-xs); text-shadow:0 1px 3px #000; }
-.tribulation-ui__resolve { margin-top:8px; font-size:var(--text-xs); font-style:italic; color:var(--hk-gold-muted, #b99a55); text-shadow:0 1px 3px #000; }
-.tribulation-ui__hp-cluster.combat-art-surface { top: auto; bottom: 63px; width: 480px; height: 100px; padding: 0; box-sizing: border-box; background: transparent; }
-.tribulation-ui__hp-frame { position: absolute; left: 0; top: -35px; width: 100%; height: 90px; padding: 29px 50px 35px; box-sizing: border-box; }
-.tribulation-ui__hp { position: absolute; top: 28px; left: 50px; right: 50px; margin: 0; color: #f1e6cc; font-size: 14px; line-height: 18px; }
-.tribulation-ui__resolve { position: absolute; top: 45px; left: 40px; right: 40px; margin: 0; font-size: 14px; color: #d5b774; }
+.tribulation-ui__hp-cluster {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(440px, 52vw);
+  padding: 12px 18px;
+  box-sizing: border-box;
+  isolation: isolate;
+}
+
+.tribulation-ui__hp-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tribulation-ui__hp {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #f4e7c8;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.tribulation-ui__resolve {
+  font-size: 12px;
+  color: rgba(213, 183, 116, 0.82);
+}
+
+.tribulation-ui__hp-track {
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid rgba(213, 183, 116, 0.35);
+  --bar-track: rgba(10, 14, 18, 0.85);
+  --bar-from: #a83232;
+  --bar-to: #d9534f;
+}
 </style>

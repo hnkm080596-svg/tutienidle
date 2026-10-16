@@ -78,7 +78,8 @@ const CHAPTERS_BY_REALM: Record<string, readonly TribulationChapterProfile[]> = 
       kind: 'lightning',
       name: 'Lôi Kiếp',
       description: 'Thiên lôi giáng xuống — trụ vững thân thể cho đến khi kiếp tan.',
-      tank: { durationSeconds: 15, strikeIntervalSeconds: 3, lightningMaxHpDamagePercent: 0.07 },
+      // 5 strikes per 3s animation wave (0.6s/strike), each strike deals 7% maxHP (x5 total difficulty).
+      tank: { durationSeconds: 15, strikeIntervalSeconds: 0.6, lightningMaxHpDamagePercent: 0.07 },
     },
   ],
   // Truc Co (Luyen Khi -> Truc Co) - 3 chuong: Tam Ma -> Than -> Loi
@@ -94,13 +95,15 @@ const CHAPTERS_BY_REALM: Record<string, readonly TribulationChapterProfile[]> = 
       kind: 'body',
       name: 'Thân Kiếp',
       description: 'Lôi hỏa rèn thân — lôi kích đều đặn, máu phải trụ được.',
-      tank: { durationSeconds: 20, strikeIntervalSeconds: 2, lightningMaxHpDamagePercent: 0.08 },
+      // 5 strikes per 2s animation wave (0.4s/strike), each strike deals 8% maxHP (x5 total difficulty).
+      tank: { durationSeconds: 20, strikeIntervalSeconds: 0.4, lightningMaxHpDamagePercent: 0.08 },
     },
     {
       kind: 'lightning',
       name: 'Lôi Kiếp',
       description: 'Cửu tiêu thần lôi — đợt dồn dập khép lại bằng một đạo đại lôi.',
-      tank: { durationSeconds: 18, strikeIntervalSeconds: 1.5, lightningMaxHpDamagePercent: 0.1, finalStrikeMaxHpDamagePercent: 0.2 },
+      // 5 strikes per 1.5s animation wave (0.3s/strike), each strike deals 10% maxHP + 100% final strike (x5 total difficulty).
+      tank: { durationSeconds: 18, strikeIntervalSeconds: 0.3, lightningMaxHpDamagePercent: 0.1, finalStrikeMaxHpDamagePercent: 1.0 },
     },
   ],
 }

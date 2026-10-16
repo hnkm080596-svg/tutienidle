@@ -521,10 +521,16 @@ export class TribulationDirector {
     // Liveness = state 'ongoing': a lethal strike commits 'defeat' inside
     // the loop; exit immediately, no further strikes (M5 / ARCH-006).
     const interval = this.effectiveStrikeInterval(chapter)
+    const STRIKE_EPSILON = 1e-9
 
-    while (interval > 0 && tank.nextStrikeInSeconds <= 0 && active.state === 'ongoing') {
+    while (interval > 0 && tank.nextStrikeInSeconds <= STRIKE_EPSILON && active.state === 'ongoing') {
       this.strikeLightning(chapter)
       tank.nextStrikeInSeconds += interval
+    }
+
+    if (tank.secondsRemaining <= STRIKE_EPSILON) {
+      tank.secondsRemaining = 0
+      active.secondsRemaining = 0
     }
 
     // Recheck liveness after a phase that may kill the actor: once the
@@ -543,6 +549,7 @@ export class TribulationDirector {
     ) {
       this.applyLightningDamage(profile.finalStrikeMaxHpDamagePercent)
       tank.finalStrikeFired = true
+      this.deps.eventBus.emit('tribulation_lightning', { targetId: 'player', isFinalStrike: true })
     }
 
     // Recheck liveness again - the final strike may also be lethal.

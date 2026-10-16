@@ -209,7 +209,8 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
 
   it('sống sót hết chương cuối → victory', () => {
     const { director } = makeDirector()
-    director.start(readyPlayer(), testStats(), false, 'qi_refining')
+    const stats = createBaseStats({ maxHp: 5000, defense: 100 }) as Stats
+    director.start(readyPlayer(), stats, false, 'qi_refining')
     let guard = 0
     while (director.getState()!.state === 'ongoing' && guard++ < 2000) {
       director.update(1)

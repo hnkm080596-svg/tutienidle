@@ -72,16 +72,18 @@ describe('TribulationDirector — Loi Kiep talent (M2)', () => {
     expect(talentedLoss).toBeCloseTo(baseLoss * 2, 5)
   })
 
-  it('khong co loi_kiep: lightning damage giu nguyen nhu truoc', () => {
+  it('khong co loi_kiep: moi strike mat mau bang 1 dot truoc do (5 strikes / 3s = x5)', () => {
     const { director } = makeDirector()
     director.start(readyPlayer(), testStats(), false, 'qi_refining')
     driveToTank(director)
 
     const hpBefore = director.getState()!.hp
-    director.update(3.5)
-
-    // qi_refining strike: 7% * grade human 1.0 * mitigation 1 *
-    // (1 - 0.15 mind-correct reduction from 3 correct answers) = 297.5.
+    // 1 strike at 0.6s interval: 7% * grade human 1.0 * mitigation 1 * (1 - 0.15) = 297.5
+    director.update(0.7)
     expect(hpBefore - director.getState()!.hp).toBeCloseTo(5000 * 0.07 * 0.85, 5)
+
+    // Full 3.0s wave (5 strikes total): 5 * 297.5 = 1487.5 (x5 difficulty)
+    director.update(2.4)
+    expect(hpBefore - director.getState()!.hp).toBeCloseTo(5 * 5000 * 0.07 * 0.85, 5)
   })
 })

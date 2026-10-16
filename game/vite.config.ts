@@ -119,6 +119,8 @@ const USED_VFX_SPRITESHEET_FILES = new Set([
   '火 (20).json',
   '火 (9).png',
   '火 (9).json',
+  'Lightning_Tribulation.png',
+  'Lightning_Tribulation.json',
 ])
 
 // Prunes raw/staging/preview assets copied from public/ into outDir so web

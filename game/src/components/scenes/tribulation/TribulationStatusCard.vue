@@ -1,12 +1,7 @@
 <script setup lang="ts">
-// Scene 13 status-card region (spec: 60/560/420/220, shell-panel,
-// surface-m-panel + timer-ring). Audit CORRECTED: real fields are the
-// chapter timer (`secondsRemaining`) and `lightningStrikesTaken` -
-// ref's "Do Tam Ma %" / attempt counters were invented, not rebuilt.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import CombatArtSurface from '@/components/scenes/combat/CombatArtSurface.vue'
-import { hkChromeUrl } from '@/ui/huyenKimChrome'
+import GameCard from '@/components/common/GameCard.vue'
 
 const props = defineProps<{
   chapterName: string
@@ -16,7 +11,6 @@ const props = defineProps<{
   showTank: boolean
 }>()
 const { t } = useI18n()
-const plaqueUrl = hkChromeUrl('scroll-title-plaque')
 
 const timerLabel = computed(() => {
   const total = Math.max(0, Math.ceil(props.secondsRemaining))
@@ -27,61 +21,114 @@ const timerLabel = computed(() => {
 </script>
 
 <template>
-  <CombatArtSurface family="tribulation" art="chapter-plaque" class="tribulation-ui__status" data-hk-region="status-card">
+  <GameCard as="section" class="tribulation-ui__status" data-hk-region="status-card">
     <div class="tribulation-ui__header">
-      <img v-if="plaqueUrl" class="tribulation-ui__plaque" :src="plaqueUrl" alt="" aria-hidden="true" />
       <div class="tribulation-ui__chapter">{{ chapterName }}</div>
       <div class="tribulation-ui__progress">{{ t('tribulation.overlay.chapter', { progress: chapterProgress }) }}</div>
     </div>
 
-    <div v-if="secondsRemaining > 0" class="tribulation-ui__time-left">{{ t('tribulation.overlay.timeLeft') }} <b>{{ timerLabel }}</b></div>
+    <div v-if="secondsRemaining > 0" class="tribulation-ui__stat-row tribulation-ui__time-left">
+      <span>{{ t('tribulation.overlay.timeLeft') }}</span>
+      <b>{{ timerLabel }}</b>
+    </div>
 
     <div v-if="showTank" class="tribulation-ui__tank">
-      <div class="tribulation-ui__strikes">{{ t('tribulation.overlay.strikesTaken', { count: strikesTaken }) }}</div>
-      <div class="tribulation-ui__strike-pips" aria-hidden="true">
-        <i
-          v-for="n in Math.max(strikesTaken, 3)"
-          :key="n"
-          class="tribulation-ui__strike-pip art-needed"
-          :class="{ 'is-lit': n <= strikesTaken }"
-          :data-art-id="`tribulation-strike-pip`"
-        />
+      <div class="tribulation-ui__stat-row tribulation-ui__strikes">
+        <span>{{ t('tribulation.overlay.strikesTaken', { count: strikesTaken }) }}</span>
+        <div class="tribulation-ui__strike-pips" aria-hidden="true">
+          <i
+            v-for="n in Math.max(strikesTaken, 3)"
+            :key="n"
+            class="tribulation-ui__strike-pip"
+            :class="{ 'is-lit': n <= strikesTaken }"
+          />
+        </div>
       </div>
       <div class="tribulation-ui__hint">{{ t('tribulation.overlay.tankHint') }}</div>
     </div>
-  </CombatArtSurface>
+  </GameCard>
 </template>
 
 <style scoped>
-/* Spec 14 status-card 60/560/420/220: the chapter identity/status
-   card anchors the lower-left (~59.5% top); the tank phase's
-   strikes/hint fold into it. surface-m-panel gives the card a real
-   body so text can't escape the plaque's painted bounds. */
-.tribulation-ui__status { position:absolute; top:59.51%; left:3.59%; width:min(25.12vw, 420px); max-height:23.38%; overflow-y:auto; display:flex; flex-direction:column; gap:2px; text-align:center; isolation:isolate; padding:30px 16px 14px; border-radius:var(--radius-md); }
-.tribulation-ui__status > :not(.combat-art-surface__art) { position:relative; z-index:2; }
-.tribulation-ui__header { position:relative; display:flex; flex-direction:column; gap:2px; align-items:center; }
-.tribulation-ui__plaque { position:absolute; left:50%; top:-14px; transform:translateX(-50%); width:min(200px, 90%); height:auto; opacity:.9; pointer-events:none; }
-.tribulation-ui__chapter { position:relative; font-family:var(--font-display); font-size:var(--text-display); font-weight:800; text-shadow:0 0 14px var(--scene-tribulation-glow); }
-.tribulation-ui__progress { margin-top:30px; font-size:var(--text-xs); color:var(--scene-tribulation-text-soft); }
-.tribulation-ui__time-left { margin-top:6px; font-size:var(--text-xs); color:var(--scene-tribulation-text-soft); }
-.tribulation-ui__time-left b { font-variant-numeric:tabular-nums; color:var(--chrome-100); }
-.tribulation-ui__hint, .tribulation-ui__strikes { margin-top:6px; font-size:var(--text-xs); text-shadow:0 1px 3px #000; color:var(--scene-tribulation-text-soft); }
-.tribulation-ui__strike-pips { display:flex; justify-content:center; gap:5px; margin-top:6px; }
-/* Ref: flame strike markers (temp art - lit = strike taken). */
+.tribulation-ui__status {
+  position: absolute;
+  top: 136px;
+  left: 28px;
+  width: min(280px, 26vw);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  isolation: isolate;
+  padding: 16px 20px;
+}
+
+.tribulation-ui__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(213, 183, 116, 0.22);
+}
+
+.tribulation-ui__chapter {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: #f4e7c8;
+}
+
+.tribulation-ui__progress {
+  font-size: 12px;
+  color: #d5b774;
+  white-space: nowrap;
+}
+
+.tribulation-ui__stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(233, 220, 196, 0.85);
+}
+
+.tribulation-ui__time-left b {
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  color: #f7ecd0;
+}
+
+.tribulation-ui__tank {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tribulation-ui__strike-pips {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .tribulation-ui__strike-pip {
-  width: 10px;
-  height: 14px;
-  clip-path: polygon(50% 0%, 82% 28%, 100% 62%, 84% 100%, 16% 100%, 0% 62%, 18% 28%);
-  background: #2a3234;
-  border: 1px solid color-mix(in srgb, var(--hk-gold-muted, #b99a55) 40%, transparent);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(213, 183, 116, 0.35);
 }
+
 .tribulation-ui__strike-pip.is-lit {
-  background: radial-gradient(circle at 50% 70%, #ffd489, var(--hk-gold-muted, #b99a55) 60%, #6b4c1e);
-  box-shadow: 0 0 6px color-mix(in srgb, #ffd489 70%, transparent);
+  background: #ffd489;
+  border-color: #fff2cf;
+  box-shadow: 0 0 6px rgba(255, 212, 137, 0.75);
 }
-.tribulation-ui__status.combat-art-surface { top: 480px; left: 24px; width: 405px; min-height: 129px; max-height: 200px; padding: 28px 28px 22px 145px; gap: 4px; border: 0; border-radius: 0; background: transparent; overflow-y: auto; }
-.tribulation-ui__plaque { display: none; }
-.tribulation-ui__chapter { font-size: 26px; color: #f4e7c8; }
-.tribulation-ui__progress { margin-top: 8px; color: #dcc89c; font-size: 15px; }
-.tribulation-ui__time-left,.tribulation-ui__hint,.tribulation-ui__strikes { font-size: 12px; }
+
+.tribulation-ui__hint {
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(213, 183, 116, 0.8);
+}
 </style>

@@ -16,7 +16,7 @@ describe('tribulation question art and answer binding', () => {
     app.use(i18n)
     app.mount(host)
     cleanups.push(() => { app.unmount(); host.remove() })
-    expect(host.querySelector('.combat-art-surface__art')?.getAttribute('src')).toContain('/tribulation/question-panel-v1.png')
+    expect(host.querySelector('[data-hk-region="mind-card"]')).not.toBeNull()
     const buttons = host.querySelectorAll<HTMLButtonElement>('.tribulation-ui__answer')
     expect(buttons).toHaveLength(4)
     buttons[2]!.click()

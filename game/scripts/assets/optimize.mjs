@@ -51,6 +51,8 @@ const USED_VFX_SPRITESHEET_FILES = new Set([
   '火 (20).json',
   '火 (9).png',
   '火 (9).json',
+  'Lightning_Tribulation.png',
+  'Lightning_Tribulation.json',
 ])
 
 const IGNORED_REL_PREFIXES = [
