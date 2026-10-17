@@ -258,4 +258,15 @@ describe('component art bundle ownership', () => {
     }
     expect(getBundlesForRoute('home')).not.toContain('ui-scenes')
   })
+
+  it('every URL in auth-opening exists on disk in public/', () => {
+    const descriptors = getBundleDescriptors('auth-opening')
+    const missing: string[] = []
+    for (const d of descriptors) {
+      if (d.kind === 'dom-image' && !existsSync(join(PUBLIC_ROOT, d.url))) {
+        missing.push(d.url)
+      }
+    }
+    expect(missing).toEqual([])
+  })
 })

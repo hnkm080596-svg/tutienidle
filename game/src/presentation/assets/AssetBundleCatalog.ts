@@ -903,6 +903,20 @@ export function getBundleDescriptors(bundleId: AssetBundleId): readonly AssetRes
   switch (bundleId) {
     case 'auth-opening': {
       const chromeUrls = getUiChromeDescriptors().map((d) => (d as DomImageResourceDescriptor).url)
+      const sceneUrls = getUiSceneDescriptors().map((d) => (d as DomImageResourceDescriptor).url)
+      const runtimeImageUrls: string[] = []
+      for (const d of [
+        ...getCoreUiDescriptors(),
+        ...getHomeDescriptors(),
+        ...getCombatDescriptors(),
+        ...getTribulationDescriptors(),
+      ]) {
+        if (d.kind === 'dom-image' || d.kind === 'image' || d.kind === 'spritesheet') {
+          runtimeImageUrls.push(d.url.startsWith('/') ? d.url : `/${d.url}`)
+        } else if (d.kind === 'atlas') {
+          runtimeImageUrls.push(d.textureUrl.startsWith('/') ? d.textureUrl : `/${d.textureUrl}`)
+        }
+      }
       return domImageDescriptors([
         '/assets/ui/tien-hiep-2026-10/auth-opening/backdrop-clean-v1.png',
         '/assets/ui/tien-hiep-2026-10/auth-opening/mortal-wind-strip-v1.png',
@@ -935,6 +949,8 @@ export function getBundleDescriptors(bundleId: AssetBundleId): readonly AssetRes
         '/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png',
         '/assets/ui/tien-hiep-2026-10/runtime/navigation-rail.png',
         ...chromeUrls,
+        ...sceneUrls,
+        ...runtimeImageUrls,
       ])
     }
     case 'core-ui':

@@ -30,7 +30,7 @@ import type {
 export const DEADLINES = {
   curtainClose: 2_000,
   curtainOpen: 2_000,
-  assets: 30_000,
+  assets: 120_000,
   deactivate: 10_000,
   prepareReady: 10_000,
 } as const
