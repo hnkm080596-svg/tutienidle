@@ -273,22 +273,37 @@ export class AssetBundleManager implements AssetPort {
 
     const tasks: Promise<void>[] = []
 
-    // 1. Load DOM images (each deduped per key; cap concurrency to 16 for background warm batches)
+    // 1. Load DOM images in strict stage order (each deduped per key; cap concurrency to 16 per stage)
     const MAX_CONCURRENT_DOM_IMAGES = 16
-    if (onProgress || domDescriptors.length <= MAX_CONCURRENT_DOM_IMAGES) {
+    if (domDescriptors.length > 0) {
+      const stagesMap = new Map<number, DomImageResourceDescriptor[]>()
       for (const domDesc of domDescriptors) {
-        tasks.push(this.loadSingleDomImage(domDesc, signal).then(report))
-      }
-    } else {
-      let cursor = 0
-      const workers = Array.from({ length: MAX_CONCURRENT_DOM_IMAGES }, async () => {
-        while (cursor < domDescriptors.length) {
-          const domDesc = domDescriptors[cursor++]!
-          await this.loadSingleDomImage(domDesc, signal)
-          report()
+        const stage = domDesc.stage ?? 0
+        let group = stagesMap.get(stage)
+        if (!group) {
+          group = []
+          stagesMap.set(stage, group)
         }
-      })
-      tasks.push(...workers)
+        group.push(domDesc)
+      }
+      const orderedStages = [...stagesMap.entries()].sort((a, b) => a[0] - b[0])
+      tasks.push(
+        (async () => {
+          for (const [, stageGroup] of orderedStages) {
+            if (signal?.aborted) throw new Error('Load aborted')
+            let cursor = 0
+            const workerCount = Math.min(MAX_CONCURRENT_DOM_IMAGES, stageGroup.length)
+            const workers = Array.from({ length: workerCount }, async () => {
+              while (cursor < stageGroup.length) {
+                const domDesc = stageGroup[cursor++]!
+                await this.loadSingleDomImage(domDesc, signal)
+                report()
+              }
+            })
+            await Promise.all(workers)
+          }
+        })(),
+      )
     }
 
     // 1b. Load DOM audio (deduped per key; fail-soft per the optional contract)

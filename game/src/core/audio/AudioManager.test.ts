@@ -587,4 +587,30 @@ describe('AudioManager (Tone.js-based)', () => {
       }
     })
   })
+
+  describe('first-gesture pending unlock', () => {
+    it('replays cues fired while unlock() is pending as soon as the chain becomes ready', async () => {
+      const mgr = AudioManager.getInstance()
+      mgr.unlock()
+      mgr.playCue('ui.click')
+      expect(triggeredSynths()).toHaveLength(0)
+
+      await vi.waitFor(() => expect(mgr.isUnlocked()).toBe(true))
+      const fired = triggeredSynths()
+      expect(fired).toHaveLength(1)
+      expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledWith('A3', '16n', undefined, 0.3)
+    })
+
+    it('calls ctx.resume() when unlock() is invoked again while context is suspended', () => {
+      const mgr = AudioManager.getInstance()
+      const ctx = Tone.getContext() as unknown as { state: string; resume: ReturnType<typeof vi.fn> }
+      ctx.state = 'suspended'
+      mgr.unlock()
+      expect(ctx.resume).not.toHaveBeenCalled()
+
+      // Subsequent pointerup/click gesture while pending wakes suspended context
+      mgr.unlock()
+      expect(ctx.resume).toHaveBeenCalledTimes(1)
+    })
+  })
 })

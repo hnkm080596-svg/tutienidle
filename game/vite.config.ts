@@ -59,7 +59,7 @@ const withAssetOrigin = (directive: string) =>
   assetOrigin ? `${directive} ${assetOrigin}` : directive
 const PRODUCTION_CSP = [
   "default-src 'self'",
-  "script-src 'self'",
+  "script-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
   withAssetOrigin("img-src 'self' data: blob:"),
   withAssetOrigin("media-src 'self' data: blob:"),

@@ -335,6 +335,7 @@ class AudioManagerImpl {
   private desiredMusicId: string | null = null
   private playingMusicId: string | null = null
   private readyListeners = new Set<() => void>()
+  private pendingCues: string[] = []
   private musicSuspended = false
   private cueCooldownAt = new Map<string, number>()
   private variantCursor = new Map<string, number>()
@@ -379,7 +380,21 @@ class AudioManagerImpl {
    * pending/ready; retry allowed after failure.
    */
   unlock(): void {
-    if (this.unlockState !== 'idle') return
+    if (this.unlockState !== 'idle') {
+      // Chromium/Safari autoplay nuance: if the initial unlock() ran on
+      // pointerdown before sticky user activation was granted, the native
+      // AudioContext.resume() promise stays pending until resume() is
+      // invoked inside a completed activation gesture (pointerup/click).
+      try {
+        const ctx = Tone.getContext()
+        if (ctx.state === 'suspended') {
+          void ctx.resume().catch(() => {})
+        }
+      } catch {
+        // Ignore if context is not yet accessible.
+      }
+      return
+    }
 
     const gen = this.generation
     this.unlockState = 'pending'
@@ -400,6 +415,15 @@ class AudioManagerImpl {
           // contract).
           this.flushPendingEncoded()
           this.applyDesiredMusic()
+          // Replay any cue fired during the first user gesture while the
+          // Reverb impulse response was still building.
+          if (this.pendingCues.length > 0) {
+            const queued = [...this.pendingCues]
+            this.pendingCues.length = 0
+            for (const cueId of queued) {
+              this.playCue(cueId)
+            }
+          }
           // W4: late-bound consumers (ambient driver's lazy bundle fetch)
           // that gated on isUnlocked() re-fire here.
           for (const cb of this.readyListeners) {
@@ -525,6 +549,12 @@ class AudioManagerImpl {
     // can read `.length` off them.
     if (typeof id !== 'string' || id.length === 0) return
     if (!this.enabled) return
+    if (this.unlockState === 'pending') {
+      if (this.pendingCues.length < 4 && !this.pendingCues.includes(id)) {
+        this.pendingCues.push(id)
+      }
+      return
+    }
     if (this.unlockState !== 'ready') return
     // Hidden tab: drop one-shots rather than sounding or queueing on a
     // suspended context - the ambient driver owns the visibility policy,
@@ -1006,6 +1036,7 @@ class AudioManagerImpl {
     this.desiredMusicId = null
     this.playingMusicId = null
     this.musicSuspended = false
+    this.pendingCues.length = 0
     this.readyListeners.clear()
 
     this.disposeChain()

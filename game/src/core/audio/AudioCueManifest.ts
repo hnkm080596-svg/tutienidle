@@ -254,8 +254,8 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'ui.toast.error': ui({ src: '/assets/audio/ui/ui_toast_error.wav', synthFallback: 'toastError' }),
   'ui.confirm': ui({ src: '/assets/audio/ui/ui_confirm.wav', synthFallback: 'uiConfirm' }),
   'ui.cancel': ui({ src: '/assets/audio/ui/ui_cancel.wav', synthFallback: 'uiCancel' }),
-  'ui.modal.open': ui({ src: '/assets/audio/ui/ui_modal_open.wav' }),
-  'ui.modal.close': ui({ src: '/assets/audio/ui/ui_modal_close.wav' }),
+  'ui.modal.open': ui({ src: '/assets/audio/ui/ui_modal_open.wav', synthFallback: 'uiClick' }),
+  'ui.modal.close': ui({ src: '/assets/audio/ui/ui_modal_close.wav', synthFallback: 'uiCancel' }),
   'ui.panel.open': ui({ src: '/assets/audio/ui/ui_panel_open.wav', synthFallback: 'uiClick' }),
   'ui.panel.close': ui({ src: '/assets/audio/ui/ui_panel_close.wav', synthFallback: 'uiCancel' }),
   'ui.wheel.open': ui({ src: '/assets/audio/ui/ui_wheel_open.wav', synthFallback: 'uiClick' }),
@@ -267,7 +267,7 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
 
   // ---- Combat ----
   'combat.cast': sfx({ cooldownMs: 80, synthFallback: 'combatAttack' }),
-  ...expand(CAST_SKILL_IDS, 'combat.cast.', sfx({ cooldownMs: 80 })),
+  ...expand(CAST_SKILL_IDS, 'combat.cast.', sfx({ cooldownMs: 80, synthFallback: 'combatAttack' })),
   'combat.hit': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
   'combat.crit': sfx({ cooldownMs: 120, duckMusic: 0.3, synthFallback: 'combatCritical' }),
   'combat.dodge': sfx({ synthFallback: 'combatDodge' }),
@@ -281,7 +281,7 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'combat.heal': sfx({ cooldownMs: 100, synthFallback: 'toastSave' }),
   'combat.turn_ready': sfx({ synthFallback: 'uiConfirm' }),
   'combat.impact': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
-  ...expand(IMPACT_PRESET_IDS, 'combat.impact.', sfx({ cooldownMs: 80 })),
+  ...expand(IMPACT_PRESET_IDS, 'combat.impact.', sfx({ cooldownMs: 80, synthFallback: 'combatHit' })),
   // Armed-reserved: enemy spawns ride the pendingEnemySpawns snapshot
   // (combat-vfx-spawner), which has no cue hook yet - these rows voice
   // the moment a spawn binding lands.
@@ -298,7 +298,7 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   // sound-design call deferred to asset time.
   'combat.buff.stack': sfx({ cooldownMs: 120 }),
   'combat.reaction': sfx({ duckMusic: 0.4, synthFallback: 'combatCritical' }),
-  ...expand(REACTION_IDS, 'combat.reaction.', sfx({ duckMusic: 0.4 })),
+  ...expand(REACTION_IDS, 'combat.reaction.', sfx({ duckMusic: 0.4, synthFallback: 'combatCritical' })),
   'combat.loot': sfx({ cooldownMs: 120, synthFallback: 'toastLoot' }),
   'combat.essence': sfx({ cooldownMs: 80, synthFallback: 'toastCraft' }),
   // Armed-reserved: TurnBattleSystem charge init and release are silent
@@ -307,15 +307,15 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'combat.release': sfx({ duckMusic: 0.3, synthFallback: 'combatCritical' }),
   'combat.boss.slam': sfx({ duckMusic: 0.5, synthFallback: 'combatCritical' }),
   'combat.kiem.combo': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
-  ...expand(KIEM_COMBO_IDS, 'combat.kiem.combo.', sfx({ duckMusic: 0.3 })),
-  'combat.kiem.tu_luc': sfx({ cooldownMs: 120 }),
+  ...expand(KIEM_COMBO_IDS, 'combat.kiem.combo.', sfx({ duckMusic: 0.3, synthFallback: 'combatHit' })),
+  'combat.kiem.tu_luc': sfx({ cooldownMs: 120, synthFallback: 'combatAttack' }),
   'combat.thetu.reflect': sfx({ synthFallback: 'combatBlock' }),
   'combat.ungthe': sfx({ synthFallback: 'combatAttack' }),
   'combat.ungthe.intercept': sfx({ synthFallback: 'combatDodge' }),
   'combat.ungthe.counter': sfx({ synthFallback: 'combatHit' }),
-  'combat.phaptu.proc': sfx({ cooldownMs: 120 }),
+  'combat.phaptu.proc': sfx({ cooldownMs: 120, synthFallback: 'combatHit' }),
   'combat.hothe.absorb': sfx({ cooldownMs: 120, synthFallback: 'combatBlock' }),
-  'combat.ward': sfx({ cooldownMs: 120 }),
+  'combat.ward': sfx({ cooldownMs: 120, synthFallback: 'combatBlock' }),
   'combat.ward.grant': sfx({ synthFallback: 'toastSave' }),
   'combat.ward.break': sfx({ synthFallback: 'combatBlock' }),
   // Armed-reserved: countdownProgress is a snapshot field; no tick emit

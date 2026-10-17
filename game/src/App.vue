@@ -371,11 +371,17 @@ const unlockAudioOnFirstGesture = () => useAudioStore().unlock()
 const audioManager = AudioManager.getInstance()
 const disarmAudioUnlockListeners = () => {
   window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
+  window.removeEventListener('pointerup', unlockAudioOnFirstGesture)
+  window.removeEventListener('click', unlockAudioOnFirstGesture)
+  window.removeEventListener('touchend', unlockAudioOnFirstGesture)
   window.removeEventListener('keydown', unlockAudioOnFirstGesture)
 }
 let disarmAudioUnlock: (() => void) | undefined
 if (!audioManager.isUnlocked()) {
   window.addEventListener('pointerdown', unlockAudioOnFirstGesture)
+  window.addEventListener('pointerup', unlockAudioOnFirstGesture)
+  window.addEventListener('click', unlockAudioOnFirstGesture)
+  window.addEventListener('touchend', unlockAudioOnFirstGesture)
   window.addEventListener('keydown', unlockAudioOnFirstGesture)
   // onReady would fire synchronously when already unlocked, so the
   // isUnlocked gate above is what keeps the listener unarmed on remount.

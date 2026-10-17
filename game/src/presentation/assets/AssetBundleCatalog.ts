@@ -128,6 +128,7 @@ export type DomImageResourceDescriptor = Readonly<{
   kind: 'dom-image'
   key: string
   url: string
+  stage?: number
 }>
 
 // Sound System W4: DOM-side audio fetch lane. `key` is the manifest src
@@ -821,15 +822,46 @@ function collectItemIconUrls(): string[] {
 }
 
 /** Keyed by URL: a file shared by two surfaces dedupes itself. */
-function domImageDescriptors(urls: Iterable<string>): AssetResourceDescriptor[] {
+function domImageDescriptors(urls: Iterable<string>, stage?: number): AssetResourceDescriptor[] {
   const out: AssetResourceDescriptor[] = []
   const seen = new Set<string>()
   for (const url of urls) {
     if (seen.has(url)) continue
     seen.add(url)
-    out.push({ kind: 'dom-image', key: url, url })
+    out.push(
+      stage !== undefined
+        ? { kind: 'dom-image', key: url, url, stage }
+        : { kind: 'dom-image', key: url, url },
+    )
   }
   return out
+}
+
+function stagedDomImageDescriptors(
+  stages: ReadonlyArray<readonly [number, Iterable<string>]>,
+): AssetResourceDescriptor[] {
+  const out: AssetResourceDescriptor[] = []
+  const seen = new Set<string>()
+  for (const [stage, urls] of stages) {
+    for (const url of urls) {
+      if (seen.has(url)) continue
+      seen.add(url)
+      out.push({ kind: 'dom-image', key: url, url, stage })
+    }
+  }
+  return out
+}
+
+function extractRuntimeImageUrls(descriptors: readonly AssetResourceDescriptor[]): string[] {
+  const urls: string[] = []
+  for (const d of descriptors) {
+    if (d.kind === 'dom-image' || d.kind === 'image' || d.kind === 'spritesheet') {
+      urls.push(d.url.startsWith('/') ? d.url : `/${d.url}`)
+    } else if (d.kind === 'atlas') {
+      urls.push(d.textureUrl.startsWith('/') ? d.textureUrl : `/${d.textureUrl}`)
+    }
+  }
+  return urls
 }
 
 /**
@@ -904,53 +936,71 @@ export function getBundleDescriptors(bundleId: AssetBundleId): readonly AssetRes
     case 'auth-opening': {
       const chromeUrls = getUiChromeDescriptors().map((d) => (d as DomImageResourceDescriptor).url)
       const sceneUrls = getUiSceneDescriptors().map((d) => (d as DomImageResourceDescriptor).url)
-      const runtimeImageUrls: string[] = []
-      for (const d of [
+      const homeRuntimeUrls = extractRuntimeImageUrls([
         ...getCoreUiDescriptors(),
         ...getHomeDescriptors(),
+      ])
+      const combatRuntimeUrls = extractRuntimeImageUrls([
         ...getCombatDescriptors(),
         ...getTribulationDescriptors(),
-      ]) {
-        if (d.kind === 'dom-image' || d.kind === 'image' || d.kind === 'spritesheet') {
-          runtimeImageUrls.push(d.url.startsWith('/') ? d.url : `/${d.url}`)
-        } else if (d.kind === 'atlas') {
-          runtimeImageUrls.push(d.textureUrl.startsWith('/') ? d.textureUrl : `/${d.textureUrl}`)
-        }
-      }
-      return domImageDescriptors([
-        '/assets/ui/tien-hiep-2026-10/auth-opening/backdrop-clean-v1.png',
-        '/assets/ui/tien-hiep-2026-10/auth-opening/mortal-wind-strip-v1.png',
-        '/assets/ui/tien-hiep-2026-10/auth-opening/crane-flight-strip-v1.png',
-        '/assets/ui/tien-hiep-2026-10/auth-opening/cloud-curtain-v1.png',
-        '/assets/ui/huyen-kim/scene/login-v2/wordmark.png',
-        '/assets/ui/huyen-kim/scene/login-v2/scroll-panel.png',
-        '/assets/ui/huyen-kim/scene/login-v2/cultivator.png',
-        '/assets/ui/huyen-kim/scene/login-v2/jade-button.png',
-        '/assets/ui/tien-hiep-2026-10/controls/trial-creation-panel-v2.png',
-        '/assets/ui/tien-hiep-2026-10/character-presentation/talent-field-v1.png',
-        '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png',
-        '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png',
-        '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-hover-v2.png',
-        '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png',
-        '/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png',
-        '/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png',
-        '/assets/ui/tien-hiep-2026-10/controls/button-primary-v1.png',
-        '/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png',
-        '/assets/ui/tien-hiep-2026-10/controls/inspector-v1.png',
-        '/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png',
-        '/assets/ui/tien-hiep-2026-10/controls/item-slot-v2.png',
-        '/assets/ui/tien-hiep-2026-10/controls/item-slot-v2-ornament-mask.png',
-        '/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2.png',
-        '/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2-ornament-mask.png',
-        '/assets/ui/tien-hiep-2026-10/runtime/page-paper.png',
-        '/assets/ui/tien-hiep-2026-10/runtime/ink-panel.png',
-        '/assets/ui/tien-hiep-2026-10/runtime/paper-panel.png',
-        '/assets/ui/tien-hiep-2026-10/runtime/paper-surface.png',
-        '/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png',
-        '/assets/ui/tien-hiep-2026-10/runtime/navigation-rail.png',
-        ...chromeUrls,
-        ...sceneUrls,
-        ...runtimeImageUrls,
+      ])
+      return stagedDomImageDescriptors([
+        // Stage 1: Cloud curtain & flying crane must finish 100% first so the
+        // loading screen itself renders immediately without network contention.
+        [
+          1,
+          [
+            '/assets/ui/tien-hiep-2026-10/auth-opening/cloud-curtain-v1.png',
+            '/assets/ui/tien-hiep-2026-10/auth-opening/crane-flight-strip-v1.png',
+          ],
+        ],
+        // Stage 2: Login vista backdrop and auth entry scroll revealed as soon
+        // as the cloud curtain parts.
+        [
+          2,
+          [
+            '/assets/ui/tien-hiep-2026-10/auth-opening/backdrop-clean-v1.png',
+            '/assets/ui/tien-hiep-2026-10/auth-opening/mortal-wind-strip-v1.png',
+            '/assets/ui/huyen-kim/scene/login-v2/wordmark.png',
+            '/assets/ui/huyen-kim/scene/login-v2/scroll-panel.png',
+            '/assets/ui/huyen-kim/scene/login-v2/cultivator.png',
+            '/assets/ui/huyen-kim/scene/login-v2/jade-button.png',
+          ],
+        ],
+        // Stage 3: Character creation screen & shared paper/control surfaces.
+        [
+          3,
+          [
+            '/assets/ui/tien-hiep-2026-10/controls/trial-creation-panel-v2.png',
+            '/assets/ui/tien-hiep-2026-10/character-presentation/talent-field-v1.png',
+            '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png',
+            '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png',
+            '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-hover-v2.png',
+            '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png',
+            '/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png',
+            '/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png',
+            '/assets/ui/tien-hiep-2026-10/controls/button-primary-v1.png',
+            '/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png',
+            '/assets/ui/tien-hiep-2026-10/controls/inspector-v1.png',
+            '/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png',
+            '/assets/ui/tien-hiep-2026-10/controls/item-slot-v2.png',
+            '/assets/ui/tien-hiep-2026-10/controls/item-slot-v2-ornament-mask.png',
+            '/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2.png',
+            '/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2-ornament-mask.png',
+            '/assets/ui/tien-hiep-2026-10/runtime/page-paper.png',
+            '/assets/ui/tien-hiep-2026-10/runtime/ink-panel.png',
+            '/assets/ui/tien-hiep-2026-10/runtime/paper-panel.png',
+            '/assets/ui/tien-hiep-2026-10/runtime/paper-surface.png',
+            '/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png',
+            '/assets/ui/tien-hiep-2026-10/runtime/navigation-rail.png',
+          ],
+        ],
+        // Stage 4: Home (Dong Fu) + shared UI chrome.
+        [4, [...homeRuntimeUrls, ...chromeUrls]],
+        // Stage 5: Mid-session UI scenes, parallax stacks, buildings & item icons.
+        [5, sceneUrls],
+        // Stage 6: Combat & tribulation sprites/sheets.
+        [6, combatRuntimeUrls],
       ])
     }
     case 'core-ui':
