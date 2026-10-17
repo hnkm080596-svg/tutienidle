@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { playUiButtonClick } from '@/presentation/audio/buttonClickAudio'
 
 const props = withDefaults(
-  defineProps<{ selected?: boolean; disabled?: boolean; sound?: boolean; silent?: boolean }>(),
+  defineProps<{
+    selected?: boolean
+    locked?: boolean
+    disabled?: boolean
+    sound?: boolean
+    silent?: boolean
+  }>(),
   {
     selected: false,
+    locked: false,
     disabled: false,
     sound: true,
     silent: false,
   },
 )
 const emit = defineEmits<{ click: [event: MouseEvent] }>()
-const normalFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png')
-const selectedFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-primary-v1.png')
 
 function handleClick(event: MouseEvent) {
   playUiButtonClick({ sound: props.sound, silent: props.silent })
@@ -22,11 +27,16 @@ function handleClick(event: MouseEvent) {
 </script>
 
 <template>
-  <button type="button" class="game-tab-button" :aria-pressed="selected" :disabled="disabled"
-    :style="{ '--tab-frame': `url('${normalFrame}')`, '--tab-selected-art': `url('${selectedFrame}')` }"
-    @click="handleClick">
-    <img class="game-tab-button__glow" :src="selected ? selectedFrame : normalFrame" alt="" aria-hidden="true">
-    <slot />
+  <button
+    type="button"
+    class="game-tab-button"
+    :class="{ selected, locked }"
+    :aria-pressed="selected"
+    :disabled="disabled || locked"
+    @click="handleClick"
+  >
+    <InkNineSlice :chrome-id="'button-compact'" layer="surface" />
+    <span class="game-tab-button__label"><slot /></span>
   </button>
 </template>
 
@@ -38,53 +48,83 @@ function handleClick(event: MouseEvent) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
-  padding: 0 14px;
+  min-height: 36px;
+  padding: 6px 14px;
   border: 0;
   background: transparent;
-  color: #f3dfb5;
-  font: 700 14px/1 var(--pc-font-body, Georgia, serif);
+  color: #f1e2c0;
+  font: 700 14px/1.15 var(--pc-font-body, 'PC Paper Serif', Georgia, serif);
   white-space: nowrap;
   cursor: pointer;
 }
-.game-tab-button::before {
+.game-tab-button > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 2;
+}
+.game-tab-button__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.game-tab-button:not(:disabled):not(.locked) .game-tab-button__label {
+  color: #f8ecc8;
+  font-weight: 700;
+  text-shadow: 0 1px 2px #1c1508;
+}
+.game-tab-button:not(:disabled):not(.locked) :deep(.ink-nine-slice) {
+  transition: filter 0.15s ease;
+}
+.game-tab-button:not(:disabled):not(.locked):not(.selected):not([aria-pressed='true']):hover :deep(.ink-nine-slice) {
+  filter: brightness(1.18);
+}
+.game-tab-button:is(.selected, [aria-pressed='true']) :deep(.ink-nine-slice) {
+  filter: brightness(1.45);
+}
+.game-tab-button:is(.selected, [aria-pressed='true'])::before {
   content: '';
   position: absolute;
   inset: 0;
-  z-index: -1;
-  border: 8px solid transparent;
-  border-image: var(--tab-frame) 21.4% 3.22% / 8px stretch;
+  z-index: 1;
   pointer-events: none;
+  box-shadow: inset 0 0 16px rgba(255, 223, 138, 0.9), inset 0 0 5px rgba(255, 236, 190, 0.7);
 }
-.game-tab-button::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  z-index: -2;
-  background: rgba(9, 14, 11, .88);
-  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
-  pointer-events: none;
+.game-tab-button:is(.selected, [aria-pressed='true']) .game-tab-button__label {
+  color: #2f2415;
+  text-shadow: none;
 }
-.game-tab-button[aria-pressed='true'] { color: #30210e; }
-.game-tab-button[aria-pressed='true']::before {
-  border-image-source: var(--tab-selected-art);
+@media (prefers-reduced-motion: no-preference) {
+  .game-tab-button:is(.selected, [aria-pressed='true']) .game-tab-button__label {
+    background: linear-gradient(100deg, #e8cf9e 36%, #ffffff 50%, #e8cf9e 64%);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    -webkit-text-stroke: 0.7px #e8cf9e;
+    animation: game-tab-glow-sweep 3.2s linear infinite;
+  }
 }
-.game-tab-button[aria-pressed='true']::after {
-  background: linear-gradient(180deg, #f6e7c4 0%, #e7cb92 100%);
+@keyframes game-tab-glow-sweep {
+  0% { background-position: 130% 0; }
+  100% { background-position: -30% 0; }
 }
-.game-tab-button__glow {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -2;
-  opacity: 0;
-  pointer-events: none;
-  filter: brightness(1.2) drop-shadow(0 0 4px #efc364);
+.game-tab-button:not(:disabled):active {
+  transform: translateY(1px);
 }
-.game-tab-button:not(:disabled):hover .game-tab-button__glow { opacity: 1; }
-.game-tab-button:not(:disabled):active { transform: translateY(1px); }
-.game-tab-button:not(:disabled):active::after { filter: brightness(.8); }
-.game-tab-button:focus-visible { outline: 2px solid #d6ad5d; outline-offset: 2px; }
-.game-tab-button:disabled { opacity: .42; cursor: default; }
+.game-tab-button:focus,
+.game-tab-button:focus-visible {
+  outline: none;
+}
+.game-tab-button:is(:disabled, .locked) {
+  cursor: default;
+}
+.game-tab-button:is(:disabled, .locked) :deep(.ink-nine-slice) {
+  opacity: 0.45;
+}
+.game-tab-button:is(:disabled, .locked) .game-tab-button__label {
+  color: #8a7c56;
+  text-shadow: none;
+}
 </style>
+

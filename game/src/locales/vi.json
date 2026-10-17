@@ -1,6 +1,13 @@
 {
   "realmPassive": { "tier": "Bậc {tier}", "perfected": "Viên mãn ẩn", "effects": "Hiệu lực đang có", "origin": "Dấu ấn nhập môn", "recorded": "Bậc đã đạt", "foundation": { "human": "Nhân Đạo", "earth": "Địa Đạo", "heaven": "Thiên Đạo", "great_dao": "Đại Đạo", "unknown": "Chưa ghi nhận" } },
-  "authOpening": { "loading": "Đang tải" },
+  "authOpening": {
+    "loading": "Đang tải linh cảnh…",
+    "tips": {
+      "tabOverview": "✦ Mẹo: Nhấn phím [Tab] bất kỳ lúc nào để mở nhanh Giao Diện Tổng.",
+      "cultivation": "Tĩnh tọa tụ linh tại Động Phủ sẽ liên tục tích lũy tu vi ngay cả khi rời màn hình.",
+      "daoPath": "Mỗi đạo lộ sở hữu Ngũ Hành tương sinh tương khắc và nhịp chiến đấu theo lượt riêng biệt."
+    }
+  },
   "testSandbox": {
     "enter": "Vào chế độ test",
     "tools": "Dev Power",

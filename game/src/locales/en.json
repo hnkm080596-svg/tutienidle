@@ -1,6 +1,13 @@
 {
   "realmPassive": { "tier": "Tier {tier}", "perfected": "Hidden perfection", "effects": "Active effects", "origin": "Initiation record", "recorded": "Earned tier", "foundation": { "human": "Human", "earth": "Earth", "heaven": "Heaven", "great_dao": "Great Dao", "unknown": "Not recorded" } },
-  "authOpening": { "loading": "Loading" },
+  "authOpening": {
+    "loading": "Loading realm…",
+    "tips": {
+      "tabOverview": "✦ Tip: Press [Tab] at any time to quickly toggle the Main Overview.",
+      "cultivation": "Meditating in your Dong Fu steadily accumulates cultivation even while away.",
+      "daoPath": "Each Dao Path wields Five-Element affinities and distinct turn-based combat mechanics."
+    }
+  },
   "testSandbox": {
     "enter": "Enter test sandbox",
     "tools": "Dev Power",

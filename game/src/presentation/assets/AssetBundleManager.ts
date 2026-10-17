@@ -65,6 +65,8 @@ export function defaultDomAudioLoader(
   })()
 }
 
+const retainedDomImages = new Map<string, HTMLImageElement>()
+
 export function defaultDomImageLoader(url: string, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
@@ -72,7 +74,14 @@ export function defaultDomImageLoader(url: string, signal?: AbortSignal): Promis
       return
     }
 
+    const existing = retainedDomImages.get(url)
+    if (existing && existing.complete && existing.naturalWidth > 0) {
+      resolve()
+      return
+    }
+
     const image = new Image()
+    image.decoding = 'async'
 
     const onAbort = () => {
       image.onload = null
@@ -82,6 +91,10 @@ export function defaultDomImageLoader(url: string, signal?: AbortSignal): Promis
 
     image.onload = () => {
       signal?.removeEventListener('abort', onAbort)
+      retainedDomImages.set(url, image)
+      if (typeof image.decode === 'function') {
+        void image.decode().catch(() => {})
+      }
       resolve()
     }
 
@@ -260,9 +273,9 @@ export class AssetBundleManager implements AssetPort {
 
     const tasks: Promise<void>[] = []
 
-    // 1. Load DOM images (each deduped per key; cap concurrency to 12 for large warm batches)
-    const MAX_CONCURRENT_DOM_IMAGES = 12
-    if (domDescriptors.length <= MAX_CONCURRENT_DOM_IMAGES) {
+    // 1. Load DOM images (each deduped per key; cap concurrency to 16 for background warm batches)
+    const MAX_CONCURRENT_DOM_IMAGES = 16
+    if (onProgress || domDescriptors.length <= MAX_CONCURRENT_DOM_IMAGES) {
       for (const domDesc of domDescriptors) {
         tasks.push(this.loadSingleDomImage(domDesc, signal).then(report))
       }

@@ -901,17 +901,42 @@ export function getUiSceneDescriptors(): readonly AssetResourceDescriptor[] {
 
 export function getBundleDescriptors(bundleId: AssetBundleId): readonly AssetResourceDescriptor[] {
   switch (bundleId) {
-    case 'auth-opening':
+    case 'auth-opening': {
+      const chromeUrls = getUiChromeDescriptors().map((d) => (d as DomImageResourceDescriptor).url)
       return domImageDescriptors([
         '/assets/ui/tien-hiep-2026-10/auth-opening/backdrop-clean-v1.png',
         '/assets/ui/tien-hiep-2026-10/auth-opening/mortal-wind-strip-v1.png',
         '/assets/ui/tien-hiep-2026-10/auth-opening/crane-flight-strip-v1.png',
         '/assets/ui/tien-hiep-2026-10/auth-opening/cloud-curtain-v1.png',
         '/assets/ui/huyen-kim/scene/login-v2/wordmark.png',
+        '/assets/ui/huyen-kim/scene/login-v2/scroll-panel.png',
+        '/assets/ui/huyen-kim/scene/login-v2/cultivator.png',
+        '/assets/ui/huyen-kim/scene/login-v2/jade-button.png',
+        '/assets/ui/tien-hiep-2026-10/controls/trial-creation-panel-v2.png',
+        '/assets/ui/tien-hiep-2026-10/character-presentation/talent-field-v1.png',
         '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png',
         '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png',
+        '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-hover-v2.png',
         '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png',
+        '/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png',
+        '/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png',
+        '/assets/ui/tien-hiep-2026-10/controls/button-primary-v1.png',
+        '/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png',
+        '/assets/ui/tien-hiep-2026-10/controls/inspector-v1.png',
+        '/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png',
+        '/assets/ui/tien-hiep-2026-10/controls/item-slot-v2.png',
+        '/assets/ui/tien-hiep-2026-10/controls/item-slot-v2-ornament-mask.png',
+        '/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2.png',
+        '/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2-ornament-mask.png',
+        '/assets/ui/tien-hiep-2026-10/runtime/page-paper.png',
+        '/assets/ui/tien-hiep-2026-10/runtime/ink-panel.png',
+        '/assets/ui/tien-hiep-2026-10/runtime/paper-panel.png',
+        '/assets/ui/tien-hiep-2026-10/runtime/paper-surface.png',
+        '/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png',
+        '/assets/ui/tien-hiep-2026-10/runtime/navigation-rail.png',
+        ...chromeUrls,
       ])
+    }
     case 'core-ui':
       return getCoreUiDescriptors()
     case 'home':

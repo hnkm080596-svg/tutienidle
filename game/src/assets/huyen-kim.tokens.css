@@ -87,8 +87,8 @@
   --hk-density-ceremonial-height: 48px;
 
   /* Typography */
-  --hk-font-display: 'Playfair Display', 'Noto Serif SC', serif;
-  --hk-font-ui: 'Be Vietnam Pro', 'Noto Sans SC', system-ui, sans-serif;
+  --hk-font-display: 'PC Paper Serif', 'Times New Roman', Georgia, serif;
+  --hk-font-ui: 'PC Paper Serif', 'Times New Roman', Georgia, serif;
 }
 
 /* Semantic state classes (§46-47) — color is never the sole signal; pair

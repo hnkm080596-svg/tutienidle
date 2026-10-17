@@ -1,6 +1,26 @@
 import { nextTick, onBeforeUnmount, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+const EDITABLE_SELECTOR = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+
+const activeDialogStack: Array<() => HTMLElement | null> = []
+
+function removeDialogFromStack(getter: () => HTMLElement | null): void {
+  const index = activeDialogStack.lastIndexOf(getter)
+  if (index >= 0) {
+    activeDialogStack.splice(index, 1)
+  }
+}
+
+function isTopmostActiveDialog(getter: () => HTMLElement | null): boolean {
+  for (let i = activeDialogStack.length - 1; i >= 0; i--) {
+    const candidate = activeDialogStack[i]!()
+    if (candidate && document.contains(candidate)) {
+      return activeDialogStack[i] === getter
+    }
+  }
+  return true
+}
 
 /**
  * Focus management dung chung cho dialog primitives (QA-003, Task 9.3):
@@ -16,6 +36,7 @@ export function useDialogFocus(
   let keydownHandler: ((event: KeyboardEvent) => void) | null = null
   let mousedownHandler: ((event: MouseEvent) => void) | null = null
   let disposed = false
+  const cardGetter = () => toValue(cardRef)
 
   function focusables(): HTMLElement[] {
     const el = toValue(cardRef)
@@ -24,6 +45,8 @@ export function useDialogFocus(
 
   const stopWatch = watch(() => toValue(open), async (isOpen) => {
     if (isOpen) {
+      removeDialogFromStack(cardGetter)
+      activeDialogStack.push(cardGetter)
       const activeElement = document.activeElement
       const activeInCard = activeElement instanceof HTMLElement && toValue(cardRef)?.contains(activeElement) === true
       // Re-open guard: focus da nam trong card (same-tick bounce) -> giu trigger goc,
@@ -36,6 +59,7 @@ export function useDialogFocus(
       const items = focusables()
       ;(items[0] ?? toValue(cardRef))?.focus()
       keydownHandler = (event: KeyboardEvent) => {
+        if (!isTopmostActiveDialog(cardGetter)) return
         if (event.key === 'Escape') {
           event.stopPropagation()
           options.onEscape()
@@ -71,14 +95,20 @@ export function useDialogFocus(
       // Escape through the blocking dialog. Cancelling the default
       // mousedown action keeps focus inside the card; click handlers
       // (e.g. scrim close) still fire because click is a separate event.
+      // Never block focus into topmost teleported dialogs or editable controls.
       mousedownHandler = (event: MouseEvent) => {
+        if (!isTopmostActiveDialog(cardGetter)) return
         const card = toValue(cardRef)
-        if (card && !(event.target instanceof Node && card.contains(event.target))) {
-          event.preventDefault()
+        const target = event.target
+        if (!card || !(target instanceof Node) || card.contains(target)) return
+        if (target instanceof Element && (target.closest(EDITABLE_SELECTOR) || target.closest('[role="dialog"]'))) {
+          return
         }
+        event.preventDefault()
       }
       document.addEventListener('mousedown', mousedownHandler)
     } else {
+      removeDialogFromStack(cardGetter)
       if (keydownHandler) toValue(cardRef)?.removeEventListener('keydown', keydownHandler)
       keydownHandler = null
       if (mousedownHandler) {
@@ -92,6 +122,7 @@ export function useDialogFocus(
 
   onBeforeUnmount(() => {
     disposed = true
+    removeDialogFromStack(cardGetter)
     stopWatch()
     if (keydownHandler) toValue(cardRef)?.removeEventListener('keydown', keydownHandler)
     if (mousedownHandler) {

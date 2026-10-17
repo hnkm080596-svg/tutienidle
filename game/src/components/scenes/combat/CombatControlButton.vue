@@ -28,7 +28,7 @@ function handleClick(event: MouseEvent) {
 .combat-control-button:hover:enabled { background-image: var(--combat-control-hover); }
 .combat-control-button:active:enabled { background-image: var(--combat-control-pressed); }
 .combat-control-button:disabled { opacity: .45; cursor: default; }
-.combat-control-button:focus-visible { outline: 2px solid #f3d58a; outline-offset: 2px; }
+.combat-control-button:focus, .combat-control-button:focus-visible { outline: none; }
 .combat-control-button { position: relative; isolation: isolate; background: none; }
 .combat-control-button::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--combat-control-normal) center / 100% 100% no-repeat; clip-path: polygon(12% 14%, 88% 14%, 95% 24%, 95% 76%, 88% 89%, 12% 89%, 4% 76%, 4% 24%); }
 .combat-control-button.is-selected,.combat-control-button:hover:enabled,.combat-control-button:active:enabled { background-image: none; }

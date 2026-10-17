@@ -27,8 +27,8 @@ export interface ArtBundleWarmer {
 
 export const ROUTE_ART_WARM_BUNDLES: Record<Route, readonly AssetBundleId[]> = {
   boot: [],
-  auth: [],
-  character: [],
+  auth: ['ui-scenes'],
+  character: ['ui-scenes'],
   home: ['ui-scenes'],
   combat: ['ui-scenes'],
   tribulation: ['ui-scenes'],

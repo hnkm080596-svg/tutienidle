@@ -515,6 +515,9 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
           </p>
 
           <div class="feedback-dialog__actions">
+            <GameActionButton v-if="rail" class="ghost-on-paper" data-testid="feedback-close-form" @click="onClose">
+              {{ i18n.global.t('betaFeedback.actions.close') }}
+            </GameActionButton>
             <GameActionButton class="ghost-on-paper" data-testid="feedback-export" @click="onExport">
               {{ exported ? i18n.global.t('betaFeedback.actions.exported') : i18n.global.t('betaFeedback.actions.export') }}
             </GameActionButton>
@@ -601,10 +604,11 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
   color: var(--hk-text-muted, #7a7260);
 }
 
+.feedback-dialog__textarea:focus,
 .feedback-dialog__textarea:focus-visible,
+.feedback-dialog__input:focus,
 .feedback-dialog__input:focus-visible {
-  outline: 2px solid var(--mineral-gold);
-  outline-offset: 1px;
+  outline: none;
 }
 
 .feedback-dialog__meta {

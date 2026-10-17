@@ -80,8 +80,8 @@ export const HUYEN_KIM_TOKENS = {
   densityCeremonialHeight: 48,
 
   // ---- Typography (spec 6): display serif / UI sans - Vietnamese-capable
-  fontDisplay: "'Playfair Display', 'Noto Serif SC', serif",
-  fontUi: "'Be Vietnam Pro', 'Noto Sans SC', system-ui, sans-serif",
+  fontDisplay: "'PC Paper Serif', 'Times New Roman', Georgia, serif",
+  fontUi: "'PC Paper Serif', 'Times New Roman', Georgia, serif",
 } as const
 
 export type HuyenKimTokenKey = keyof typeof HUYEN_KIM_TOKENS

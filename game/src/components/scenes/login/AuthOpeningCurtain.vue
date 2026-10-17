@@ -94,6 +94,11 @@ defineExpose({ close, open, prepare })
       </div>
       <p class="auth-opening-loading__percent">{{ percent }}%</p>
       <p class="auth-opening-loading__label">{{ t('authOpening.loading') }}</p>
+      <div class="auth-opening-tips" data-testid="auth-opening-tips">
+        <p class="auth-opening-tips__primary">{{ t('authOpening.tips.tabOverview') }}</p>
+        <p class="auth-opening-tips__item">{{ t('authOpening.tips.cultivation') }}</p>
+        <p class="auth-opening-tips__item">{{ t('authOpening.tips.daoPath') }}</p>
+      </div>
     </div>
     <div ref="crane" class="auth-opening-crane" :style="cranePosition" aria-hidden="true">
       <div class="auth-opening-crane__bob">
@@ -109,11 +114,14 @@ defineExpose({ close, open, prepare })
 .auth-opening-cloud::before { content: ''; position: absolute; inset: -10% 94% -10% -24%; background: linear-gradient(90deg, transparent, #f5ebd7 75%); }
 .auth-opening-cloud__texture { position: absolute; left: -18%; top: -18%; width: 135%; height: 140%; object-fit: fill; }
 .auth-opening-cloud-near { position: absolute; left: -30%; bottom: -38%; width: 160%; height: 125%; object-fit: fill; opacity: .75; }
-.auth-opening-loading { position: absolute; left: 28%; top: 58%; width: 44%; text-align: center; color: #634b25; transition: opacity 180ms ease; }
+.auth-opening-loading { position: absolute; left: 24%; top: 56%; width: 52%; text-align: center; color: #634b25; transition: opacity 180ms ease; }
 .auth-opening-track { height: 8px; border: 1px solid #a5803b; background: #4e453332; box-shadow: 0 0 0 3px #f9eccc; }
 .auth-opening-track__fill { display: block; height: 100%; background: linear-gradient(90deg, #95662a, #e6c071); transition: width 180ms ease-out; }
-.auth-opening-loading__percent { margin: 20px 0 4px; font: 26px var(--font-display, Georgia, serif); }
-.auth-opening-loading__label { margin: 0; font: 18px var(--font-display, Georgia, serif); }
+.auth-opening-loading__percent { margin: 16px 0 4px; font: 700 26px var(--font-display, 'PC Paper Serif', Georgia, serif); }
+.auth-opening-loading__label { margin: 0; font: 600 18px var(--font-display, 'PC Paper Serif', Georgia, serif); }
+.auth-opening-tips { margin: 14px auto 0; padding: 10px 18px; max-width: 620px; border-top: 1px solid rgba(165, 128, 59, 0.45); border-bottom: 1px solid rgba(165, 128, 59, 0.45); background: linear-gradient(90deg, transparent, rgba(245, 235, 215, 0.86) 15%, rgba(245, 235, 215, 0.86) 85%, transparent); }
+.auth-opening-tips__primary { margin: 0 0 6px; color: #432f13; font: 700 16px/1.4 var(--font-display, 'PC Paper Serif', Georgia, serif); }
+.auth-opening-tips__item { margin: 3px 0 0; color: #6b522c; font: 500 14px/1.4 var(--font-display, 'PC Paper Serif', Georgia, serif); }
 .auth-opening-crane { position: absolute; top: 45%; width: 155px; height: auto; transform: translateX(-50%); transition: left 180ms ease-out; }
 .auth-opening-crane__bob { animation: crane-bob 1500ms ease-in-out infinite; transform-origin: 55% 50%; }
 @keyframes crane-bob {

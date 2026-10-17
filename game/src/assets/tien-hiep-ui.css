@@ -1,6 +1,4 @@
 
-/* Instance panels own their internal presentation. */
-@scope (:root) to (:is(.game-panel, .combat-panel__content, .game-card, .game-action-button, .game-tab-button, .game-dropdown-button, .chip-select, .slot-view)) {
 /* Shared visual skin. Gameplay models and commands remain with their owners. */
 :root {
   --th-paper: #f3e5c8;
@@ -8,8 +6,10 @@
   --th-gold: #b58b43;
   --th-copy: #30291d;
   --th-soft: #675637;
-  --font-display: 'Noto Serif', 'Times New Roman', Georgia, serif;
+  --font-display: var(--pc-font-title, 'PC Paper Serif', 'Times New Roman', Georgia, serif);
 }
+/* Instance panels own their internal presentation. */
+@scope (:root) to (:is(.game-panel, .combat-panel__content, .game-card, .game-action-button, .game-tab-button, .game-dropdown-button, .chip-select, .slot-view)) {
 :is(#app, body) .scene-viewport:not(.scene-viewport--overlay) { background: #15221e; }
 :is(#app, body) .paper-navigation.paper-navigation {
   left: 22px; top: 123px; width: 130px; height: 633px;
@@ -25,7 +25,7 @@
 :is(#app, body) .paper-navigation .paper-navigation-icon img, :is(#app, body) .paper-navigation .paper-back img { width: 30px; height: 30px; transform: none; filter: brightness(0) saturate(100%) invert(83%) sepia(30%) saturate(600%) hue-rotate(352deg); }
 :is(#app, body) .paper-navigation .active { background: linear-gradient(90deg,transparent,#b58a3740,transparent); outline: 0; border-block: 1px solid #b9995370; box-shadow: 0 0 12px #d5aa4430; color: #fff2c5; }
 :is(#app, body) .paper-navigation button:hover:not(.is-locked) { color: #ffe5a4; }
-:is(#app, body) .paper-navigation button:focus-visible { outline: 2px solid var(--th-gold, #ddbc76); outline-offset: 2px; }
+:is(#app, body) .paper-navigation button:focus-visible { outline: none; }
 :is(#app, body) .cf-scene .cf-name { font-size: 27px; font-style: normal; white-space: normal; overflow-wrap: anywhere; }
 :is(#app, body) .cf-scene .cf-identity { left: 210px; top: 205px; width: 285px; }
 :is(#app, body) .cf-scene .cf-person { left: 430px; top: 188px; width: 420px; height: 525px; }
@@ -241,6 +241,6 @@
 
 }
 
-/* D3 ruling (2026-10-15, U1): restore keyboard-only :focus-visible outline
-   using the theme gold token across all buttons, including inside GamePanel/GameCard. */
-:is(#app, body) button:focus-visible { outline: 2px solid var(--th-gold, #ddbc76); outline-offset: 2px; }
+/* Hide default gold focus outlines across buttons and controls. */
+:is(#app, body) :is(button, [role="button"], [tabindex]):focus,
+:is(#app, body) :is(button, [role="button"], [tabindex]):focus-visible { outline: none; }

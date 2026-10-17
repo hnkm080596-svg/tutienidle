@@ -50,22 +50,40 @@ const aiOpen = shallowRef(false)
   justify-content: center;
   min-width: 0;
   min-height: 30px;
-  padding: 4px 12px;
+  padding: 0 16px;
   border: 0;
   background: transparent;
   color: var(--chrome-100);
-  font: var(--text-xs) var(--font-display, Georgia, serif);
-  letter-spacing: 0.04em;
+  font: 700 13px/1 var(--font-display, Georgia, serif);
+  letter-spacing: 0.02em;
   cursor: pointer;
   pointer-events: auto;
 }
 
-.combat-ai-rail__reopen-label { position: relative; z-index: 2; white-space: nowrap; }
+.combat-ai-rail__reopen-label {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  line-height: 1;
+}
 
+.combat-ai-rail__reopen:focus,
 .combat-ai-rail__reopen:focus-visible {
-  outline: 2px solid var(--chrome-300);
-  outline-offset: 2px;
+  outline: none;
 }
 .combat-ai-rail.game-card { padding: 0; }
-.combat-ai-rail__reopen.game-action-button { height: 40px; min-width: 150px; }
+.combat-ai-rail__reopen.game-action-button {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: auto;
+  height: 40px;
+  min-width: 156px;
+  padding: 0 18px;
+}
 </style>

@@ -1,4 +1,4 @@
-﻿/* "Mực & Giấy Trắng" — bảng token màu/typography dùng chung
+/* "Mực & Giấy Trắng" — bảng token màu/typography dùng chung
    toàn app. Trước đợt này KHÔNG có hệ thống design-token nào (mọi hex
    hardcode rời rạc mỗi component) — file này chính thức hoá bảng màu
    tối giản/sang trọng kiếm hiệp đang dần được áp dụng, bắt đầu từ
@@ -266,8 +266,8 @@
   --slot-caption-bg-strong: rgba(10, 10, 13, 0.82);
   --slot-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 
-  --font-display: 'Playfair Display', 'Noto Serif', Georgia, serif;
-  --font-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--pc-font-title, 'PC Paper Serif', 'Times New Roman', Georgia, serif);
+  --font-body: var(--pc-font-body, 'PC Paper Serif', 'Times New Roman', Georgia, serif);
 
   /* ============================================================
      DARK SURFACE PALETTE (2026-08-31 redesign) — token semantic

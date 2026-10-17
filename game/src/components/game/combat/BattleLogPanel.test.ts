@@ -161,7 +161,7 @@ describe('BattleLogPanel display names (T4-36)', () => {
     const tabs = container.querySelectorAll<HTMLButtonElement>('.df-chatbox__tab')
     expect(tabs.length).toBe(3)
 
-    // Switch to Thống Kê tab
+    // Switch to stats tab
     tabs[1]!.click()
     await nextTick()
 
@@ -171,7 +171,7 @@ describe('BattleLogPanel display names (T4-36)', () => {
     expect(statsRows[0]?.textContent).toContain('600')
     expect(statsRows[0]?.textContent).toContain('75%')
 
-    // Switch to Thu Hoạch tab
+    // Switch to loot tab
     tabs[2]!.click()
     await nextTick()
 
